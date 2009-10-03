@@ -1,0 +1,85 @@
+#!/bin/bash
+# Copyright: Christoph Dittmann <eigene_homepage@gmx.de>
+# License: GNU GPL, version 3 or later; http://www.gnu.org/copyleft/gpl.html
+#
+# RTK keyword lookup.
+# The lookup works in both directions: From keyword to kanji and from
+# kanji to keyword.
+# 
+# The command line arguments must be utf-8 encoded.
+
+DICT=$(dirname "$0")/rtk.txt
+MAX_KEYWORDS=10
+
+# Make sure we have a UTF-8 environment.
+LANG=en_US.UTF-8
+if [ ! -e "$DICT" ]; then
+   echo "Please put \"rtk.txt\" in the same directory as this script."
+   exit 1
+fi
+
+QUERY=$@
+
+if [ -z "$QUERY" ]; then
+    echo "epsilon."
+    exit 0
+fi
+
+if echo "$QUERY" | grep -q -e "[*+()$^]"; then
+    echo "Bitte keine regulären Ausdrücke. :-)"
+    exit 0
+fi
+
+# Escape the dot as it has special significance in regexps
+QUERY=${QUERY//./\\.}
+
+if echo "$QUERY" | grep -q -e "^\([a-zA-Z \-]\|\\\.\)*$"; then
+    # Query contains a keyword, so look for the matching kanji.
+    LINES1=$(grep -i -m 1 -e "	${QUERY}	" "$DICT")
+    LINES2=$(grep -i -m $MAX_KEYWORDS -e "	${QUERY}..*	" "$DICT")
+    LINES3=$(grep -i -m $MAX_KEYWORDS -e "	..*${QUERY}.*	" "$DICT")
+    LINES=$(echo -e "$LINES1\n$LINES2\n$LINES3" | head -n $MAX_KEYWORDS)
+    if [ -n "$LINES" ]; then
+        # Change $IFS to loop over lines instead of words.
+        ORIGIFS=$IFS
+        IFS=$'\n'
+        for LINE in $LINES; do
+            KANJI=$(echo "$LINE" | cut -f 1)
+            KEYWORD=$(echo "$LINE" | cut -f 2)
+            NUMBER=$(echo "$LINE" | cut -f 3)
+            R="#$NUMBER: $KEYWORD $KANJI"
+            if [ -z "$RESULT" ]; then
+                RESULT="$R"
+            else
+                RESULT=$RESULT", $R"
+            fi
+        done
+        IFS=$ORIGIFS
+        echo "$RESULT"
+    else
+        # Unknown keyword
+        echo "Dieses Keyword kenne ich nicht :-("
+    fi
+else
+    # Query likely contains Japanese characters.
+
+    # Decode letter by letter, restricted to the first few letters.
+    # Note that it is crucial for this step to work that $LANG
+    # contains something with "UTF-8". Otherwise substring access to
+    # $QUERY would not work as expected.
+    QUERY=${QUERY:0:15}
+    for I in $(seq 0 $(expr ${#QUERY} - 1)); do
+        KEYWORD=$(grep -m 1 -e "${QUERY:$I:1}	.*	" "$DICT" | cut -f 2 )
+        if [ -z "$KEYWORD" ]; then
+            KEYWORD="${QUERY:$I:1}"
+        fi
+        if [ -z "$RESULT" ]; then
+            RESULT="$KEYWORD"
+        else
+            RESULT=$RESULT" | $KEYWORD"
+        fi
+    done
+    echo "$RESULT"
+fi
+
+exit 0

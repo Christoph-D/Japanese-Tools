@@ -1,0 +1,115 @@
+#!/bin/bash
+# Copyright: Christoph Dittmann <eigene_homepage@gmx.de>
+# License: GNU GPL, version 3 or later; http://www.gnu.org/copyleft/gpl.html
+#
+# This script translates the command line parameters using Google.
+
+# Default target language
+TARGET_LANG=de
+# Fallback target language
+SECOND_TARGET_LANG=en
+# Allowed target languages
+KNOWN_LANGUAGES=( en de ja it )
+
+# Default source language (empty string is "guess language")
+SOURCE_LANG=
+
+TRANSLATE_SERVICE_URL="http://ajax.googleapis.com/ajax/services/language/translate"
+
+# Make sure we have a UTF-8 environment.
+LANG=en_US.UTF-8
+
+# Accumulate all parameters
+QUERY="$*"
+# Restrict length
+QUERY=${QUERY:0:300}
+
+if [ -z "$QUERY" ]; then
+    # No input.
+    echo "Keine Eingabe."
+    exit 0
+fi
+
+get_lang_selector() {
+    # The first word might be a language selector.
+    local LANG_CANDIDATE=( $1 )
+    LANG_CANDIDATE=${LANG_CANDIDATE[0]}
+    local L
+    for L in ${KNOWN_LANGUAGES[@]}; do
+        if [ "$LANG_CANDIDATE" = "$L" ]; then
+            echo "$L"
+            return 0
+        fi
+    done
+    # No valid language selector found
+    return 1
+}
+remove_lang_selector() {
+    echo "$1" | cut -d ' ' -f 2-
+}
+
+# Parse language overrides
+LANG_SELECTOR=$(get_lang_selector "$QUERY")
+if [ "$?" -eq 0 ]; then
+    QUERY=$(remove_lang_selector "$QUERY")
+    TARGET_LANG_OVERWRITTEN=YES
+    TARGET_LANG=$LANG_SELECTOR
+fi
+LANG_SELECTOR=$(get_lang_selector "$QUERY")
+if [ "$?" -eq 0 ]; then
+    # If there are 2 language selectors, the second one describes the
+    # source language.
+    QUERY=$(remove_lang_selector "$QUERY")
+    SOURCE_LANG=$LANG_SELECTOR
+fi
+
+if [ "$SOURCE_LANG" = "$TARGET_LANG" ]; then
+    echo "Scherzkeks. :p"
+    exit 0
+fi
+
+fix_html_entities() {
+    sed "s/\&\#39;/'/g" |
+    sed 's/\&lt;/</g' |
+    sed 's/\&gt;/>/g' |
+    sed 's/\&quot;/"/g' |
+    sed 's/\&amp;/\&/g'
+}
+translate() {
+    # Escape single quotes for use in perl
+    local ENCODED_QUERY=${1//\'/\\\'}
+    ENCODED_QUERY=$(perl -MURI::Escape -e "print uri_escape('$ENCODED_QUERY');")
+    wget "$TRANSLATE_SERVICE_URL" \
+        --quiet \
+        --post-data="v=1.0&q=$ENCODED_QUERY&langpair=$SOURCE_LANG%7C$TARGET_LANG" \
+        -O - \
+        | grep -e '"translatedText"' \
+        | sed 's/.*"translatedText":"\([^"]*\)".*/\1/' \
+        | sed 's/\\u0026/\&/g' \
+        | fix_html_entities
+}
+
+RESULT=$(translate "$QUERY")
+
+if [ "$RESULT" = "$QUERY" -a "$TARGET_LANG_OVERWRITTEN" != "YES" ]; then
+    # If the translation service did not translate anything, try again
+    # with the fallback language.
+    TARGET_LANG=$SECOND_TARGET_LANG
+    RESULT=$(translate "$QUERY")
+fi
+
+if [ "$RESULT" = "$QUERY" ]; then
+    # The service did not translate anything.
+    echo "Das kann ich nicht übersetzen. :/"
+    exit 0
+fi
+if [ -z "$RESULT" ]; then
+    # The service did not return a result.
+    echo "Kein Ergebnis. :-("
+    exit 0
+fi
+
+# Restrict length and print result
+echo "${RESULT:0:300}"
+
+exit 0

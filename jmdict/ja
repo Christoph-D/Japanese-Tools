@@ -1,0 +1,87 @@
+#!/bin/bash
+# Copyright: Christoph Dittmann <eigene_homepage@gmx.de>
+# License: GNU GPL, version 3 or later; http://www.gnu.org/copyleft/gpl.html
+#
+# Dictionary lookup for Japanese words.
+
+DICT=$(dirname "$0")/JMdict_e_prepared
+MAX_RESULTS_PER_PATTERN=5
+MAX_LENGTH_PER_ENGLISH=100
+MAX_TOTAL_LENGTH=1000
+NOT_FOUND_MSG="Dieses Wort kenne ich nicht. :-("
+
+if [ ! -e "$DICT" ]; then
+   echo "Please run \"./prepare_jmdict JMdict_e.gz > JMdict_e_prepared\"."
+   echo "You can get the dictionary from: http://ftp.monash.edu.au/pub/nihongo/JMdict_e.gz"
+   exit 1
+fi
+
+QUERY=$@
+
+if [ -z "$QUERY" ]; then
+    echo "epsilon."
+    exit 0
+fi
+
+print_result() {
+    # Change $IFS to loop over lines instead of words.
+    ORIGIFS=$IFS
+    IFS=$'\n'
+    SEEN=
+    for R in $RESULT; do
+        # Skip duplicate lines.
+        if echo "$SEEN" | grep -qF "$R"; then
+            continue
+        fi
+        SEEN=$(echo "$SEEN" ; echo "$R")
+
+        KANJI=$(echo "$R" | cut -d '\' -f 1)
+        KANA=$(echo "$R" | cut -d '\' -f 2)
+        POS=$(echo "$R" | cut -d '\' -f 3)
+        ENGLISH=$(echo "$R" | cut -d '\' -f 4)
+        if [ -n "$KANJI" ]; then
+            L="$KANJI [$KANA] ($POS)"
+        else
+            L="$KANA ($POS)"
+        fi
+        NEXT="${FINAL:+$FINAL\n}$L, "
+        if [ ${#ENGLISH} -le $MAX_LENGTH_PER_ENGLISH ]; then
+            NEXT="$NEXT$ENGLISH"
+        else
+            NEXT="$NEXT${ENGLISH:0:$(expr $MAX_LENGTH_PER_ENGLISH - 3)}..."
+        fi
+
+        # If the final string would get too long, we're done.
+        if [ ${#NEXT} -gt $MAX_TOTAL_LENGTH ]; then
+            break
+        fi
+        FINAL=$NEXT
+    done
+    IFS=$ORIGIFS
+
+    echo -e "$FINAL"
+}
+
+# The more specific search patterns are used first
+PATTERNS=( \
+    "\(\\\\\|^\)$QUERY\(\$\|\\\\\)" \
+    "\\\\\(1\\. \)$QUERY\( ([^,]*\?)\)\?,"
+    "\\\\\(1\\. \)\?$QUERY\( \|,\)" \
+    "\(\\\\\|^\)\(1\\. \)\?$QUERY" \
+    "2\\. $QUERY\( ([^,]*\?)\)\?\(,\|\$\)" \
+    "$QUERY" \
+    )
+
+# Accumulate results over all patterns
+for I in $(seq 0 1 $(expr ${#PATTERNS[@]} - 1)); do
+    P="${PATTERNS[$I]}"
+    RESULT=$(echo "$RESULT" ; grep -m $MAX_RESULTS_PER_PATTERN -e "$P" "$DICT")
+done
+
+if [ -n "$RESULT" ]; then
+    print_result
+else
+    echo "$NOT_FOUND_MSG"
+fi
+
+exit 0

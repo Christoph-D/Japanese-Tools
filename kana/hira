@@ -1,0 +1,11 @@
+#!/bin/bash
+# Copyright: Christoph Dittmann <eigene_homepage@gmx.de>
+# License: GNU GPL, version 3 or later; http://www.gnu.org/copyleft/gpl.html
+#
+# Hiragana trainer.
+
+DIRECTORY="."
+KANA_FILE="$DIRECTORY/hiragana.txt"
+IRC_COMMAND='!hira'
+
+. kana
