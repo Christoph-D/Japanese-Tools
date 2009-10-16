@@ -93,9 +93,6 @@ read_weighted_lessons() {
     done
 }
 
-#read_weighted_lessons $1
-#exit 0
-
 # Parameters: lesson-number result-lines
 start_lesson() {
     RESULT_LINES=$2
