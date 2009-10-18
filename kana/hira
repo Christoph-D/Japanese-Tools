@@ -8,4 +8,4 @@ DIRECTORY="."
 KANA_FILE="$DIRECTORY/hiragana.txt"
 IRC_COMMAND='!hira'
 
-. $(dirname "$0")/kana
+. "$(dirname "$0")/kana"
