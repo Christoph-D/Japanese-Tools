@@ -9,14 +9,17 @@ if [ -z "$KANA_FILE" ]; then
     exit 1
 fi
 
-SOLUTION_FILE="$DIRECTORY/solution.txt" # this file will be overwritten
-LESSON_STATUS_FILE="$DIRECTORY/status.txt" # this file will be overwritten
-USER_STATS_DIR="$DIRECTORY/user_statistics" # this directory will be filled with files
+# Configuration
+TEMP_PATH="$DIRECTORY/tmp" # directory for temporary files
+USER_STATS_DIR="$DIRECTORY/user_statistics" # this directory will be
+                                            # filled with files
 USER=$DMB_SENDER
+CHANNEL_NAME=$DMB_RECEIVER
 
 DEFAULT_RESULT_ITEMS=5
 MAX_RESULT_ITEMS=30
 LESSON_MAP=( 5 10 15 20 25 30 35 38 43 45 46 ) # line numbers in $KANA_FILE
+# End of configuration
 
 # Make sure we have a UTF-8 environment.
 LANG=en_US.UTF-8
@@ -31,10 +34,25 @@ if [[ ! -d $USER_STATS_DIR ]]; then
    echo 'Please point $USER_STATS_DIR to an existing directory.'
    exit 2
 fi
+if [[ ! -d $TEMP_PATH ]]; then
+   echo 'Please point $TEMP_PATH to an existing directory (not /tmp).'
+   exit 2
+fi
 if [[ -z $USER ]]; then
     echo 'Could not determine nick name. Please fix $USER.'
     exit 1
 fi
+if [[ -z $CHANNEL_NAME ]]; then
+    echo 'Could not determine channel name or query sender. Please fix $CHANNEL_NAME.'
+    exit 1
+fi
+
+# Determine file names for the status and the solution file.
+# First, turn slashes into || to make is safe for a file name.
+CHANNEL_NAME=${CHANNEL_NAME////||}
+SOLUTION_FILE=$TEMP_PATH/solution-$CHANNEL_NAME
+LESSON_STATUS_FILE=$TEMP_PATH/status-$CHANNEL_NAME
+
 
 # Prints the smaller of the two arguments.
 min() { if (( "$1" < "$2" )); then echo "$1"; else echo "$2"; fi; }
@@ -120,7 +138,6 @@ start_lesson() {
 # Result: $USER_STATS
 read_user_statistics() {
     USER=${USER////} # remove slashes
-    USER=${USER//./} # remove dots
     USER_FILE="$USER_STATS_DIR"/"$USER"
     if [[ -f $USER_FILE ]]; then
         USER_STATS=( $(cat "$USER_FILE") )
