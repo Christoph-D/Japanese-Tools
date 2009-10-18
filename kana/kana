@@ -47,6 +47,9 @@ if [[ -z $CHANNEL_NAME ]]; then
     exit 1
 fi
 
+# Prune old temporary files
+find "$TEMP_PATH" -maxdepth 1 -type f -mmin +60 -exec rm '{}' \;
+
 # Determine file names for the status and the solution file.
 # First, turn slashes into || to make is safe for a file name.
 CHANNEL_NAME=${CHANNEL_NAME////||}
@@ -196,11 +199,6 @@ if echo "$QUERY_BEGIN" | grep -q -E '^[0-9]+ [0-9]*$'; then
 fi
 
 if [[ ! -f "$SOLUTION_FILE" ]]; then
-    show_help
-    exit 0
-elif find "$SOLUTION_FILE" -maxdepth 0 -mmin +60 | grep -q -e '.'; then
-    # Solution file is too old, discard it.
-    rm "$SOLUTION_FILE"
     show_help
     exit 0
 fi
