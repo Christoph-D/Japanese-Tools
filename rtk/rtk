@@ -32,7 +32,9 @@ if echo "$QUERY" | grep -q -e "[*+()$^]"; then
     exit 0
 fi
 
-# Escape the dot as it has special significance in regexps
+# Remove backslashes and escape the dot as they have special
+# significance in regexps.
+QUERY=${QUERY//\\/}
 QUERY=${QUERY//./\\.}
 
 format_entry() {
