@@ -11,8 +11,7 @@ MAX_TOTAL_LENGTH=1000
 NOT_FOUND_MSG="Dieses Wort kenne ich nicht. :-("
 
 if [ ! -e "$DICT" ]; then
-   echo "Please run \"./prepare_jmdict JMdict_e.gz > JMdict_e_prepared\"."
-   echo "You can get the dictionary from: http://ftp.monash.edu.au/pub/nihongo/JMdict_e.gz"
+   echo "Please run: wget http://ftp.monash.edu.au/pub/nihongo/JMdict_e.gz && ./prepare_jmdict JMdict_e.gz > JMdict_e_prepared"
    exit 1
 fi
 
