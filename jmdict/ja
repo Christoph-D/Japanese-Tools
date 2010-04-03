@@ -16,7 +16,8 @@ if [ ! -e "$DICT" ]; then
    exit 1
 fi
 
-QUERY=$@
+# Get query and remove backslashes because we use them internally.
+QUERY=${@//\\/}
 
 if [ -z "$QUERY" ]; then
     echo "epsilon."
