@@ -44,7 +44,7 @@ print_result() {
         else
             L="$KANA ($POS)"
         fi
-        NEXT="${FINAL:+$FINAL\n}$L, "
+        NEXT="${FINAL:+$FINAL / }$L, "
         if [ ${#ENGLISH} -le $MAX_LENGTH_PER_ENGLISH ]; then
             NEXT="$NEXT$ENGLISH"
         else
