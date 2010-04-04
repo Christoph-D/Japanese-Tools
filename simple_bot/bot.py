@@ -101,13 +101,12 @@ class SimpleBot(SingleServerIRCBot):
         return
 
     def do_command(self, cmd):
-        """This method will never raise an exception."""
+        """This method will never raise an exception based on the
+        Exception base class."""
         try:
             self.do_command_unsafe(cmd)
         except Exception, e:
             self.debug_out('Caught exception: %s' % str(e))
-        except:
-            self.debug_out('Caught unknown exception!')
 
     def do_command_unsafe(self, cmd):
         """This method could raise an exception."""
