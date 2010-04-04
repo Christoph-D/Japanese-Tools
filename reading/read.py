@@ -7,7 +7,7 @@
 # See http://ichi2.net/anki/wiki/JapaneseSupport
 #
 # Adapted for stand-alone use by
-# Christoph Dittmann <eigene_homepage@gmx.de>.
+# Christoph Dittmann <github@christoph-d.de>.
 
 import sys, os, platform, re, subprocess, codecs
 
