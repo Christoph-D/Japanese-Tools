@@ -82,7 +82,9 @@ class SimpleBot(SingleServerIRCBot):
 
     def on_welcome(self, c, e):
         if self.nickpass is not None:
-            self.connection.privmsg('NickServ', 'identify ' + self.nickpass)
+            c.privmsg('NickServ', 'identify ' + self.nickpass)
+        # Set bot mode.
+        c.mode(c.get_nickname(), '+B')
         c.join(self.channel)
 
     def on_privmsg(self, c, e):
