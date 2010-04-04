@@ -61,7 +61,7 @@ class SimpleBot(SingleServerIRCBot):
 
     def debug_out(self, line):
         # Overwrite magic key.
-        print '\r' + (100 * ' ') + '\r' + line
+        print '\r' + (60 * ' ') + '\r' + line
         # Print magic key again.
         self.print_magic_key()
 
