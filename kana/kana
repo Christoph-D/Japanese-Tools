@@ -30,12 +30,18 @@ if [[ ! -e $KANA_FILE ]]; then
 fi
 # Cache kana file so we don't need to read it over and over again.
 KANA_SRC=$(cat "$KANA_FILE")
+
+# Try to create data directories.
+[[ -d $USER_STATS_DIR ]] || mkdir -p "$USER_STATS_DIR"
 if [[ ! -d $USER_STATS_DIR ]]; then
-   echo 'Please point $USER_STATS_DIR to an existing directory.'
+   echo "Could not create directory $USER_STATS_DIR."
+   echo 'Please fix $USER_STATS_DIR.'
    exit 2
 fi
+[[ -d $TEMP_PATH ]] || mkdir -p "$TEMP_PATH"
 if [[ ! -d $TEMP_PATH ]]; then
-   echo 'Please point $TEMP_PATH to an existing directory (not /tmp).'
+   echo "Could not create directory $TEMP_PATH."
+   echo 'Please fix $TEMP_PATH.'
    exit 2
 fi
 if [[ -z $USER ]]; then
