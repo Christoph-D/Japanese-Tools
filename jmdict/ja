@@ -4,10 +4,13 @@
 #
 # Dictionary lookup for Japanese words.
 
+set -u
+
 DICT=$(dirname "$0")/JMdict_e_prepared
 MAX_RESULTS_PER_PATTERN=5
-MAX_LENGTH_PER_ENGLISH=100
-MAX_TOTAL_LENGTH=1000
+MAX_LENGTH_PER_ENGLISH=150
+MAX_LINE_LENGTH=400
+MAX_LINES=2
 NOT_FOUND_MSG="Dieses Wort kenne ich nicht. :-("
 
 if [ ! -e "$DICT" ]; then
@@ -28,6 +31,7 @@ print_result() {
     ORIGIFS=$IFS
     IFS=$'\n'
     SEEN=
+    LINE_COUNT=0
     for R in $RESULT; do
         # Skip duplicate lines.
         if echo "$SEEN" | grep -qF "$R"; then
@@ -44,20 +48,27 @@ print_result() {
         else
             L="$KANA ($POS)"
         fi
-        NEXT="${FINAL:+$FINAL / }$L, "
-        if [ ${#ENGLISH} -le $MAX_LENGTH_PER_ENGLISH ]; then
-            NEXT="$NEXT$ENGLISH"
-        else
-            NEXT="$NEXT${ENGLISH:0:$(expr $MAX_LENGTH_PER_ENGLISH - 3)}..."
+        if [ ${#ENGLISH} -gt $MAX_LENGTH_PER_ENGLISH ]; then
+            ENGLISH="${ENGLISH:0:$(expr $MAX_LENGTH_PER_ENGLISH - 3)}..."
         fi
+        CURRENT_ITEM="$L, $ENGLISH"
+        NEXT="${LINE_BUFFER:+$LINE_BUFFER / }$CURRENT_ITEM"
 
         # If the final string would get too long, we're done.
-        if [ ${#NEXT} -gt $MAX_TOTAL_LENGTH ]; then
-            break
+        if [[ ${#NEXT} -gt $MAX_LINE_LENGTH ]]; then
+            # Append the current line to the result.
+            FINAL="${FINAL:+$FINAL\n}$LINE_BUFFER"
+            # Remember the current item for the next line.
+            NEXT="$CURRENT_ITEM"
+            let ++LINE_COUNT
+            [[ $LINE_COUNT -ge $MAX_LINES ]] && break
         fi
-        FINAL=$NEXT
+        LINE_BUFFER=$NEXT
     done
     IFS=$ORIGIFS
+    if [[ $LINE_COUNT -lt $MAX_LINES ]]; then
+        FINAL="${FINAL:+$FINAL\n}$LINE_BUFFER"
+    fi
 
     echo -e "$FINAL"
 }
@@ -73,6 +84,7 @@ PATTERNS=( \
     )
 
 # Accumulate results over all patterns
+RESULT=
 for I in $(seq 0 1 $(expr ${#PATTERNS[@]} - 1)); do
     P="${PATTERNS[$I]}"
     RESULT=$(echo "$RESULT" ; grep -m $MAX_RESULTS_PER_PATTERN -e "$P" "$DICT")
