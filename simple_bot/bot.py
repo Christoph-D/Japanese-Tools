@@ -134,13 +134,19 @@ class SimpleBot(SingleServerIRCBot):
     def do_user_command(self, cmd):
         """Commands normal users may use."""
         if cmd == 'version':
-            self.say(u'A very simple bot with 日本語 support.')
-            return
+            return self.say(u'A very simple bot with 日本語 support.')
+        elif cmd == 'help':
+            return self.show_help()
         cmd = cmd.split(' ', 1)
         e = self.current_event
         for s in scripts:
             if s[0] == cmd[0]:
                 self.say(run_script(s[1], cmd[1], nm_to_n(e.source()), e.target()))
+
+    def show_help(self):
+        possible_commands = [ '!' + s[0] for s in scripts ] + ['!version']
+        possible_commands.sort()
+        self.say('Bekannte Befehle: ' + ', '.join(possible_commands))
 
 def main():
     import sys
