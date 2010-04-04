@@ -127,6 +127,12 @@ class SimpleBot(SingleServerIRCBot):
                 self.die(cmd[1])
         elif cmd[0] == 'say':
             self.say(cmd[1], self.channel)
+        elif cmd[0] == 'join':
+            self.connection.join(cmd[1])
+        elif cmd[0] == 'part':
+            self.connection.part(cmd[1])
+        elif cmd[0] == 'raw':
+            self.connection.send_raw(cmd[1])
         elif cmd[0] == 'privmsg':
             cmd = cmd[1].split(' ', 1)
             self.connection.privmsg(cmd[0], cmd[1])
