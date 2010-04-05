@@ -16,7 +16,7 @@ import os, subprocess, sys
 
 scripts = [('rtk', '../rtk/rtk'),
            ('romaji', '../romaji/romaji'),
-           ('read', '../reading/read.py'),
+           ('kana', '../reading/read.py'),
            ('ja', '../jmdict/ja'),
            ('gt', '../google_translate/gt')
            ]
