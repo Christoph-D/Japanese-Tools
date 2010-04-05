@@ -7,7 +7,7 @@
 # Default target language
 TARGET_LANG=en
 # Fallback target language
-SECOND_TARGET_LANG=en
+SECOND_TARGET_LANG=ja
 # Allowed target languages
 KNOWN_LANGUAGES=( en de ja it )
 
