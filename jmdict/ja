@@ -11,7 +11,7 @@ MAX_RESULTS_PER_PATTERN=5
 MAX_LENGTH_PER_ENGLISH=150
 MAX_LINE_LENGTH=400
 MAX_LINES=2
-NOT_FOUND_MSG="Dieses Wort kenne ich nicht. :-("
+NOT_FOUND_MSG="Unknown word."
 
 if [ ! -e "$DICT" ]; then
    echo "Please run: wget http://ftp.monash.edu.au/pub/nihongo/JMdict_e.gz && ./prepare_jmdict JMdict_e.gz > JMdict_e_prepared"

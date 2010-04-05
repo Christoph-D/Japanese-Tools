@@ -28,7 +28,7 @@ if [[ -z $QUERY ]]; then
 fi
 
 if echo "$QUERY" | grep -q -e "[*+()$^]"; then
-    echo "Bitte keine regulären Ausdrücke. :-)"
+    echo "No regular expressions please."
     exit 0
 fi
 
@@ -60,7 +60,7 @@ if echo "$QUERY" | grep -q -e "^\([a-zA-Z \-]\|\\\.\)*$"; then
         IFS=$ORIGIFS
     else
         # Unknown keyword
-        RESULT="Dieses Keyword kenne ich nicht :-("
+        RESULT="Unknown keyword."
     fi
 elif echo "$QUERY" | grep -q -e '^[0-9 ]\+$'; then
     # Query contains Kanji numbers.
@@ -75,7 +75,7 @@ elif echo "$QUERY" | grep -q -e '^[0-9 ]\+$'; then
         RESULT="$RESULT${RESULT+ | }$R"
     done
     if [[ $RESULT = '???' ]]; then
-        RESULT="Diese Nummer kenne ich leider nicht. :-("
+        RESULT="Unknown kanji number."
     fi
 else
     # Query likely contains Japanese characters.

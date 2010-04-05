@@ -17,8 +17,6 @@ import os, subprocess, sys
 scripts = [('rtk', '../rtk/rtk'),
            ('romaji', '../romaji/romaji'),
            ('read', '../reading/read.py'),
-           ('hira', '../kana/hira'),
-           ('kata', '../kana/kata'),
            ('ja', '../jmdict/ja'),
            ('gt', '../google_translate/gt')
            ]
@@ -154,7 +152,7 @@ class SimpleBot(SingleServerIRCBot):
     def show_help(self):
         possible_commands = [ '!' + s[0] for s in scripts ] + ['!version']
         possible_commands.sort()
-        self.say('Bekannte Befehle: ' + ', '.join(possible_commands))
+        self.say('Known commands: ' + ', '.join(possible_commands))
 
 def main():
     import sys

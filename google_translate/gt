@@ -5,7 +5,7 @@
 # This script translates the command line parameters using Google.
 
 # Default target language
-TARGET_LANG=de
+TARGET_LANG=en
 # Fallback target language
 SECOND_TARGET_LANG=en
 # Allowed target languages
@@ -26,7 +26,7 @@ QUERY=${QUERY:0:300}
 
 if [ -z "$QUERY" ]; then
     # No input.
-    echo "Keine Eingabe."
+    echo "No input."
     exit 0
 fi
 
@@ -64,7 +64,7 @@ if [ "$?" -eq 0 ]; then
 fi
 
 if [ "$SOURCE_LANG" = "$TARGET_LANG" ]; then
-    echo "Scherzkeks. :p"
+    echo "..."
     exit 0
 fi
 
@@ -100,12 +100,12 @@ fi
 
 if [ "$RESULT" = "$QUERY" ]; then
     # The service did not translate anything.
-    echo "Das kann ich nicht übersetzen. :/"
+    echo "This is untranslatable. :/"
     exit 0
 fi
 if [ -z "$RESULT" ]; then
     # The service did not return a result.
-    echo "Kein Ergebnis. :-("
+    echo "No result. :-("
     exit 0
 fi
 

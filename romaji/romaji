@@ -26,7 +26,7 @@ if [ -n "$RESULT" ]; then
     # Restrict length and print result
     printf "%s\n" "${RESULT:0:300}"
 else
-    echo "Kein Ergebnis."
+    echo "No result."
 fi
 
 exit 0
