@@ -65,7 +65,7 @@ ask_google() {
 RESULT=$(ask_google "$QUERY")
 
 if [[ -z $RESULT ]]; then
-    echo "Kein Ergebnis. :-("
+    echo "No result. :-("
     exit 0
 fi
 
