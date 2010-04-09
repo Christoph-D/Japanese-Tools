@@ -9,12 +9,17 @@ TARGET_LANG=en
 # Fallback target language
 SECOND_TARGET_LANG=ja
 # Allowed target languages
-KNOWN_LANGUAGES=( en de ja it )
+KNOWN_LANGUAGES=( de en es fi fr it ja sv zh )
 
 # Default source language (empty string is "guess language")
 SOURCE_LANG=
 
+# Maximum number of chained translations.
+MAX_PATH_LENGTH=5
+
 TRANSLATE_SERVICE_URL="http://ajax.googleapis.com/ajax/services/language/translate"
+
+set -u
 
 # Make sure we have a UTF-8 environment.
 LANG=en_US.UTF-8
@@ -48,25 +53,23 @@ remove_lang_selector() {
     echo "$1" | cut -d ' ' -f 2-
 }
 
-# Parse language overrides
-LANG_SELECTOR=$(get_lang_selector "$QUERY")
-if [ "$?" -eq 0 ]; then
+# Parse requested translation path.
+LANG_PATH=
+LANG_PATH_PRETTY=
+LAST_LANG_SELECTOR=
+I=0
+while true; do
+    LANG_SELECTOR=$(get_lang_selector "$QUERY")
+    [[ $? -ne 0 ]] && break
+    let ++I
+    [[ $I -gt $MAX_PATH_LENGTH ]] && break
     QUERY=$(remove_lang_selector "$QUERY")
-    TARGET_LANG_OVERWRITTEN=YES
-    TARGET_LANG=$LANG_SELECTOR
-fi
-LANG_SELECTOR=$(get_lang_selector "$QUERY")
-if [ "$?" -eq 0 ]; then
-    # If there are 2 language selectors, the second one describes the
-    # source language.
-    QUERY=$(remove_lang_selector "$QUERY")
-    SOURCE_LANG=$LANG_SELECTOR
-fi
-
-if [ "$SOURCE_LANG" = "$TARGET_LANG" ]; then
-    echo "..."
-    exit 0
-fi
+    if [[ $LANG_SELECTOR != $LAST_LANG_SELECTOR ]]; then
+        LANG_PATH+="$LANG_SELECTOR "
+        LANG_PATH_PRETTY+="->$LANG_SELECTOR"
+    fi
+    LAST_LANG_SELECTOR="$LANG_SELECTOR"
+done
 
 fix_html_entities() {
     sed "s/\&\#39;/'/g" |
@@ -89,13 +92,24 @@ translate() {
         | fix_html_entities
 }
 
-RESULT=$(translate "$QUERY")
-
-if [ "$RESULT" = "$QUERY" -a "$TARGET_LANG_OVERWRITTEN" != "YES" ]; then
+if [[ ! $LANG_PATH ]]; then
+    # No language path requested. Use heuristic.
+    RESULT=$(translate "$QUERY")
+    if [ "$RESULT" = "$QUERY" ]; then
     # If the translation service did not translate anything, try again
     # with the fallback language.
-    TARGET_LANG=$SECOND_TARGET_LANG
-    RESULT=$(translate "$QUERY")
+        TARGET_LANG=$SECOND_TARGET_LANG
+        RESULT=$(translate "$QUERY")
+    fi
+else
+    # Walk language path.
+    RESULT="$QUERY"
+    for T in $LANG_PATH; do
+        TARGET_LANG="$T"
+        RESULT=$(translate "$RESULT")
+        SOURCE_LANG="$TARGET_LANG"
+    done
+    RESULT="${LANG_PATH_PRETTY:2}: $RESULT"
 fi
 
 if [ "$RESULT" = "$QUERY" ]; then
