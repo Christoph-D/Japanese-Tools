@@ -7,7 +7,7 @@
 
 URL="http://dic.yahoo.co.jp/dsearch?enc=UTF-8&stype=0&dtype=0&p="
 # Make sure we have a UTF-8 environment.
-LANG=en_US.UTF-8
+export LANG=en_US.UTF-8
 
 MAX_TITLE_LENGTH=60
 MAX_RESULT_LENGTH=120
