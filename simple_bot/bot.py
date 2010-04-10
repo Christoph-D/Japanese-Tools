@@ -91,6 +91,8 @@ class SimpleBot(SingleServerIRCBot):
         self.current_event = e
         self.say_target = nm_to_n(e.source())
         line = e.arguments()[0]
+        if len(line) > 0 and line[0] == '!':
+            line = line[1:]
         self.do_command(line)
         self.debug_out('<%s> %s' % (e.source(), line))
 
