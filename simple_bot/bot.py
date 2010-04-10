@@ -19,7 +19,8 @@ scripts = [('rtk', '../rtk/rtk'),
            ('kana', '../reading/read.py'),
            ('ja', '../jmdict/ja'),
            ('gt', '../google_translate/gt'),
-           ('define', '../google_dictionary/gd')
+           ('define', '../google_dictionary/gd'),
+           ('yahoo', '../yahoo_jisho/yj')
            ]
 
 def run_script(path, argument, irc_source, irc_target):
