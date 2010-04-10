@@ -5,7 +5,7 @@
 # This script performs a Yahoo dictionary lookup for Japanese words.
 #
 
-URL="http://dic.yahoo.co.jp/dsearch?enc=UTF-8&stype=0&dtype=0&p="
+URL="http://dic.yahoo.co.jp/dsearch?enc=UTF-8&stype=1&dtype=0&p="
 # Make sure we have a UTF-8 environment.
 export LANG=en_US.UTF-8
 
