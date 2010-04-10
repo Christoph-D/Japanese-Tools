@@ -80,6 +80,7 @@ ask_dictionary() {
         tail -n 1 | \
         sed 's#\[下接語\].*$##' | \
         sed 's#^[[「【〈『《『][^<]*\(<br>\)*##' | \
+        sed 's#《[^》]*》##g' | \
         perl -pe 's#<table.*?</table>##g' | \
         perl -pe 's#<a.*?>(.*?)</a>#\1#g' | \
         perl -pe 's#<br><img.*?>(.*?)<br>#<br>#g' | \
