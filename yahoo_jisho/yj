@@ -27,11 +27,11 @@ fi
 
 # Split query into kanji and reading part.
 KANJI=$(printf '%s' "$QUERY" | \
-    sed 's#[ 　/[［「【〈『《].*##' | \
+    sed 's#[ 　/・[［「【〈『《].*##' | \
     sed 's#[　 ]##g')
 READING=$(printf '%s' "$QUERY" | \
-    sed 's#^[^ 　/[［「【〈『《]*.\(.*\)$#\1#' | \
-    sed 's#[] 　［「【〈『《］」】〉』》]##g')
+    sed 's#^[^ 　/・[［「【〈『《]*.\(.*\)$#\1#' | \
+    sed 's#[] 　・［「【〈『《］」】〉』》]##g')
 
 # If the reading is empty, ask mecab.
 if [[ ! $READING ]]; then
