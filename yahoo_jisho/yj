@@ -5,12 +5,11 @@
 # This script performs a Yahoo dictionary lookup for Japanese words.
 #
 
-URL="http://dic.yahoo.co.jp/dsearch?enc=UTF-8&stype=1&dtype=0&p="
-# Make sure we have a UTF-8 environment.
-export LANG=en_US.UTF-8
-
 MAX_TITLE_LENGTH=60
 MAX_RESULT_LENGTH=120
+
+# Make sure we have a UTF-8 environment.
+export LANG=en_US.UTF-8
 
 set -u
 
@@ -19,8 +18,13 @@ QUERY="$*"
 # Restrict length
 QUERY=${QUERY:0:100}
 
+if [[ ! ${URL-} ]]; then
+    echo "Please don't run this script directly."
+    exit 1
+fi
+
 if [[ $QUERY = 'help' || $QUERY = '' ]]; then
-    echo 'Example: !yahoo 車　くるま'
+    echo "Example: $IRC_COMMAND 車　くるま"
     echo 'Providing the reading is optional. If it is missing, it will be guessed by mecab.'
     exit 0
 fi
@@ -81,6 +85,9 @@ ask_dictionary() {
         sed 's#\[下接語\].*$##' | \
         sed 's#^[[「【〈『《『][^<]*\(<br>\)*##' | \
         sed 's#《[^》]*》##g' | \
+        perl -pe 's#<table><tr valign="top" align="left" num="3">(.*?)</table>#\1#g' | \
+        perl -pe 's#［([0-9]+)］#\1　#g' | \
+        perl -pe 's#<br>→.*?(<br>→.*?)*<br>#<br>#g' | \
         perl -pe 's#<table.*?</table>##g' | \
         perl -pe 's#<a.*?>(.*?)</a>#\1#g' | \
         perl -pe 's#<br><img.*?>(.*?)<br>#<br>#g' | \
