@@ -104,7 +104,7 @@ check_if_answer() {
     IFS=','
     for R in $READINGS; do
         if [[ $R = $PROPOSED ]]; then
-            echo "Yes! (Meaning: $MEANING)"
+            echo "Correct! ($READINGS: $MEANING)"
             record_answer 1
             # Ignore additional answers for a few seconds.
             set_timer 2
