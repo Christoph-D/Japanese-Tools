@@ -72,15 +72,17 @@ timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP );'
 }
 
 get_user_stats() {
-    local STATS=$(sql "SELECT COUNT(*) FROM user_stats WHERE user = '$1'
+    local STATS=$(sql "SELECT correct,COUNT(*) FROM user_stats WHERE user = '$1'
 AND julianday(timestamp) > julianday('now', '-2 month')
 GROUP BY correct ORDER BY correct ASC;")
-    local WRONG=$(echo "$STATS" | head -n 1)
-    local CORRECT=$(echo "$STATS" | head -n 2 | tail -n 1)
-    if [[ ! $WRONG || ! $CORRECT ]]; then
+    local WRONG=$(echo "$STATS" | grep -m 1 '^0|' | sed 's/^0|//')
+    local CORRECT=$(echo "$STATS" | grep -m 1 '^1|' | sed 's/^1|//')
+    if [[ ! $WRONG && ! $CORRECT ]]; then
         echo "Unknown user: $1"
         return 1
     fi
+    WRONG=${WRONG-0}
+    CORRECT=${CORRECT-0}
     local TOTAL=$(( $WRONG + $CORRECT ))
     local PERCENT=$(echo "scale=2; $CORRECT * 100 / ($TOTAL)" | bc)
     printf 'In the last 2 months, %s answered %s/%s questions correctly, that is %s%%.\n' "$1" "$CORRECT" "$TOTAL" "$PERCENT"
