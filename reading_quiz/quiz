@@ -90,7 +90,7 @@ GROUP BY correct ORDER BY correct ASC;")
 AND julianday(timestamp) > julianday('now', '-2 month')
 GROUP BY word ORDER BY COUNT(*) DESC LIMIT 10;" | \
         sed 's/^\([^|]*\)|\(.*\)$/\1 (\2)/')
-    echo "Hardest words for $1 (number of mistakes): ${HARD_WORDS//$'\n'/, }"
+    [[ $HARD_WORDS ]] && echo "Hardest words for $1 (number of mistakes): ${HARD_WORDS//$'\n'/, }"
 }
 
 # Checks if $1 is a correct answer.
