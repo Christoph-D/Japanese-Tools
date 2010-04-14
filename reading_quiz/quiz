@@ -5,6 +5,8 @@ set -u -e
 DATA_DIR=$(dirname "$0")/data
 VOCAB_DIR=$(dirname "$0")/vocabulary
 
+IRC_COMMAND='!quiz'
+
 USER=${DMB_SENDER//\'/}
 CHANNEL_NAME=${DMB_RECEIVER-}
 
@@ -115,17 +117,24 @@ check_if_answer() {
     record_answer 0
 }
 
+# Handle the help command.
 if [[ ! $QUERY || $QUERY = 'help' ]]; then
-    echo 'Try: !quiz jlpt4'
-    echo 'Statistics can be accessed by !quiz stats <nickname>'
+    echo "Try \"$IRC_COMMAND jlpt4\". With \"$IRC_COMMAND skip\" you can skip questions."
+    echo "Statistics can be accessed by \"$IRC_COMMAND stats <nickname>\"."
     exit 0
 fi
 
+# Handle the stats command.
 if printf '%s\n' "$QUERY" | grep -q '^stats'; then
-    get_user_stats "$(printf '%s\n' "$QUERY" | sed 's/^stats \?//')"
+    if printf '%s\n' "$QUERY" | grep -q '^stats \+[][a-zA-Z0-9|_-]\+ *$'; then
+        get_user_stats "$(printf '%s\n' "$QUERY" | sed 's/^stats \+\([^ ]\+\) */\1/')"
+    else
+        echo "Usage: $IRC_COMMAND stats <nickname>"
+    fi
     exit 0
 fi
 
+# Handle the timer.
 if [[ -s $TIMER_FILE ]]; then
     if [[ ! $(find "$TIMER_FILE" -cmin 1) ]]; then
         rm "$TIMER_FILE"
@@ -140,6 +149,27 @@ if [[ -s $TIMER_FILE ]]; then
     fi
 fi
 
-ask_question "$QUERY" || check_if_answer "$QUERY"
+# Handle the skip/next command.
+if printf '%s\n' "$QUERY" | grep -q '^\(next\|skip\) *$'; then
+    # Display answer and skip current question.
+    [[ -s $QUESTION_FILE ]] || echo "Nothing to skip!" && exit 0
+    split_lines "$(cat "$QUESTION_FILE")"
+    echo "Skipping $KANJI [$READINGS]..."
+    set_timer 2
+    exit 0
+fi
+
+# Handle answers.
+if echo "$QUERY" | grep -v -q '^[a-zA-Z0-9]\+$'; then
+    # $QUERY contains non-latin characters, so assume it's an answer.
+    check_if_answer "$QUERY"
+    exit 0
+fi
+
+# The only remaining possibility is that $QUERY contains a level.
+if ! ask_question "$QUERY"; then
+    VALID_LEVELS=$(find "$VOCAB_DIR" -name '*.txt' | xargs -n 1 basename | sed 's/\.txt$//')
+    echo "Unknown level \"$QUERY\". Valid levels: ${VALID_LEVELS//$'\n'/, }"
+fi
 
 exit 0
