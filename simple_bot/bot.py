@@ -55,6 +55,7 @@ class SimpleBot(SingleServerIRCBot):
         # "say".
         self.magic_key = ''.join([random.choice(string.ascii_letters) for x in range(8)]) + ' '
         self.print_magic_key()
+        self._connect()
 
     def print_magic_key(self):
         print 'Today\'s magic key for admin commands: %s' % self.magic_key,
@@ -159,6 +160,16 @@ class SimpleBot(SingleServerIRCBot):
         possible_commands.sort()
         self.say('Known commands: ' + ', '.join(possible_commands))
 
+    def check_timers(self):
+        pass
+
+    def run_forever(self):
+        """In order to support custom timers, we can't call
+        self.start()."""
+        while True:
+            self.check_timers()
+            self.ircobj.process_once(0.2)
+
 def main():
     import sys
     if len(sys.argv) != 4 and len(sys.argv) != 5:
@@ -183,7 +194,7 @@ def main():
 
     bot = SimpleBot(channel, nickname, nickpass, server, port)
     try:
-        bot.start()
+        bot.run_forever()
     except KeyboardInterrupt:
         print 'Caught KeyboardInterrupt, exiting...'
         bot.do_special_command('die')
