@@ -10,7 +10,14 @@ IRC_COMMAND='!quiz'
 USER=${DMB_SENDER//\'/}
 CHANNEL_NAME=${DMB_RECEIVER-}
 
+# Make sure we have a UTF-8 environment. Otherwise sed etc. will not
+# work on utf-8 strings.
+export LANG=en_US.UTF-8
+
 QUERY="$*"
+# Strip whitespace.
+QUERY="$(printf '%s\n' "$QUERY" | sed 's/\(^[ 　]*\|[ 　]*$\)//g')"
+
 [[ -d $DATA_DIR ]] || mkdir -p "$DATA_DIR"
 [[ -d $VOCAB_DIR ]] || mkdir -p "$VOCAB_DIR"
 
@@ -126,8 +133,8 @@ fi
 
 # Handle the stats command.
 if printf '%s\n' "$QUERY" | grep -q '^stats'; then
-    if printf '%s\n' "$QUERY" | grep -q '^stats \+[][a-zA-Z0-9|_-`]\+ *$'; then
-        get_user_stats "$(printf '%s\n' "$QUERY" | sed 's/^stats \+\([^ ]\+\) */\1/')"
+    if printf '%s\n' "$QUERY" | grep -q '^stats \+[][a-zA-Z0-9|_-`]\+$'; then
+        get_user_stats "$(printf '%s\n' "$QUERY" | sed 's/^stats \+//')"
     else
         echo "Usage: $IRC_COMMAND stats <nickname>"
     fi
