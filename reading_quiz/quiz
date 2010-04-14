@@ -113,7 +113,7 @@ check_if_answer() {
             return 0
         fi
     done
-    echo '$USER: Sadly, no.'
+    echo "$USER: Sadly, no."
     record_answer 0
 }
 
