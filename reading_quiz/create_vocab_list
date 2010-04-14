@@ -1,4 +1,8 @@
 #!/bin/bash
+# Copyright: Christoph Dittmann <github@christoph-d.de>
+# License: GNU GPL, version 3 or later; http://www.gnu.org/copyleft/gpl.html
+#
+# Creates vocabulary lists suitable for the quiz script.
 
 JA="$(dirname "$0")"/lookup_one_line
 
@@ -6,6 +10,7 @@ INPUT="$1"
 
 if [[ ! $INPUT ]]; then
     echo 'Usage: create_vocab_list word_list.txt > vocabulary/list.txt'
+    echo 'word_list.txt should contain one word per line, in kanji.'
     exit 0
 fi
 
