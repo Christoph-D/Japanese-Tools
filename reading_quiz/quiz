@@ -152,7 +152,10 @@ fi
 # Handle the skip/next command.
 if printf '%s\n' "$QUERY" | grep -q '^\(next\|skip\) *$'; then
     # Display answer and skip current question.
-    [[ -s $QUESTION_FILE ]] || echo "Nothing to skip!" && exit 0
+    if [[ ! -s $QUESTION_FILE ]]; then
+        echo "Nothing to skip!"
+        exit 0
+    fi
     split_lines "$(cat "$QUESTION_FILE")"
     echo "Skipping $KANJI [$READINGS]..."
     set_timer 2
