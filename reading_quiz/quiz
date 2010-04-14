@@ -106,14 +106,14 @@ check_if_answer() {
     IFS=','
     for R in $READINGS; do
         if [[ $R = $PROPOSED ]]; then
-            echo "Correct! ($READINGS: $MEANING)"
+            echo "$USER: Correct! ($READINGS: $MEANING)"
             record_answer 1
             # Ignore additional answers for a few seconds.
             set_timer 2
             return 0
         fi
     done
-    echo 'Sadly, no.'
+    echo '$USER: Sadly, no.'
     record_answer 0
 }
 
