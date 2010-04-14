@@ -126,7 +126,7 @@ fi
 
 # Handle the stats command.
 if printf '%s\n' "$QUERY" | grep -q '^stats'; then
-    if printf '%s\n' "$QUERY" | grep -q '^stats \+[][a-zA-Z0-9|_-]\+ *$'; then
+    if printf '%s\n' "$QUERY" | grep -q '^stats \+[][a-zA-Z0-9|_-`]\+ *$'; then
         get_user_stats "$(printf '%s\n' "$QUERY" | sed 's/^stats \+\([^ ]\+\) */\1/')"
     else
         echo "Usage: $IRC_COMMAND stats <nickname>"
