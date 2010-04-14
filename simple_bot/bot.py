@@ -14,6 +14,8 @@ import string
 import random
 import os, subprocess, sys
 import time
+import StringIO
+import traceback
 
 scripts = [('rtk', '../rtk/rtk'),
            ('romaji', '../romaji/romaji'),
@@ -22,7 +24,8 @@ scripts = [('rtk', '../rtk/rtk'),
            ('gt', '../google_translate/gt'),
            ('define', '../google_dictionary/gd'),
            ('daijisen', '../yahoo_jisho/daijisen'),
-           ('daijirin', '../yahoo_jisho/daijirin')
+           ('daijirin', '../yahoo_jisho/daijirin'),
+           ('quiz', '../reading_quiz/quiz')
            ]
 
 def run_script(path, argument, irc_source, irc_target):
@@ -114,7 +117,11 @@ class SimpleBot(SingleServerIRCBot):
         try:
             self.do_command_unsafe(cmd)
         except Exception, e:
-            self.debug_out('Caught exception: %s' % str(e))
+            output = StringIO.StringIO()
+            output.write('Caught exception: %s\n' % str(e))
+            traceback.print_exc(file = output)
+            self.debug_out(output.getvalue())
+            output.close()
 
     def do_command_unsafe(self, cmd):
         """This method could raise an exception."""
@@ -152,10 +159,23 @@ class SimpleBot(SingleServerIRCBot):
         elif cmd == 'help':
             return self.show_help()
         cmd = cmd.split(' ', 1)
+        # Make sure we have at least the empty argument.
+        cmd.append('')
         e = self.current_event
         for s in scripts:
             if s[0] == cmd[0]:
-                self.say(run_script(s[1], cmd[1], nm_to_n(e.source()), e.target()))
+                output = run_script(s[1], cmd[1], nm_to_n(e.source()), e.target())
+                self.handle_script_output(output, s[1])
+
+    def handle_script_output(self, output, script):
+        result = []
+        for line in output.split('\n'):
+            if not line.startswith('/timer '):
+                result.append(line)
+            else:
+                args = line.split(' ')
+                self.add_timer(int(args[1]), script, args[2])
+        self.say('\n'.join(result))
 
     def show_help(self):
         possible_commands = [ '!' + s[0] for s in scripts ] + ['!version']
@@ -163,16 +183,16 @@ class SimpleBot(SingleServerIRCBot):
         self.say('Known commands: ' + ', '.join(possible_commands))
 
     def add_timer(self, delay_seconds, script, argument):
-        """Removes any timers identical to the new one and adds the
-        new timer."""
-        self._timers = [ t for t in self._timers if t[1] != script ]
-        timer = (delay_seconds + time.time(), script, argument, self.say_target)
+        """Adds a new timer."""
+        e = self.current_event
+        timer = (delay_seconds + time.time(), script, argument,
+                 nm_to_n(e.source()), e.target(), self.say_target)
         self._timers.append(timer)
 
     def run_timed_command(self, timer):
         """Runs the command associated with the timer."""
-        self.say_target = timer[3]
-        self.say(run_script(timer[1], timer[2], '', ''))
+        self.say_target = timer[5]
+        self.handle_script_output(run_script(timer[1], timer[2], timer[3], timer[4]), timer[1])
 
     def check_timers(self):
         current_time = time.time()
