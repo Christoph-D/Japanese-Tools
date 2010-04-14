@@ -1,0 +1,29 @@
+#!/bin/bash
+
+JA="$(dirname "$0")"/lookup_one_line
+
+INPUT="$1"
+
+if [[ ! $INPUT ]]; then
+    echo 'Usage: create_vocab_list word_list.txt > vocabulary/list.txt'
+    exit 0
+fi
+
+TOTAL=$(wc -l "$INPUT")
+
+C=0
+SKIPPED=0
+while read I; do
+    FULL_LINE="$("$JA" "$I" | head -n 1)"
+    if [[ $FULL_LINE = 'Unknown word.' ]] ||
+        echo "$FULL_LINE" | grep -q '^\([^|]*\)|\1'; then
+        let SKIPPED=$SKIPPED+1
+    else
+        echo "$FULL_LINE"
+    fi
+    let C=$C+1
+    echo -ne "$C/$TOTAL\r" >&2
+done < "$INPUT"
+
+echo >&2
+echo "Skipped $SKIPPED lines." >&2
