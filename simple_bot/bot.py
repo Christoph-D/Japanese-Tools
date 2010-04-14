@@ -13,6 +13,7 @@ import threading
 import string
 import random
 import os, subprocess, sys
+import time
 
 scripts = [('rtk', '../rtk/rtk'),
            ('romaji', '../romaji/romaji'),
@@ -55,6 +56,7 @@ class SimpleBot(SingleServerIRCBot):
         # "say".
         self.magic_key = ''.join([random.choice(string.ascii_letters) for x in range(8)]) + ' '
         self.print_magic_key()
+        self._timers = []
         self._connect()
 
     def print_magic_key(self):
@@ -160,8 +162,24 @@ class SimpleBot(SingleServerIRCBot):
         possible_commands.sort()
         self.say('Known commands: ' + ', '.join(possible_commands))
 
+    def add_timer(self, delay_seconds, script, argument):
+        """Removes any timers identical to the new one and adds the
+        new timer."""
+        self._timers = [ t for t in self._timers if t[1] != script ]
+        timer = (delay_seconds + time.time(), script, argument, self.say_target)
+        self._timers.append(timer)
+
+    def run_timed_command(self, timer):
+        """Runs the command associated with the timer."""
+        self.say_target = timer[3]
+        self.say(run_script(timer[1], timer[2], '', ''))
+
     def check_timers(self):
-        pass
+        current_time = time.time()
+        # Check for expired timers.
+        [ self.run_timed_command(t) for t in self._timers if t[0] < current_time ]
+        # Remove expired timers.
+        self._timers = [ t for t in self._timers if t[0] >= current_time ]
 
     def run_forever(self):
         """In order to support custom timers, we can't call
