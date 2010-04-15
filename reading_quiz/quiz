@@ -178,8 +178,12 @@ fi
 
 # The only remaining possibility is that $QUERY contains a level.
 if ! ask_question "$QUERY"; then
-    VALID_LEVELS=$(find "$VOCAB_DIR" -name '*.txt' | xargs -n 1 basename | sort | sed 's/\.txt$//')
-    echo "Unknown level \"$QUERY\". Valid levels: ${VALID_LEVELS//$'\n'/, }"
+    for LEVEL in "$VOCAB_DIR"/*.txt; do
+        BASE_NAME="$(basename "$LEVEL" | sed 's/\.txt$//')"
+        LINE_COUNT="$(wc -l "$LEVEL" | cut -d ' ' -f 1)"
+        VALID_LEVELS="${VALID_LEVELS:+$VALID_LEVELS$'\n'}$BASE_NAME ($LINE_COUNT)"
+    done
+    echo "Unknown level \"$QUERY\". Valid levels (number of words): ${VALID_LEVELS//$'\n'/, }"
 fi
 
 exit 0
