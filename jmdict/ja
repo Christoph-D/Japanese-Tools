@@ -73,17 +73,27 @@ print_result() {
     echo -e "$FINAL"
 }
 
-# The more specific search patterns are used first
-PATTERNS=( \
-    "\(\\\\\|^\)$QUERY\(\$\|\\\\\)" \
+# The more specific search patterns are used first.
+PATTERNS=(
+    # Perfect match.
+    "\(\\\\\|^\)$QUERY\(\$\|\\\\\)"
+    # Match primary kana reading.
+    "^[^\\]*\\\\$QUERY" #\(,\|\\\\\)"
+    # Match secondary kana readings.
+    "^[^\\]*\\\\[^\\]*,$QUERY\(,\|\\\\\)"
+    # Match "1. $QUERY (possibly something in brackets),".
     "\\\\\(1\\. \)$QUERY\( ([^,]*\?)\)\?,"
-    "\\\\\(1\\. \)\?$QUERY\( \|,\)" \
-    "\(\\\\\|^\)\(1\\. \)\?$QUERY" \
-    "2\\. $QUERY\( ([^,]*\?)\)\?\(,\|\$\)" \
-    "$QUERY" \
+    # Match "1. $QUERY " or "1. $QUERY,".
+    "\\\\\(1\\. \)\?$QUERY\( \|,\)"
+    # Match $QUERY at the beginning of an entry (Kanji, Kana or English).
+    "\(\\\\\|^\)\(1\\. \)\?$QUERY"
+    # Match $QUERY at second position in the English definition.
+    "2\\. $QUERY\( ([^,]*\?)\)\?\(,\|\$\)"
+    # Match $QUERY everywhere.
+    "$QUERY"
     )
 
-# Accumulate results over all patterns
+# Accumulate results over all patterns.
 RESULT=
 for I in $(seq 0 1 $(expr ${#PATTERNS[@]} - 1)); do
     P="${PATTERNS[$I]}"
