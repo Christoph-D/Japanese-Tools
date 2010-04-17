@@ -78,7 +78,7 @@ PATTERNS=(
     # Perfect match.
     "\(\\\\\|^\)$QUERY\(\$\|\\\\\)"
     # Match primary kana reading.
-    "^[^\\]*\\\\$QUERY" #\(,\|\\\\\)"
+    "^[^\\]*\\\\$QUERY\(,\|\\\\\)"
     # Match secondary kana readings.
     "^[^\\]*\\\\[^\\]*,$QUERY\(,\|\\\\\)"
     # Match "1. $QUERY (possibly something in brackets),".
