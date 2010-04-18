@@ -25,6 +25,7 @@ scripts = [('rtk', '../rtk/rtk'),
            ('define', '../google_dictionary/gd'),
            ('daijisen', '../yahoo_jisho/daijisen'),
            ('daijirin', '../yahoo_jisho/daijirin'),
+           ('audio', '../audio/find_audio.sh'),
            ('quiz', '../reading_quiz/quiz')
            ]
 
