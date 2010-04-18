@@ -25,7 +25,15 @@ encode_query() {
     ENCODED_QUERY=$(perl -MURI::Escape -e "print uri_escape('$ENCODED_QUERY');")
     printf '%s\n' "$ENCODED_QUERY"
 }
-find_reading() {
+# Returns 0 if $1 does not contain characters not present in English.
+is_english() {
+    printf '%s' "$1" | grep -q '^[][/'"'"' a-zA-Z0-9.()]*$'
+}
+to_katakana() {
+    printf '%s\n' "$1" | \
+        mecab --node-format='%f[7]' --eos-format= --unk-format='%m'
+}
+to_hiragana() {
     # We need kakasi to convert to Hiragana. mecab only prints
     # Katakana.
     printf '%s\n' "$1" | \
@@ -33,6 +41,24 @@ find_reading() {
         iconv -s -c -f utf-8 -t sjis | \
         kakasi -isjis -osjis -KH -HH -JH | \
         iconv -s -c -f sjis -t utf-8
+}
+# Takes $KANJI as input and sets $READING, $KANJI and $WORD
+# appropriately.
+figure_out_reading() {
+    READING=$(to_hiragana "$KANJI")
+    local KATAKANA_READING=$(to_katakana "$KANJI")
+    if [[ $READING = ${KANJI// /} ]]; then
+        # Try to find a Kanji variant for this word.
+        KANJI=$("$(dirname "$0")"/../jmdict/ja "$KANJI" | head -n 1 | sed 's/^\([^ ,]*\).*$/\1/')
+        # If it didn't work, go with the kana variant.
+        if [[ $KANJI = 'Unknown' || $(to_hiragana "$KANJI") = $KANJI ]]; then
+            KANJI="$READING"
+            WORD="$READING"
+        fi
+    elif [[ $KATAKANA_READING = ${KANJI// /} ]]; then
+        READING="$KATAKANA_READING"
+        WORD="$KATAKANA_READING"
+    fi
 }
 
 QUERY="$*"
@@ -44,22 +70,24 @@ READING=$(printf '%s' "$QUERY" | \
     sed 's#^[^ 　/／・[［「【〈『《]*.\(.*\)$#\1#' | \
     sed 's#[] 　／・［「【〈『《］」】〉』》]##g')
 
+# Grab the whole command line if it is all in English.
+if is_english "$QUERY"; then
+    KANJI="$QUERY"
+    READING=
+fi
+
 if [[ ! $KANJI ]]; then
     echo "Please provide a word."
     exit 0
 fi
 
 if [[ ! $READING ]]; then
-    READING=$(find_reading "$KANJI")
-    if [[ $READING = $KANJI ]]; then
-        # Try to find a Kanji variant for this word.
-        KANJI=$("$(dirname "$0")"/../jmdict/ja "$READING" | head -n 1 | cut -f 1 -d ' ')
-        # If it didn't work, go with the kana variant.
-        if [[ $KANJI = 'Unknown' || $(find_reading "$KANJI") = $KANJI ]]; then
-            KANJI="$READING"
-            WORD="$READING"
-        fi
-    fi
+    figure_out_reading
+fi
+
+# If the reading appears to be English, we need to fix it.
+if is_english "$READING"; then
+    figure_out_reading
 fi
 
 WORD="${WORD:-$KANJI [$READING]}"
