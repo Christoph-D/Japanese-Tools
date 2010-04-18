@@ -15,6 +15,9 @@ fi
 # md5sum of the "audio missing" file.
 NOT_FOUND=7e2c2f954ef6051373ba916f000168dc
 
+# Make sure we have a UTF-8 environment.
+export LANG=en_US.UTF-8
+
 # URL encoding.
 encode_query() {
     # Escape single quotes for use in perl
