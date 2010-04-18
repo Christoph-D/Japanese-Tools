@@ -25,6 +25,15 @@ encode_query() {
     ENCODED_QUERY=$(perl -MURI::Escape -e "print uri_escape('$ENCODED_QUERY');")
     printf '%s\n' "$ENCODED_QUERY"
 }
+find_reading() {
+    # We need kakasi to convert to Hiragana. mecab only prints
+    # Katakana.
+    printf '%s\n' "$1" | \
+        mecab --node-format='%f[7]' --eos-format= --unk-format='%m' | \
+        iconv -s -c -f utf-8 -t sjis | \
+        kakasi -isjis -osjis -KH -HH -JH | \
+        iconv -s -c -f sjis -t utf-8
+}
 
 QUERY="$*"
 # Split query into kanji and reading part.
@@ -35,24 +44,24 @@ READING=$(printf '%s' "$QUERY" | \
     sed 's#^[^ 　/／・[［「【〈『《]*.\(.*\)$#\1#' | \
     sed 's#[] 　／・［「【〈『《］」】〉』》]##g')
 
+if [[ ! $KANJI ]]; then
+    echo "Please provide a word."
+    exit 0
+fi
+
 if [[ ! $READING ]]; then
-    # We need kakasi to convert to Hiragana. mecab only prints
-    # Katakana.
-    READING=$(printf '%s\n' "$KANJI" | \
-        mecab --node-format='%f[7]' --eos-format= --unk-format='%m' | \
-        iconv -s -c -f utf-8 -t sjis | \
-        kakasi -isjis -osjis -KH -HH -JH | \
-        iconv -s -c -f sjis -t utf-8)
+    READING=$(find_reading "$KANJI")
     if [[ $READING = $KANJI ]]; then
         # Try to find a Kanji variant for this word.
         KANJI=$("$(dirname "$0")"/../jmdict/ja "$READING" | head -n 1 | cut -f 1 -d ' ')
         # If it didn't work, go with the kana variant.
-        if [[ $KANJI = 'Unknown' ]]; then
+        if [[ $KANJI = 'Unknown' || $(find_reading "$KANJI") = $KANJI ]]; then
             KANJI="$READING"
             WORD="$READING"
         fi
     fi
 fi
+
 WORD="${WORD:-$KANJI [$READING]}"
 KANJI="$(encode_query "$KANJI")"
 READING="$(encode_query "$READING")"
