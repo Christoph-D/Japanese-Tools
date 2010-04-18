@@ -70,7 +70,7 @@ URL="http://assets.languagepod101.com/dictionary/japanese/audiomp3.php?kana=$REA
 
 # Only print the URL if the audio file exists.
 if [[ $(wget -q "$URL" -O - | md5sum | cut -f 1 -d ' ') = $NOT_FOUND ]]; then
-    echo 'No audio file available.'
+    printf 'No audio file available%s.\n' "${WORD:+ for $WORD}"
     exit 0
 fi
 
