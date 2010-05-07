@@ -4,6 +4,8 @@
 #
 # Dictionary lookup for Japanese words.
 
+. "$(dirname "$0")"/../gettext/gettext.sh
+
 set -u
 
 DICT=$(dirname "$0")/JMdict_e_prepared
@@ -11,10 +13,9 @@ MAX_RESULTS_PER_PATTERN=5
 MAX_LENGTH_PER_ENGLISH=150
 MAX_LINE_LENGTH=400
 MAX_LINES=2
-NOT_FOUND_MSG="Unknown word."
 
 if [ ! -e "$DICT" ]; then
-   echo "Please run: wget http://ftp.monash.edu.au/pub/nihongo/JMdict_e.gz && ./prepare_jmdict.sh JMdict_e.gz > JMdict_e_prepared"
+   echo "$(gettext 'Please run:') wget http://ftp.monash.edu.au/pub/nihongo/JMdict_e.gz && ./prepare_jmdict.sh JMdict_e.gz > JMdict_e_prepared"
    exit 1
 fi
 
@@ -22,7 +23,7 @@ fi
 QUERY=${@//\\/}
 
 if [ -z "$QUERY" ]; then
-    echo "epsilon."
+    echo "$(gettext 'epsilon.')"
     exit 0
 fi
 
@@ -103,7 +104,7 @@ done
 if [ -n "$RESULT" ]; then
     print_result
 else
-    echo "$NOT_FOUND_MSG"
+    echo "$(gettext 'Unknown word.')"
 fi
 
 exit 0

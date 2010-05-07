@@ -7,7 +7,7 @@
 msgid ""
 msgstr ""
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2010-05-08 01:33+0200\n"
+"POT-Creation-Date: 2010-05-08 01:41+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: Christoph Dittmann <github@christoph-d.de>\n"
 "MIME-Version: 1.0\n"
@@ -25,6 +25,18 @@ msgstr "Das kann ich nicht übersetzen. :/"
 #: google_translate/gt.sh:121
 msgid "No result. :-("
 msgstr "Kein Ergebnis. :-("
+
+#: jmdict/ja.sh:18
+msgid "Please run:"
+msgstr "Bitte führe den folgenden Befehl aus:"
+
+#: jmdict/ja.sh:26
+msgid "epsilon."
+msgstr "epsilon."
+
+#: jmdict/ja.sh:107
+msgid "Unknown word."
+msgstr "Unbekanntes Wort."
 
 #: audio/find_audio.sh:13
 msgid "Usage: %s word [reading]\\n"
