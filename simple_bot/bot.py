@@ -16,6 +16,7 @@ import os, subprocess, sys
 import time
 import StringIO
 import traceback
+import locale
 
 scripts = [('rtk', '../rtk/rtk.sh'),
            ('romaji', '../romaji/romaji.sh'),
@@ -37,7 +38,8 @@ def run_script(path, argument, irc_source, irc_target):
             stderr=subprocess.PIPE,
             cwd=os.path.dirname(os.path.abspath(path)),
             env={ 'DMB_SENDER'   : irc_source,
-                  'DMB_RECEIVER' : irc_target }
+                  'DMB_RECEIVER' : irc_target,
+                  'LANG'         : '.'.join(locale.getlocale()) }
             ).communicate()[0]
     except:
         return 'An error occured.'
@@ -210,6 +212,8 @@ class SimpleBot(SingleServerIRCBot):
             self.ircobj.process_once(0.2)
 
 def main():
+    # Set preferred locale.
+    locale.setlocale(locale.LC_ALL, '')
     import sys
     if len(sys.argv) != 4 and len(sys.argv) != 5:
         print 'Usage: bot.py <server[:port]> <channel> <nickname> [NickServ password]'

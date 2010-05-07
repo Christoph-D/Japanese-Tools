@@ -4,6 +4,8 @@
 #
 # This script translates the command line parameters using Google.
 
+. "$(dirname "$0")"/../gettext/gettext.sh
+
 # Default target language
 TARGET_LANG=en
 # Fallback target language
@@ -21,9 +23,6 @@ TRANSLATE_SERVICE_URL="http://ajax.googleapis.com/ajax/services/language/transla
 
 set -u
 
-# Make sure we have a UTF-8 environment.
-LANG=en_US.UTF-8
-
 # Accumulate all parameters
 QUERY="$*"
 # Restrict length
@@ -31,7 +30,7 @@ QUERY=${QUERY:0:300}
 
 if [ -z "$QUERY" ]; then
     # No input.
-    echo "No input."
+    echo "$(gettext 'No input.')"
     exit 0
 fi
 
@@ -114,12 +113,12 @@ fi
 
 if [ "$RESULT" = "$QUERY" ]; then
     # The service did not translate anything.
-    echo "This is untranslatable. :/"
+    echo "$(gettext "This is untranslatable. :/")"
     exit 0
 fi
 if [ -z "$RESULT" ]; then
     # The service did not return a result.
-    echo "No result. :-("
+    echo "$(gettext "No result. :-(")"
     exit 0
 fi
 
