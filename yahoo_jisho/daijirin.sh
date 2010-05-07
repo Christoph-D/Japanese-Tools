@@ -9,4 +9,4 @@
 export IRC_COMMAND='!daijirin'
 export URL="http://dic.yahoo.co.jp/dsearch?enc=UTF-8&stype=1&dtype=0&dname=0ss&p="
 
-exec "$(dirname "$0")"/yj "$@"
+exec "$(dirname "$0")"/yj.sh "$@"

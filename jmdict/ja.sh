@@ -14,7 +14,7 @@ MAX_LINES=2
 NOT_FOUND_MSG="Unknown word."
 
 if [ ! -e "$DICT" ]; then
-   echo "Please run: wget http://ftp.monash.edu.au/pub/nihongo/JMdict_e.gz && ./prepare_jmdict JMdict_e.gz > JMdict_e_prepared"
+   echo "Please run: wget http://ftp.monash.edu.au/pub/nihongo/JMdict_e.gz && ./prepare_jmdict.sh JMdict_e.gz > JMdict_e_prepared"
    exit 1
 fi
 

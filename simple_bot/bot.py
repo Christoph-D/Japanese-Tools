@@ -17,16 +17,16 @@ import time
 import StringIO
 import traceback
 
-scripts = [('rtk', '../rtk/rtk'),
-           ('romaji', '../romaji/romaji'),
+scripts = [('rtk', '../rtk/rtk.sh'),
+           ('romaji', '../romaji/romaji.sh'),
            ('kana', '../reading/read.py'),
-           ('ja', '../jmdict/ja'),
-           ('gt', '../google_translate/gt'),
-           ('define', '../google_dictionary/gd'),
-           ('daijisen', '../yahoo_jisho/daijisen'),
-           ('daijirin', '../yahoo_jisho/daijirin'),
+           ('ja', '../jmdict/ja.sh'),
+           ('gt', '../google_translate/gt.sh'),
+           ('define', '../google_dictionary/gd.sh'),
+           ('daijisen', '../yahoo_jisho/daijisen.sh'),
+           ('daijirin', '../yahoo_jisho/daijirin.sh'),
            ('audio', '../audio/find_audio.sh'),
-           ('quiz', '../reading_quiz/quiz')
+           ('quiz', '../reading_quiz/quiz.sh')
            ]
 
 def run_script(path, argument, irc_source, irc_target):

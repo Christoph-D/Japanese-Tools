@@ -4,12 +4,12 @@
 #
 # Creates vocabulary lists suitable for the quiz script.
 
-JA="$(dirname "$0")"/lookup_one_line
+JA="$(dirname "$0")"/lookup_one_line.sh
 
 INPUT="$1"
 
 if [[ ! $INPUT ]]; then
-    echo 'Usage: create_vocab_list word_list.txt > vocabulary/list.txt'
+    echo 'Usage: create_vocab_list.sh word_list.txt > vocabulary/list.txt'
     echo 'word_list.txt should contain one word per line, in kanji.'
     exit 0
 fi

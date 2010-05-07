@@ -8,4 +8,4 @@ DIRECTORY="$(dirname "$0")"
 KANA_FILE="$DIRECTORY/katakana.txt"
 IRC_COMMAND='!kata'
 
-. "$(dirname "$0")/kana"
+. "$(dirname "$0")/kana.sh"
