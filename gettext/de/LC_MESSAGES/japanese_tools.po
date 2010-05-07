@@ -7,7 +7,7 @@
 msgid ""
 msgstr ""
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2010-05-08 01:32+0200\n"
+"POT-Creation-Date: 2010-05-08 01:33+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: Christoph Dittmann <github@christoph-d.de>\n"
 "MIME-Version: 1.0\n"
@@ -25,3 +25,23 @@ msgstr "Das kann ich nicht übersetzen. :/"
 #: google_translate/gt.sh:121
 msgid "No result. :-("
 msgstr "Kein Ergebnis. :-("
+
+#: audio/find_audio.sh:13
+msgid "Usage: %s word [reading]\\n"
+msgstr "Benutzung: %s Kanji [Hiragana]"
+
+#: audio/find_audio.sh:79
+msgid "Please provide a word."
+msgstr "Bitte ein Wort angeben."
+
+#: audio/find_audio.sh:101
+msgid "No audio file available for %s.\\n"
+msgstr "Keine Audio-Datei gefunden für %s.\\n"
+
+#: audio/find_audio.sh:103
+msgid "No audio file available.\\n"
+msgstr "Keine Audio-Datei gefunden.\\n"
+
+#: audio/find_audio.sh:111
+msgid "Audio for %s: %s\\n"
+msgstr "Audio für %s: %s\\n"

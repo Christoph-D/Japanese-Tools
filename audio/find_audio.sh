@@ -5,18 +5,17 @@
 # This script finds audio files for Japanese words.
 #
 
+. "$(dirname "$0")"/../gettext/gettext.sh
+
 set -u
 
 if [[ $# -ne 2 && $# -ne 1 ]]; then
-    echo "Usage: $(basename "$0") word [reading]"
+    printf "$(gettext 'Usage: %s word [reading]\n')" "$(basename "$0")"
     exit 0
 fi
 
 # md5sum of the "audio missing" file.
 NOT_FOUND=7e2c2f954ef6051373ba916f000168dc
-
-# Make sure we have a UTF-8 environment.
-export LANG=en_US.UTF-8
 
 # URL encoding.
 encode_query() {
@@ -77,7 +76,7 @@ if is_english "$QUERY"; then
 fi
 
 if [[ ! $KANJI ]]; then
-    echo "Please provide a word."
+    echo "$(gettext "Please provide a word.")"
     exit 0
 fi
 
@@ -98,13 +97,17 @@ URL="http://assets.languagepod101.com/dictionary/japanese/audiomp3.php?kana=$REA
 
 # Only print the URL if the audio file exists.
 if [[ $(wget -q "$URL" -O - | md5sum | cut -f 1 -d ' ') = $NOT_FOUND ]]; then
-    printf 'No audio file available%s.\n' "${WORD:+ for $WORD}"
+    if [[ $WORD ]]; then
+        printf "$(gettext 'No audio file available for %s.\n')" "$WORD"
+    else
+        printf "$(gettext 'No audio file available.\n')"
+    fi
     exit 0
 fi
 
 # Try generating the tinyurl link. If it fails, print the long URL.
 TINY=$(wget 'http://tinyurl.com/api-create.php?url='"$(encode_query "$URL")" \
          --quiet -O - --timeout=5 --tries=1)
-printf 'Audio for %s: %s\n' "$WORD" "${TINY:-$URL}"
+printf "$(gettext 'Audio for %s: %s\n')" "$WORD" "${TINY:-$URL}"
 
 exit 0
