@@ -6,8 +6,6 @@
 #
 
 URL="http://google.com/dictionary?aq=f&langpair=en%7Cen&q="
-# Make sure we have a UTF-8 environment.
-LANG=en_US.UTF-8
 
 MAX_RESULT_LENGTH=300
 
