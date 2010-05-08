@@ -18,13 +18,13 @@ QUERY="$*"
 QUERY=${QUERY:0:100}
 
 if [[ ! ${URL-} ]]; then
-    echo "$(gettext "Please don't run this script directly.")"
+    echo_ "Please don't run this script directly."
     exit 1
 fi
 
 if [[ $QUERY = 'help' || $QUERY = '' ]]; then
-    printf "$(gettext 'Example: %s')\n" "$IRC_COMMAND 車　くるま"
-    echo "$(gettext 'Providing the reading is optional. If it is missing, it will be guessed by mecab.')"
+    printf_ 'Example: %s' "$IRC_COMMAND 車　くるま"
+    echo_ 'Providing the reading is optional. If it is missing, it will be guessed by mecab.'
     exit 0
 fi
 
@@ -69,7 +69,7 @@ ask_dictionary() {
     local SOURCE
     SOURCE=$(wget "$URL" --quiet -O - --timeout=10 --tries=1)
     if [[ $? -ne 0 ]]; then
-        echo "$(gettext 'A network error occured.')"
+        echo_ 'A network error occured.'
         return
     fi
     local TITLE=$(printf '%s' "$SOURCE" | \

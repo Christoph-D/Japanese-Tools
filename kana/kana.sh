@@ -7,7 +7,7 @@
 . "$(dirname "$0")"/../gettext/gettext.sh
 
 if [ -z "$KANA_FILE" ]; then
-    printf "$(gettext "Please don't call this script directly, use %s or %s instead.")\n" \
+    printf_ "Please don't call this script directly, use %s or %s instead." \
         "$(dirname "$0")/hira" "$(dirname "$0")/kata"
     exit 1
 fi
@@ -26,7 +26,7 @@ LESSON_MAP=( 5 10 15 20 25 30 35 38 43 45 46 ) # line numbers in $KANA_FILE
 
 # Preliminary checks
 if [[ ! -e $KANA_FILE ]]; then
-   printf "$(gettext 'Please fix %s.')\n" '$KANA_FILE'
+   printf_ 'Please fix %s.' '$KANA_FILE'
    exit 1
 fi
 # Cache kana file so we don't need to read it over and over again.
@@ -35,22 +35,23 @@ KANA_SRC=$(cat "$KANA_FILE")
 # Try to create data directories.
 [[ -d $USER_STATS_DIR ]] || mkdir -p "$USER_STATS_DIR"
 if [[ ! -d $USER_STATS_DIR ]]; then
-   printf "$(gettext 'Could not create directory %s. Please fix %s.')" \
+   printf_ 'Could not create directory %s. Please fix %s.' \
        "$USER_STATS_DIR" '$USER_STATS_DIR'
    exit 2
 fi
 [[ -d $TEMP_PATH ]] || mkdir -p "$TEMP_PATH"
 if [[ ! -d $TEMP_PATH ]]; then
-   printf "$(gettext 'Could not create directory %s. Please fix %s.')" \
+   printf_ 'Could not create directory %s. Please fix %s.' \
        "$TEMP_PATH" '$TEMP_PATH'
    exit 2
 fi
 if [[ -z $USER ]]; then
-    printf "$(gettext 'Could not determine nick name. Please fix %s.')\n" '$USER'
+    printf_ 'Could not determine nick name. Please fix %s.' '$USER'
     exit 1
 fi
 if [[ -z $CHANNEL_NAME ]]; then
-    printf "$(gettext 'Could not determine channel name or query sender. Please fix %s.')\n" '$CHANNEL_NAME'
+    printf_ 'Could not determine channel name or query sender. Please fix %s.' \
+        '$CHANNEL_NAME'
     exit 1
 fi
 
@@ -67,8 +68,8 @@ LESSON_STATUS_FILE=$TEMP_PATH/status-$CHANNEL_NAME
 min() { if (( "$1" < "$2" )); then echo "$1"; else echo "$2"; fi; }
 
 show_help() {
-    printf "$(gettext 'Start with "%s <level> [count]". Known levels are 0 to %s. To learn more about some level please use "%s help <level>".
-To only see the differences between consecutive levels, please use "%s helpdiff <level>".')\n" \
+    printf_ 'Start with "%s <level> [count]". Known levels are 0 to %s. To learn more about some level please use "%s help <level>".
+To only see the differences between consecutive levels, please use "%s helpdiff <level>".' \
         "$IRC_COMMAND" "$(( ${#LESSON_MAP[*]} - 1))" \
         "$IRC_COMMAND" "$IRC_COMMAND"
 }
@@ -132,7 +133,7 @@ start_lesson() {
     KANA=$(echo "$LESSON" | cut -d ' ' -f 1)
     KANA=${KANA//$'\n'/ }
 
-    printf "$(gettext 'Please write in romaji: %s')\n" "$KANA"
+    printf_ 'Please write in romaji: %s' "$KANA"
     echo "$LESSON" > "$SOLUTION_FILE"
     # Save the status so we can generate a similar question again
     # after this one has been answered.
@@ -152,10 +153,10 @@ read_user_statistics() {
 print_user_statistics() {
     if (( ${USER_STATS[1]} > 0 )); then
         local PERCENT=$(echo "scale=2; ${USER_STATS[0]} * 100 / ${USER_STATS[1]}" | bc)
-        printf "$(gettext 'Statistics for %s: %s%% of %s characters correct.')\n" \
+        printf_ 'Statistics for %s: %s%% of %s characters correct.' \
             "$USER" "$PERCENT" "${USER_STATS[1]}"
     else
-        printf "$(gettext 'No statistics available for %s.')\n" "$USER"
+        printf_ 'No statistics available for %s.' "$USER"
     fi
 }
 
@@ -189,7 +190,7 @@ elif echo "$QUERY_BEGIN" | grep -q -E '^helpdiff [0-9]+$'; then
     if [ -n "$LESSON_DIFF" ]; then
         echo "$LESSON_DIFF"
     else
-        echo "$(gettext 'No diff available. :-(')"
+        echo_ 'No diff available. :-('
     fi
     exit 0
 fi
@@ -221,14 +222,16 @@ for I in $(seq 0 $(( $EXPECTED_NUMBER - 1 ))); do
     fi
 done
 if (( $CORRECT == 0 )); then
-    printf "$(gettext 'Unfortunately, no character was right. Solution:%s.') " "$PRETTY_SOLUTION"
+    printf_no_newline_ 'Unfortunately, no character was right. Solution:%s.' \
+        "$PRETTY_SOLUTION"
 elif (( $CORRECT == $EXPECTED_NUMBER )); then
-    printf "$(gettext 'Perfect! %s of %s.') " \
+    printf_no_newline_ 'Perfect! %s of %s.' \
         "$CORRECT" "$EXPECTED_NUMBER"
 else
-    printf "$(gettext 'Correct: %s of %s, Corrections:%s.') " \
+    printf_no_newline_ 'Correct: %s of %s, Corrections:%s.' \
         "$CORRECT" "$EXPECTED_NUMBER" "$PRETTY_SOLUTION"
 fi
+echo -n ' '
 
 # update user statistics
 read_user_statistics

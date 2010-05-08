@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2010-05-08 18:46+0200\n"
+"POT-Creation-Date: 2010-05-08 22:59+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: Christoph Dittmann <github@christoph-d.de>\n"
 
@@ -81,41 +81,41 @@ msgstr ""
 msgid "Unknown level \"%s\". Valid levels (number of words): %s"
 msgstr ""
 
-#: simple_bot/bot.py:48
+#: simple_bot/bot.py:51
 msgid "An error occured."
 msgstr ""
 
-#: simple_bot/bot.py:72
+#: simple_bot/bot.py:75
 #, python-format
 msgid "Today's magic key for admin commands: %s"
 msgstr ""
 
-#: simple_bot/bot.py:127
+#: simple_bot/bot.py:130
 #, python-format
 msgid "Caught exception: %s\n"
 msgstr ""
 
-#: simple_bot/bot.py:159
+#: simple_bot/bot.py:162
 msgid "Unknown command."
 msgstr ""
 
-#: simple_bot/bot.py:164
+#: simple_bot/bot.py:176
 msgid "A very simple bot with \346\227\245\346\234\254\350\252\236 support."
 msgstr ""
 
-#: simple_bot/bot.py:189
+#: simple_bot/bot.py:201
 msgid "Known commands: "
 msgstr ""
 
-#: simple_bot/bot.py:232
+#: simple_bot/bot.py:244
 msgid "Usage: bot.py <server[:port]> <channel> <nickname> [NickServ password]"
 msgstr ""
 
-#: simple_bot/bot.py:241
+#: simple_bot/bot.py:253
 msgid "Error: Invalid port."
 msgstr ""
 
-#: simple_bot/bot.py:255
+#: simple_bot/bot.py:267
 msgid "Caught KeyboardInterrupt, exiting..."
 msgstr ""
 
@@ -152,7 +152,7 @@ msgid "No result. :-("
 msgstr ""
 
 #: jmdict/ja.sh:18
-msgid "Please run:"
+msgid "Please run: %s"
 msgstr ""
 
 #: jmdict/ja.sh:107
@@ -191,7 +191,7 @@ msgstr ""
 msgid "Could not create directory %s. Please fix %s."
 msgstr ""
 
-#: kana/kana.sh:70
+#: kana/kana.sh:71
 msgid ""
 "Start with \"%s <level> [count]\". Known levels are 0 to %s. To learn more "
 "about some level please use \"%s help <level>\".\n"
@@ -199,31 +199,31 @@ msgid ""
 "helpdiff <level>\"."
 msgstr ""
 
-#: kana/kana.sh:135
+#: kana/kana.sh:136
 msgid "Please write in romaji: %s"
 msgstr ""
 
-#: kana/kana.sh:155
+#: kana/kana.sh:156
 msgid "Statistics for %s: %s%% of %s characters correct."
 msgstr ""
 
-#: kana/kana.sh:158
+#: kana/kana.sh:159
 msgid "No statistics available for %s."
 msgstr ""
 
-#: kana/kana.sh:192
+#: kana/kana.sh:193
 msgid "No diff available. :-("
 msgstr ""
 
-#: kana/kana.sh:224
+#: kana/kana.sh:225
 msgid "Unfortunately, no character was right. Solution:%s."
 msgstr ""
 
-#: kana/kana.sh:226
+#: kana/kana.sh:228
 msgid "Perfect! %s of %s."
 msgstr ""
 
-#: kana/kana.sh:229
+#: kana/kana.sh:231
 msgid "Correct: %s of %s, Corrections:%s."
 msgstr ""
 

@@ -30,7 +30,7 @@ QUERY=${QUERY:0:300}
 
 if [ -z "$QUERY" ]; then
     # No input.
-    echo "$(gettext 'No input.')"
+    echo_ 'No input.'
     exit 0
 fi
 
@@ -113,12 +113,12 @@ fi
 
 if [ "$RESULT" = "$QUERY" ]; then
     # The service did not translate anything.
-    echo "$(gettext "This is untranslatable. :/")"
+    echo_ 'This is untranslatable. :/'
     exit 0
 fi
 if [ -z "$RESULT" ]; then
     # The service did not return a result.
-    echo "$(gettext "No result. :-(")"
+    echo_ 'No result. :-('
     exit 0
 fi
 

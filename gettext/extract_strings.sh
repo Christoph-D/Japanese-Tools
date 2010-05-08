@@ -2,7 +2,10 @@
 
 THIS_DIR=$(basename "$(readlink -e "$(dirname "$0")")")
 cd "$(dirname "$0")"/../
-xgettext -E -d japanese_tools -p "./$THIS_DIR" --from-code=UTF-8 $(\
+xgettext -E -d japanese_tools -p "./$THIS_DIR" --from-code=UTF-8 \
+    --keyword=_ --keyword=echo_ \
+    --keyword=printf_ --keyword=printf_no_newline_ \
+    $(\
     find . \
     -path "./$THIS_DIR" -prune \
     -or -path "./.git" -prune \

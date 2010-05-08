@@ -25,7 +25,7 @@ if [ -n "$RESULT" ]; then
     # Restrict length and print result
     printf "%s\n" "${RESULT:0:300}"
 else
-    echo "$(gettext 'No result.')"
+    echo_ 'No result.'
 fi
 
 exit 0

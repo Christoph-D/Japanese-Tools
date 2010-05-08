@@ -16,19 +16,19 @@ MAX_KEYWORDS=10
 MAX_LINE_LENGTH=300
 
 if [[ ! -e $DICT ]]; then
-   echo "$(gettext 'Please put "rtk.txt" in the same directory as this script.')"
+   echo_ 'Please put "rtk.txt" in the same directory as this script.'
    exit 1
 fi
 
 QUERY=$@
 
 if [[ -z $QUERY ]]; then
-    echo "$(gettext 'epsilon.')"
+    echo_ 'epsilon.'
     exit 0
 fi
 
 if echo "$QUERY" | grep -q -e "[*+()$^]"; then
-    echo "$(gettext 'No regular expressions, please.')"
+    echo_ 'No regular expressions, please.'
     exit 0
 fi
 
@@ -60,7 +60,7 @@ if echo "$QUERY" | grep -q -e "^\([a-zA-Z \-]\|\\\.\)*$"; then
         IFS=$ORIGIFS
     else
         # Unknown keyword
-        RESULT=$(gettext 'Unknown keyword.')
+        RESULT=$(_ 'Unknown keyword.')
     fi
 elif echo "$QUERY" | grep -q -e '^[0-9 ]\+$'; then
     # Query contains Kanji numbers.
@@ -75,7 +75,7 @@ elif echo "$QUERY" | grep -q -e '^[0-9 ]\+$'; then
         RESULT="$RESULT${RESULT+ | }$R"
     done
     if [[ $RESULT = '???' ]]; then
-        RESULT=$(gettext 'Unknown kanji number.')
+        RESULT=$(_ 'Unknown kanji number.')
     fi
 else
     # Query likely contains Japanese characters.

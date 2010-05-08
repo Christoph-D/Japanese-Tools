@@ -15,7 +15,7 @@ MAX_LINE_LENGTH=400
 MAX_LINES=2
 
 if [ ! -e "$DICT" ]; then
-   echo "$(gettext 'Please run:') wget http://ftp.monash.edu.au/pub/nihongo/JMdict_e.gz && ./prepare_jmdict.sh JMdict_e.gz > JMdict_e_prepared"
+   printf_ 'Please run: %s' 'wget http://ftp.monash.edu.au/pub/nihongo/JMdict_e.gz && ./prepare_jmdict.sh JMdict_e.gz > JMdict_e_prepared'
    exit 1
 fi
 
@@ -23,7 +23,7 @@ fi
 QUERY=${@//\\/}
 
 if [ -z "$QUERY" ]; then
-    echo "$(gettext 'epsilon.')"
+    echo_ 'epsilon.'
     exit 0
 fi
 
@@ -104,7 +104,7 @@ done
 if [ -n "$RESULT" ]; then
     print_result
 else
-    echo "$(gettext 'Unknown word.')"
+    echo_ 'Unknown word.'
 fi
 
 exit 0
