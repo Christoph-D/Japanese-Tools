@@ -4,8 +4,11 @@
 #
 # Hiragana and katakana trainer.
 
+. "$(dirname "$0")"/../gettext/gettext.sh
+
 if [ -z "$KANA_FILE" ]; then
-    echo "Please don't call this script directly, use $(dirname "$0")/hira or $(dirname "$0")/kata instead."
+    printf "$(gettext "Please don't call this script directly, use %s or %s instead.")\n" \
+        "$(dirname "$0")/hira" "$(dirname "$0")/kata"
     exit 1
 fi
 
@@ -21,11 +24,9 @@ MAX_RESULT_ITEMS=30
 LESSON_MAP=( 5 10 15 20 25 30 35 38 43 45 46 ) # line numbers in $KANA_FILE
 # End of configuration
 
-# Make sure we have a UTF-8 environment.
-LANG=en_US.UTF-8
 # Preliminary checks
 if [[ ! -e $KANA_FILE ]]; then
-   echo 'Please fix $KANA_FILE.'
+   printf "$(gettext 'Please fix %s.')\n" '$KANA_FILE'
    exit 1
 fi
 # Cache kana file so we don't need to read it over and over again.
@@ -34,22 +35,22 @@ KANA_SRC=$(cat "$KANA_FILE")
 # Try to create data directories.
 [[ -d $USER_STATS_DIR ]] || mkdir -p "$USER_STATS_DIR"
 if [[ ! -d $USER_STATS_DIR ]]; then
-   echo "Could not create directory $USER_STATS_DIR."
-   echo 'Please fix $USER_STATS_DIR.'
+   printf "$(gettext 'Could not create directory %s. Please fix %s.')" \
+       "$USER_STATS_DIR" '$USER_STATS_DIR'
    exit 2
 fi
 [[ -d $TEMP_PATH ]] || mkdir -p "$TEMP_PATH"
 if [[ ! -d $TEMP_PATH ]]; then
-   echo "Could not create directory $TEMP_PATH."
-   echo 'Please fix $TEMP_PATH.'
+   printf "$(gettext 'Could not create directory %s. Please fix %s.')" \
+       "$TEMP_PATH" '$TEMP_PATH'
    exit 2
 fi
 if [[ -z $USER ]]; then
-    echo 'Could not determine nick name. Please fix $USER.'
+    printf "$(gettext 'Could not determine nick name. Please fix %s.')\n" '$USER'
     exit 1
 fi
 if [[ -z $CHANNEL_NAME ]]; then
-    echo 'Could not determine channel name or query sender. Please fix $CHANNEL_NAME.'
+    printf "$(gettext 'Could not determine channel name or query sender. Please fix %s.')\n" '$CHANNEL_NAME'
     exit 1
 fi
 
@@ -62,21 +63,14 @@ CHANNEL_NAME=${CHANNEL_NAME////||}
 SOLUTION_FILE=$TEMP_PATH/solution-$CHANNEL_NAME
 LESSON_STATUS_FILE=$TEMP_PATH/status-$CHANNEL_NAME
 
-
 # Prints the smaller of the two arguments.
 min() { if (( "$1" < "$2" )); then echo "$1"; else echo "$2"; fi; }
 
 show_help() {
-    # It's a German irc bot. The help message in English reads
-    # "Start with \"$IRC_COMMAND <level> [count]\"."
-    # "Known levels are 0 to $(( ${#LESSON_MAP[*]} - 1))."
-    # "To learn more about some level please use \"$IRC_COMMAND help <level>\"."
-    # "To only see the differences between consecutive levels, please
-    # use \"$IRC_COMMAND helpdiff <level>\"."
-    echo -n "Beginnen mit \"$IRC_COMMAND <Stufe> [Anzahl]\". "
-    echo -n "Bekannte Stufen sind 0 bis $(( ${#LESSON_MAP[*]} - 1)). "
-    echo "Für Erklärung einer Stufe bitte \"$IRC_COMMAND help <Stufe>\" eingeben."
-    echo "Um nur die neuen Zeichen einer Stufe anzuzeigen bitte \"$IRC_COMMAND helpdiff <Stufe>\" verwenden."
+    printf "$(gettext 'Start with "%s <level> [count]". Known levels are 0 to %s. To learn more about some level please use "%s help <level>".
+To only see the differences between consecutive levels, please use "%s helpdiff <level>".')\n" \
+        "$IRC_COMMAND" "$(( ${#LESSON_MAP[*]} - 1))" \
+        "$IRC_COMMAND" "$IRC_COMMAND"
 }
 
 # Parameters: Lesson number
@@ -158,9 +152,10 @@ read_user_statistics() {
 print_user_statistics() {
     if (( ${USER_STATS[1]} > 0 )); then
         local PERCENT=$(echo "scale=2; ${USER_STATS[0]} * 100 / ${USER_STATS[1]}" | bc)
-        echo "Statistik für $USER: $PERCENT% von ${USER_STATS[1]} Zeichen korrekt."
+        printf "$(gettext 'Statistics for %s: %s%% of %s characters correct.')\n" \
+            "$USER" "$PERCENT" "${USER_STATS[1]}"
     else
-        echo "Keine Statistik für $USER vorhanden."
+        printf "$(gettext 'No statistics available for %s.')\n" "$USER"
     fi
 }
 
@@ -194,7 +189,7 @@ elif echo "$QUERY_BEGIN" | grep -q -E '^helpdiff [0-9]+$'; then
     if [ -n "$LESSON_DIFF" ]; then
         echo "$LESSON_DIFF"
     else
-        echo "Kein Diff verfügbar. :-("
+        echo "$(gettext 'No diff available. :-(')"
     fi
     exit 0
 fi
@@ -226,11 +221,13 @@ for I in $(seq 0 $(( $EXPECTED_NUMBER - 1 ))); do
     fi
 done
 if (( $CORRECT == 0 )); then
-    echo -n "Leider kein einziges Zeichen korrekt. Lösung:$PRETTY_SOLUTION. "
+    printf "$(gettext 'Unfortunately, no character was right. Solution:%s.') " "$PRETTY_SOLUTION"
 elif (( $CORRECT == $EXPECTED_NUMBER )); then
-    echo -n "Alles korrekt! $CORRECT von $EXPECTED_NUMBER. "
+    printf "$(gettext 'Perfect! %s of %s.') " \
+        "$CORRECT" "$EXPECTED_NUMBER"
 else
-    echo -n "Korrekt: $CORRECT von $EXPECTED_NUMBER, Korrekturen:$PRETTY_SOLUTION. "
+    printf "$(gettext 'Correct: %s of %s, Corrections:%s.') " \
+        "$CORRECT" "$EXPECTED_NUMBER" "$PRETTY_SOLUTION"
 fi
 
 # update user statistics

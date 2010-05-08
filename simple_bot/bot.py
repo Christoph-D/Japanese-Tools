@@ -22,6 +22,8 @@ _ = gettext.gettext
 scripts = [('rtk', '../rtk/rtk.sh'),
            ('romaji', '../romaji/romaji.sh'),
            ('kana', '../reading/read.py'),
+           ('hira', '../kana/hira.sh'),
+           ('kata', '../kana/kata.sh'),
            ('ja', '../jmdict/ja.sh'),
            ('gt', '../google_translate/gt.sh'),
            ('define', '../google_dictionary/gd.sh'),

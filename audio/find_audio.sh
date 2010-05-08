@@ -10,7 +10,7 @@
 set -u
 
 if [[ $# -ne 2 && $# -ne 1 ]]; then
-    printf "$(gettext 'Usage: %s word [reading]\n')" "$(basename "$0")"
+    printf "$(gettext 'Usage: %s word [reading]')\n" "$(basename "$0")"
     exit 0
 fi
 
@@ -98,9 +98,9 @@ URL="http://assets.languagepod101.com/dictionary/japanese/audiomp3.php?kana=$REA
 # Only print the URL if the audio file exists.
 if [[ $(wget -q "$URL" -O - | md5sum | cut -f 1 -d ' ') = $NOT_FOUND ]]; then
     if [[ $WORD ]]; then
-        printf "$(gettext 'No audio file available for %s.\n')" "$WORD"
+        printf "$(gettext 'No audio file available for %s.')\n" "$WORD"
     else
-        printf "$(gettext 'No audio file available.\n')"
+        printf "$(gettext 'No audio file available.')\n"
     fi
     exit 0
 fi
@@ -108,6 +108,6 @@ fi
 # Try generating the tinyurl link. If it fails, print the long URL.
 TINY=$(wget 'http://tinyurl.com/api-create.php?url='"$(encode_query "$URL")" \
          --quiet -O - --timeout=5 --tries=1)
-printf "$(gettext 'Audio for %s: %s\n')" "$WORD" "${TINY:-$URL}"
+printf "$(gettext 'Audio for %s: %s')\n" "$WORD" "${TINY:-$URL}"
 
 exit 0

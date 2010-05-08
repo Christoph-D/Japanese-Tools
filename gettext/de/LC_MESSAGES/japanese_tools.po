@@ -7,7 +7,7 @@
 msgid ""
 msgstr ""
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2010-05-08 16:00+0200\n"
+"POT-Creation-Date: 2010-05-08 16:48+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: Christoph Dittmann <github@christoph-d.de>\n"
 "MIME-Version: 1.0\n"
@@ -18,11 +18,11 @@ msgstr ""
 msgid "No result."
 msgstr "Kein Ergebnis."
 
-#: reading_quiz/quiz.sh:23
+#: reading_quiz/quiz.sh:23 kana/kana.sh:49
 msgid "Could not determine nick name. Please fix %s."
 msgstr "Konnte Nickname nicht ermitteln. Bitte %s reparieren."
 
-#: reading_quiz/quiz.sh:27
+#: reading_quiz/quiz.sh:27 kana/kana.sh:53
 msgid "Could not determine channel name or query sender. Please fix %s."
 msgstr ""
 "Konnte Channel-Namen bzw. Query-Sender nicht ermitteln. Bitte %s reparieren."
@@ -82,42 +82,42 @@ msgstr "Überspringe %s [%s]..."
 msgid "Unknown level \"%s\". Valid levels (number of words): %s"
 msgstr "Unbekanntes Level \"%s\". Gültige Levels sind (Zahl der Wörter): %s"
 
-#: simple_bot/bot.py:46
+#: simple_bot/bot.py:48
 msgid "An error occured."
 msgstr "Ein Fehler ist aufgetreten."
 
-#: simple_bot/bot.py:70
+#: simple_bot/bot.py:72
 #, python-format
 msgid "Today's magic key for admin commands: %s"
 msgstr "Heutiger Magic-Key für Admin-Befehle: %s"
 
-#: simple_bot/bot.py:125
+#: simple_bot/bot.py:127
 #, python-format
 msgid "Caught exception: %s\n"
 msgstr "Exception gefangen: %s\n"
 
-#: simple_bot/bot.py:157
+#: simple_bot/bot.py:159
 msgid "Unknown command."
 msgstr "Unbekannter Befehl."
 
-#: simple_bot/bot.py:162
+#: simple_bot/bot.py:164
 msgid "A very simple bot with 日本語 support."
 msgstr "Ein sehr einfacher Bot mit 日本語-Features."
 
-#: simple_bot/bot.py:187
+#: simple_bot/bot.py:189
 msgid "Known commands: "
 msgstr "Bekannte Befehle: "
 
-#: simple_bot/bot.py:230
+#: simple_bot/bot.py:232
 msgid "Usage: bot.py <server[:port]> <channel> <nickname> [NickServ password]"
 msgstr ""
 "Aufruf: bot.py <Server[:Port]> <Channel> <Nickname> [NickServ-Passwort]"
 
-#: simple_bot/bot.py:239
+#: simple_bot/bot.py:241
 msgid "Error: Invalid port."
 msgstr "Fehler: Ungültiger Port."
 
-#: simple_bot/bot.py:253
+#: simple_bot/bot.py:255
 msgid "Caught KeyboardInterrupt, exiting..."
 msgstr "Ein KeyboardInterrupt ist aufgetreten, Ende..."
 
@@ -162,7 +162,7 @@ msgid "Unknown word."
 msgstr "Unbekanntes Wort."
 
 #: audio/find_audio.sh:13
-msgid "Usage: %s word [reading]\\n"
+msgid "Usage: %s word [reading]"
 msgstr "Aufruf: %s Kanji [Hiragana]"
 
 #: audio/find_audio.sh:79
@@ -170,16 +170,65 @@ msgid "Please provide a word."
 msgstr "Bitte ein Wort angeben."
 
 #: audio/find_audio.sh:101
-msgid "No audio file available for %s.\\n"
-msgstr "Keine Audio-Datei gefunden für %s.\\n"
+msgid "No audio file available for %s."
+msgstr "Keine Audio-Datei gefunden für %s."
 
 #: audio/find_audio.sh:103
-msgid "No audio file available.\\n"
-msgstr "Keine Audio-Datei gefunden.\\n"
+msgid "No audio file available."
+msgstr "Keine Audio-Datei gefunden."
 
 #: audio/find_audio.sh:111
-msgid "Audio for %s: %s\\n"
-msgstr "Audio für %s: %s\\n"
+msgid "Audio for %s: %s"
+msgstr "Audio für %s: %s"
+
+#: kana/kana.sh:10
+msgid "Please don't call this script directly, use %s or %s instead."
+msgstr ""
+"Dieses Skript bitte nicht direkt ausführen, stattdessen %s oder %s benutzen."
+
+#: kana/kana.sh:29
+msgid "Please fix %s."
+msgstr "Bitte repariere %s."
+
+#: kana/kana.sh:38 kana/kana.sh:44
+msgid "Could not create directory %s. Please fix %s."
+msgstr "Konnte Verzeichnis %s nicht erstellen. Bitte %s reparieren."
+
+#: kana/kana.sh:70
+msgid ""
+"Start with \"%s <level> [count]\". Known levels are 0 to %s. To learn more "
+"about some level please use \"%s help <level>\".\n"
+"To only see the differences between consecutive levels, please use \"%s "
+"helpdiff <level>\"."
+msgstr ""
+"Beginnen mit \"%s <Stufe> [Anzahl]\". Bekannte Stufen sind 0 bis %s. Für "
+"Erklärung einer Stufe bitte %s help <Stufe>\" eingeben.\n"
+"Um nur die neuen Zeichen einer Stufe anzuzeigen bitte \"%s helpdiff <Stufe>"
+"\" verwenden."
+
+#: kana/kana.sh:155
+msgid "Statistics for %s: %s%% of %s characters correct."
+msgstr "Statistik für %s: %s%% von %s Zeichen korrekt."
+
+#: kana/kana.sh:158
+msgid "No statistics available for %s."
+msgstr "Keine Statistik für %s vorhanden."
+
+#: kana/kana.sh:192
+msgid "No diff available. :-("
+msgstr "Kein Diff verfügbar. :-("
+
+#: kana/kana.sh:224
+msgid "Unfortunately, no character was right. Solution:%s."
+msgstr "Leider kein einziges Zeichen korrekt. Lösung:%s."
+
+#: kana/kana.sh:226
+msgid "Perfect! %s of %s."
+msgstr "Alles korrekt! %s von %s."
+
+#: kana/kana.sh:229
+msgid "Correct: %s of %s, Corrections:%s."
+msgstr "Korrekt: %s von %s, Korrekturen:%s."
 
 #: yahoo_jisho/yj.sh:21
 msgid "Please don't run this script directly."

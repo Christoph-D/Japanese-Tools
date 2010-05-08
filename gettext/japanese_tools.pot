@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2010-05-08 16:00+0200\n"
+"POT-Creation-Date: 2010-05-08 16:54+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: Christoph Dittmann <github@christoph-d.de>\n"
 
@@ -20,11 +20,11 @@ msgstr ""
 msgid "No result."
 msgstr ""
 
-#: reading_quiz/quiz.sh:23
+#: reading_quiz/quiz.sh:23 kana/kana.sh:49
 msgid "Could not determine nick name. Please fix %s."
 msgstr ""
 
-#: reading_quiz/quiz.sh:27
+#: reading_quiz/quiz.sh:27 kana/kana.sh:53
 msgid "Could not determine channel name or query sender. Please fix %s."
 msgstr ""
 
@@ -81,41 +81,41 @@ msgstr ""
 msgid "Unknown level \"%s\". Valid levels (number of words): %s"
 msgstr ""
 
-#: simple_bot/bot.py:46
+#: simple_bot/bot.py:48
 msgid "An error occured."
 msgstr ""
 
-#: simple_bot/bot.py:70
+#: simple_bot/bot.py:72
 #, python-format
 msgid "Today's magic key for admin commands: %s"
 msgstr ""
 
-#: simple_bot/bot.py:125
+#: simple_bot/bot.py:127
 #, python-format
 msgid "Caught exception: %s\n"
 msgstr ""
 
-#: simple_bot/bot.py:157
+#: simple_bot/bot.py:159
 msgid "Unknown command."
 msgstr ""
 
-#: simple_bot/bot.py:162
+#: simple_bot/bot.py:164
 msgid "A very simple bot with \346\227\245\346\234\254\350\252\236 support."
 msgstr ""
 
-#: simple_bot/bot.py:187
+#: simple_bot/bot.py:189
 msgid "Known commands: "
 msgstr ""
 
-#: simple_bot/bot.py:230
+#: simple_bot/bot.py:232
 msgid "Usage: bot.py <server[:port]> <channel> <nickname> [NickServ password]"
 msgstr ""
 
-#: simple_bot/bot.py:239
+#: simple_bot/bot.py:241
 msgid "Error: Invalid port."
 msgstr ""
 
-#: simple_bot/bot.py:253
+#: simple_bot/bot.py:255
 msgid "Caught KeyboardInterrupt, exiting..."
 msgstr ""
 
@@ -160,7 +160,7 @@ msgid "Unknown word."
 msgstr ""
 
 #: audio/find_audio.sh:13
-msgid "Usage: %s word [reading]\\n"
+msgid "Usage: %s word [reading]"
 msgstr ""
 
 #: audio/find_audio.sh:79
@@ -168,15 +168,59 @@ msgid "Please provide a word."
 msgstr ""
 
 #: audio/find_audio.sh:101
-msgid "No audio file available for %s.\\n"
+msgid "No audio file available for %s."
 msgstr ""
 
 #: audio/find_audio.sh:103
-msgid "No audio file available.\\n"
+msgid "No audio file available."
 msgstr ""
 
 #: audio/find_audio.sh:111
-msgid "Audio for %s: %s\\n"
+msgid "Audio for %s: %s"
+msgstr ""
+
+#: kana/kana.sh:10
+msgid "Please don't call this script directly, use %s or %s instead."
+msgstr ""
+
+#: kana/kana.sh:29
+msgid "Please fix %s."
+msgstr ""
+
+#: kana/kana.sh:38 kana/kana.sh:44
+msgid "Could not create directory %s. Please fix %s."
+msgstr ""
+
+#: kana/kana.sh:70
+msgid ""
+"Start with \"%s <level> [count]\". Known levels are 0 to %s. To learn more "
+"about some level please use \"%s help <level>\".\n"
+"To only see the differences between consecutive levels, please use \"%s "
+"helpdiff <level>\"."
+msgstr ""
+
+#: kana/kana.sh:155
+msgid "Statistics for %s: %s%% of %s characters correct."
+msgstr ""
+
+#: kana/kana.sh:158
+msgid "No statistics available for %s."
+msgstr ""
+
+#: kana/kana.sh:192
+msgid "No diff available. :-("
+msgstr ""
+
+#: kana/kana.sh:224
+msgid "Unfortunately, no character was right. Solution:%s."
+msgstr ""
+
+#: kana/kana.sh:226
+msgid "Perfect! %s of %s."
+msgstr ""
+
+#: kana/kana.sh:229
+msgid "Correct: %s of %s, Corrections:%s."
 msgstr ""
 
 #: yahoo_jisho/yj.sh:21
