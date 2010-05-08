@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2010-05-08 16:54+0200\n"
+"POT-Creation-Date: 2010-05-08 18:46+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: Christoph Dittmann <github@christoph-d.de>\n"
 
@@ -197,6 +197,10 @@ msgid ""
 "about some level please use \"%s help <level>\".\n"
 "To only see the differences between consecutive levels, please use \"%s "
 "helpdiff <level>\"."
+msgstr ""
+
+#: kana/kana.sh:135
+msgid "Please write in romaji: %s"
 msgstr ""
 
 #: kana/kana.sh:155

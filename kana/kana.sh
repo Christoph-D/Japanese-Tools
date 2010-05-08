@@ -132,7 +132,7 @@ start_lesson() {
     KANA=$(echo "$LESSON" | cut -d ' ' -f 1)
     KANA=${KANA//$'\n'/ }
 
-    echo "Leseübung: $KANA"
+    printf "$(gettext 'Please write in romaji: %s')\n" "$KANA"
     echo "$LESSON" > "$SOLUTION_FILE"
     # Save the status so we can generate a similar question again
     # after this one has been answered.

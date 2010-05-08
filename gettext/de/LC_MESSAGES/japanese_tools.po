@@ -7,7 +7,7 @@
 msgid ""
 msgstr ""
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2010-05-08 16:48+0200\n"
+"POT-Creation-Date: 2010-05-08 18:46+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: Christoph Dittmann <github@christoph-d.de>\n"
 "MIME-Version: 1.0\n"
@@ -205,6 +205,10 @@ msgstr ""
 "Erklärung einer Stufe bitte %s help <Stufe>\" eingeben.\n"
 "Um nur die neuen Zeichen einer Stufe anzuzeigen bitte \"%s helpdiff <Stufe>"
 "\" verwenden."
+
+#: kana/kana.sh:135
+msgid "Please write in romaji: %s"
+msgstr "Leseübung: %s"
 
 #: kana/kana.sh:155
 msgid "Statistics for %s: %s%% of %s characters correct."
