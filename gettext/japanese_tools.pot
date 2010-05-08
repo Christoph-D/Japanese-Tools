@@ -8,13 +8,74 @@ msgid ""
 msgstr ""
 
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2010-05-08 01:41+0200\n"
+"POT-Creation-Date: 2010-05-08 02:14+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: Christoph Dittmann <github@christoph-d.de>\n"
 
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+
+#: reading_quiz/quiz.sh:23
+msgid "Could not determine nick name. Please fix %s."
+msgstr ""
+
+#: reading_quiz/quiz.sh:27
+msgid "Could not determine channel name or query sender. Please fix %s."
+msgstr ""
+
+#: reading_quiz/quiz.sh:64
+msgid "Please read: %s"
+msgstr ""
+
+#: reading_quiz/quiz.sh:88
+msgid "Unknown user: %s"
+msgstr ""
+
+#: reading_quiz/quiz.sh:95
+msgid ""
+"In the last 2 months, %s answered %s/%s questions correctly, that is %s%%."
+msgstr ""
+
+#: reading_quiz/quiz.sh:101
+msgid "Hardest words for %s (number of mistakes): %s"
+msgstr ""
+
+#: reading_quiz/quiz.sh:108
+msgid "Please specify a level."
+msgstr ""
+
+#: reading_quiz/quiz.sh:117
+msgid "%s: Correct! (%s: %s)"
+msgstr ""
+
+#: reading_quiz/quiz.sh:124
+msgid "%s: Sadly, no."
+msgstr ""
+
+#: reading_quiz/quiz.sh:130
+msgid "Try \"%s jlpt4\". With \"%s skip\" you can skip questions."
+msgstr ""
+
+#: reading_quiz/quiz.sh:131
+msgid "Statistics can be accessed by \"%s stats <nickname>\"."
+msgstr ""
+
+#: reading_quiz/quiz.sh:140
+msgid "Usage: %s stats <nickname>"
+msgstr ""
+
+#: reading_quiz/quiz.sh:164
+msgid "Nothing to skip!"
+msgstr ""
+
+#: reading_quiz/quiz.sh:168
+msgid "Skipping %s [%s]..."
+msgstr ""
+
+#: reading_quiz/quiz.sh:187
+msgid "Unknown level \"%s\". Valid levels (number of words): %s"
+msgstr ""
 
 #: google_translate/gt.sh:33
 msgid "No input."
