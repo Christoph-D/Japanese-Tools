@@ -33,15 +33,15 @@ scripts = [('rtk', '../rtk/rtk.sh'),
            ('quiz', '../reading_quiz/quiz.sh')
            ]
 
-def run_script(path, argument, irc_source, irc_target):
+def run_script(path, argument, irc_source_target):
     try:
         return subprocess.Popen(
             [path, argument],
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             cwd=os.path.dirname(os.path.abspath(path)),
-            env={ 'DMB_SENDER'   : irc_source,
-                  'DMB_RECEIVER' : irc_target,
+            env={ 'DMB_SENDER'   : irc_source_target[0],
+                  'DMB_RECEIVER' : irc_source_target[1],
                   'LANGUAGE'     : '.'.join(locale.getlocale()) }
             ).communicate()[0]
     except:
@@ -158,6 +158,15 @@ class SimpleBot(SingleServerIRCBot):
         else:
             self.say(_('Unknown command.'))
 
+    def get_source_target(self):
+        e = self.current_event
+        source = nm_to_n(e.source())
+        target = e.target()
+        if target == self.connection.get_nickname():
+            return (source, source)
+        else:
+            return (source, target)
+
     def do_user_command(self, cmd):
         """Commands normal users may use."""
         if cmd == 'version':
@@ -170,7 +179,7 @@ class SimpleBot(SingleServerIRCBot):
         e = self.current_event
         for s in scripts:
             if s[0] == cmd[0]:
-                output = run_script(s[1], cmd[1], nm_to_n(e.source()), e.target())
+                output = run_script(s[1], cmd[1], self.get_source_target())
                 self.handle_script_output(output, s[1])
 
     def handle_script_output(self, output, script):
@@ -192,13 +201,13 @@ class SimpleBot(SingleServerIRCBot):
         """Adds a new timer."""
         e = self.current_event
         timer = (delay_seconds + time.time(), script, argument,
-                 nm_to_n(e.source()), e.target(), self.say_target)
+                 self.get_source_target(), self.say_target)
         self._timers.append(timer)
 
     def run_timed_command(self, timer):
         """Runs the command associated with the timer."""
-        self.say_target = timer[5]
-        self.handle_script_output(run_script(timer[1], timer[2], timer[3], timer[4]), timer[1])
+        self.say_target = timer[4]
+        self.handle_script_output(run_script(timer[1], timer[2], timer[3]), timer[1])
 
     def check_timers(self):
         current_time = time.time()
