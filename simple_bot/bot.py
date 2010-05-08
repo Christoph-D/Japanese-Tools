@@ -42,7 +42,7 @@ def run_script(path, argument, irc_source, irc_target):
             cwd=os.path.dirname(os.path.abspath(path)),
             env={ 'DMB_SENDER'   : irc_source,
                   'DMB_RECEIVER' : irc_target,
-                  'LANG'         : '.'.join(locale.getlocale()) }
+                  'LANGUAGE'     : '.'.join(locale.getlocale()) }
             ).communicate()[0]
     except:
         return _('An error occured.')
