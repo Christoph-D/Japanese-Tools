@@ -7,12 +7,16 @@
 msgid ""
 msgstr ""
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2010-05-08 02:14+0200\n"
+"POT-Creation-Date: 2010-05-08 02:18+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: Christoph Dittmann <github@christoph-d.de>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+
+#: romaji/romaji.sh:26
+msgid "No result."
+msgstr "Kein Ergebnis."
 
 #: reading_quiz/quiz.sh:23
 msgid "Could not determine nick name. Please fix %s."
@@ -34,7 +38,9 @@ msgstr "Unbekannter Nutzer: %s"
 #: reading_quiz/quiz.sh:95
 msgid ""
 "In the last 2 months, %s answered %s/%s questions correctly, that is %s%%."
-msgstr "In den letzten 2 Monaten hat %s %s/%s Fragen korrekt beantwortet, das sind %s%%."
+msgstr ""
+"In den letzten 2 Monaten hat %s %s/%s Fragen korrekt beantwortet, das sind %s"
+"%%."
 
 #: reading_quiz/quiz.sh:101
 msgid "Hardest words for %s (number of mistakes): %s"

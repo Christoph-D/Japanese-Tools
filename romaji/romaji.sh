@@ -6,8 +6,7 @@
 # heavily depends on kakasi and mecab. Kanji readings might be a bit
 # off.
 
-# Make sure we have a UTF-8 environment.
-LANG=en_US.UTF-8
+. "$(dirname "$0")"/../gettext/gettext.sh
 
 READING=$(echo "$*" | mecab --node-format="%f[7] " --eos-format= --unk-format=%m)
 # For some reason utf-8 support in kakasi on Ubuntu 9.04 seems to be
@@ -26,7 +25,7 @@ if [ -n "$RESULT" ]; then
     # Restrict length and print result
     printf "%s\n" "${RESULT:0:300}"
 else
-    echo "No result."
+    echo "$(gettext 'No result.')"
 fi
 
 exit 0
