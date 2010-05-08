@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2010-05-08 02:23+0200\n"
+"POT-Creation-Date: 2010-05-08 02:30+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: Christoph Dittmann <github@christoph-d.de>\n"
 
@@ -139,4 +139,22 @@ msgstr ""
 
 #: audio/find_audio.sh:111
 msgid "Audio for %s: %s\\n"
+msgstr ""
+
+#: yahoo_jisho/yj.sh:21
+msgid "Please don't run this script directly."
+msgstr ""
+
+#: yahoo_jisho/yj.sh:26
+msgid "Example: %s"
+msgstr ""
+
+#: yahoo_jisho/yj.sh:27
+msgid ""
+"Providing the reading is optional. If it is missing, it will be guessed by "
+"mecab."
+msgstr ""
+
+#: yahoo_jisho/yj.sh:72
+msgid "A network error occured."
 msgstr ""

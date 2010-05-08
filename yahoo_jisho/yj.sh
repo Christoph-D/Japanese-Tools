@@ -5,11 +5,10 @@
 # This script performs a Yahoo dictionary lookup for Japanese words.
 #
 
+. "$(dirname "$0")"/../gettext/gettext.sh
+
 MAX_TITLE_LENGTH=60
 MAX_RESULT_LENGTH=120
-
-# Make sure we have a UTF-8 environment.
-export LANG=en_US.UTF-8
 
 set -u
 
@@ -19,13 +18,13 @@ QUERY="$*"
 QUERY=${QUERY:0:100}
 
 if [[ ! ${URL-} ]]; then
-    echo "Please don't run this script directly."
+    echo "$(gettext "Please don't run this script directly.")"
     exit 1
 fi
 
 if [[ $QUERY = 'help' || $QUERY = '' ]]; then
-    echo "Example: $IRC_COMMAND 車　くるま"
-    echo 'Providing the reading is optional. If it is missing, it will be guessed by mecab.'
+    printf "$(gettext 'Example: %s')\n" "$IRC_COMMAND 車　くるま"
+    echo "$(gettext 'Providing the reading is optional. If it is missing, it will be guessed by mecab.')"
     exit 0
 fi
 
@@ -70,7 +69,7 @@ ask_dictionary() {
     local SOURCE
     SOURCE=$(wget "$URL" --quiet -O - --timeout=10 --tries=1)
     if [[ $? -ne 0 ]]; then
-        echo 'A network error occured.'
+        echo "$(gettext 'A network error occured.')"
         return
     fi
     local TITLE=$(printf '%s' "$SOURCE" | \
