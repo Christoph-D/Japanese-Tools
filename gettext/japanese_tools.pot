@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2010-05-08 02:30+0200\n"
+"POT-Creation-Date: 2010-05-08 16:00+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: Christoph Dittmann <github@christoph-d.de>\n"
 
@@ -79,6 +79,44 @@ msgstr ""
 
 #: reading_quiz/quiz.sh:187
 msgid "Unknown level \"%s\". Valid levels (number of words): %s"
+msgstr ""
+
+#: simple_bot/bot.py:46
+msgid "An error occured."
+msgstr ""
+
+#: simple_bot/bot.py:70
+#, python-format
+msgid "Today's magic key for admin commands: %s"
+msgstr ""
+
+#: simple_bot/bot.py:125
+#, python-format
+msgid "Caught exception: %s\n"
+msgstr ""
+
+#: simple_bot/bot.py:157
+msgid "Unknown command."
+msgstr ""
+
+#: simple_bot/bot.py:162
+msgid "A very simple bot with \346\227\245\346\234\254\350\252\236 support."
+msgstr ""
+
+#: simple_bot/bot.py:187
+msgid "Known commands: "
+msgstr ""
+
+#: simple_bot/bot.py:230
+msgid "Usage: bot.py <server[:port]> <channel> <nickname> [NickServ password]"
+msgstr ""
+
+#: simple_bot/bot.py:239
+msgid "Error: Invalid port."
+msgstr ""
+
+#: simple_bot/bot.py:253
+msgid "Caught KeyboardInterrupt, exiting..."
 msgstr ""
 
 #: rtk/rtk.sh:19

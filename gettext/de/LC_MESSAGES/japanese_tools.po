@@ -7,7 +7,7 @@
 msgid ""
 msgstr ""
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2010-05-08 02:30+0200\n"
+"POT-Creation-Date: 2010-05-08 16:00+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: Christoph Dittmann <github@christoph-d.de>\n"
 "MIME-Version: 1.0\n"
@@ -82,6 +82,45 @@ msgstr "Überspringe %s [%s]..."
 msgid "Unknown level \"%s\". Valid levels (number of words): %s"
 msgstr "Unbekanntes Level \"%s\". Gültige Levels sind (Zahl der Wörter): %s"
 
+#: simple_bot/bot.py:46
+msgid "An error occured."
+msgstr "Ein Fehler ist aufgetreten."
+
+#: simple_bot/bot.py:70
+#, python-format
+msgid "Today's magic key for admin commands: %s"
+msgstr "Heutiger Magic-Key für Admin-Befehle: %s"
+
+#: simple_bot/bot.py:125
+#, python-format
+msgid "Caught exception: %s\n"
+msgstr "Exception gefangen: %s\n"
+
+#: simple_bot/bot.py:157
+msgid "Unknown command."
+msgstr "Unbekannter Befehl."
+
+#: simple_bot/bot.py:162
+msgid "A very simple bot with 日本語 support."
+msgstr "Ein sehr einfacher Bot mit 日本語-Features."
+
+#: simple_bot/bot.py:187
+msgid "Known commands: "
+msgstr "Bekannte Befehle: "
+
+#: simple_bot/bot.py:230
+msgid "Usage: bot.py <server[:port]> <channel> <nickname> [NickServ password]"
+msgstr ""
+"Aufruf: bot.py <Server[:Port]> <Channel> <Nickname> [NickServ-Passwort]"
+
+#: simple_bot/bot.py:239
+msgid "Error: Invalid port."
+msgstr "Fehler: Ungültiger Port."
+
+#: simple_bot/bot.py:253
+msgid "Caught KeyboardInterrupt, exiting..."
+msgstr "Ein KeyboardInterrupt ist aufgetreten, Ende..."
+
 #: rtk/rtk.sh:19
 msgid "Please put \"rtk.txt\" in the same directory as this script."
 msgstr "Bitte \"rtk.txt\" in dasselbe Verzeichnis wie dieses Skript legen."
@@ -124,7 +163,7 @@ msgstr "Unbekanntes Wort."
 
 #: audio/find_audio.sh:13
 msgid "Usage: %s word [reading]\\n"
-msgstr "Benutzung: %s Kanji [Hiragana]"
+msgstr "Aufruf: %s Kanji [Hiragana]"
 
 #: audio/find_audio.sh:79
 msgid "Please provide a word."

@@ -9,7 +9,7 @@
 
 from ircbot import SingleServerIRCBot
 from irclib import nm_to_n, nm_to_h, irc_lower, ip_numstr_to_quad, ip_quad_to_numstr
-import threading
+import gettext
 import string
 import random
 import os, subprocess, sys
@@ -17,6 +17,7 @@ import time
 import StringIO
 import traceback
 import locale
+_ = gettext.gettext
 
 scripts = [('rtk', '../rtk/rtk.sh'),
            ('romaji', '../romaji/romaji.sh'),
@@ -42,7 +43,7 @@ def run_script(path, argument, irc_source, irc_target):
                   'LANG'         : '.'.join(locale.getlocale()) }
             ).communicate()[0]
     except:
-        return 'An error occured.'
+        return _('An error occured.')
 
 def limit_length(s, max_bytes):
     """Limits the length of a unicode string after conversion to
@@ -66,7 +67,7 @@ class SimpleBot(SingleServerIRCBot):
         self._connect()
 
     def print_magic_key(self):
-        print 'Today\'s magic key for admin commands: %s' % self.magic_key,
+        print _('Today\'s magic key for admin commands: %s') % self.magic_key,
         sys.stdout.flush()
 
     def debug_out(self, line):
@@ -121,7 +122,7 @@ class SimpleBot(SingleServerIRCBot):
             self.do_command_unsafe(cmd)
         except Exception, e:
             output = StringIO.StringIO()
-            output.write('Caught exception: %s\n' % str(e))
+            output.write(_('Caught exception: %s\n') % str(e))
             traceback.print_exc(file = output)
             self.debug_out(output.getvalue())
             output.close()
@@ -153,12 +154,12 @@ class SimpleBot(SingleServerIRCBot):
             cmd = cmd[1].split(' ', 1)
             self.connection.privmsg(cmd[0], cmd[1])
         else:
-            self.say('Unknown command.')
+            self.say(_('Unknown command.'))
 
     def do_user_command(self, cmd):
         """Commands normal users may use."""
         if cmd == 'version':
-            return self.say(u'A very simple bot with 日本語 support.')
+            return self.say(_(u'A very simple bot with 日本語 support.'))
         elif cmd == 'help':
             return self.show_help()
         cmd = cmd.split(' ', 1)
@@ -183,7 +184,7 @@ class SimpleBot(SingleServerIRCBot):
     def show_help(self):
         possible_commands = [ '!' + s[0] for s in scripts ] + ['!version']
         possible_commands.sort()
-        self.say('Known commands: ' + ', '.join(possible_commands))
+        self.say(_('Known commands: ') + ', '.join(possible_commands))
 
     def add_timer(self, delay_seconds, script, argument):
         """Adds a new timer."""
@@ -211,12 +212,22 @@ class SimpleBot(SingleServerIRCBot):
             self.check_timers()
             self.ircobj.process_once(0.2)
 
+def setup_gettext():
+    gettext.bindtextdomain('japanese_tools', '../gettext/')
+    gettext.textdomain('japanese_tools')
+
 def main():
     # Set preferred locale.
     locale.setlocale(locale.LC_ALL, '')
-    import sys
+
+    # Change working directory to the location of this script so we
+    # can work with relative paths.
+    os.chdir(sys.path[0])
+
+    setup_gettext()
+
     if len(sys.argv) != 4 and len(sys.argv) != 5:
-        print 'Usage: bot.py <server[:port]> <channel> <nickname> [NickServ password]'
+        print _('Usage: bot.py <server[:port]> <channel> <nickname> [NickServ password]')
         sys.exit(1)
 
     s = sys.argv[1].split(':', 1)
@@ -225,7 +236,7 @@ def main():
         try:
             port = int(s[1])
         except ValueError:
-            print 'Error: Invalid port.'
+            print _('Error: Invalid port.')
             sys.exit(1)
     else:
         port = 6667
@@ -239,7 +250,7 @@ def main():
     try:
         bot.run_forever()
     except KeyboardInterrupt:
-        print 'Caught KeyboardInterrupt, exiting...'
+        print _('Caught KeyboardInterrupt, exiting...')
         bot.do_special_command('die')
         bot.start()
 
