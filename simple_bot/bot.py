@@ -35,6 +35,7 @@ scripts = [('rtk', '../rtk/rtk.sh'),
 
 def run_script(path, argument, irc_source_target):
     try:
+        lang = '.'.join(locale.getlocale())
         return subprocess.Popen(
             [path, argument],
             stdout=subprocess.PIPE,
@@ -42,7 +43,9 @@ def run_script(path, argument, irc_source_target):
             cwd=os.path.dirname(os.path.abspath(path)),
             env={ 'DMB_SENDER'   : irc_source_target[0],
                   'DMB_RECEIVER' : irc_source_target[1],
-                  'LANGUAGE'     : '.'.join(locale.getlocale()) }
+                  'LANGUAGE'     : lang,
+                  'LANG'         : lang,
+                  'LC_ALL'       : lang }
             ).communicate()[0]
     except:
         return _('An error occured.')
