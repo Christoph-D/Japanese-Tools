@@ -8,27 +8,27 @@
 # 
 # The command line arguments must be utf-8 encoded.
 
+. "$(dirname "$0")"/../gettext/gettext.sh
+
 DICT=$(dirname "$0")/rtk.txt
 MAX_KEYWORDS=10
 # Hardcoded limit on line length for IRC
 MAX_LINE_LENGTH=300
 
-# Make sure we have a UTF-8 environment.
-LANG=en_US.UTF-8
 if [[ ! -e $DICT ]]; then
-   echo "Please put \"rtk.txt\" in the same directory as this script."
+   echo "$(gettext 'Please put "rtk.txt" in the same directory as this script.')"
    exit 1
 fi
 
 QUERY=$@
 
 if [[ -z $QUERY ]]; then
-    echo "epsilon."
+    echo "$(gettext 'epsilon.')"
     exit 0
 fi
 
 if echo "$QUERY" | grep -q -e "[*+()$^]"; then
-    echo "No regular expressions please."
+    echo "$(gettext 'No regular expressions, please.')"
     exit 0
 fi
 
@@ -60,7 +60,7 @@ if echo "$QUERY" | grep -q -e "^\([a-zA-Z \-]\|\\\.\)*$"; then
         IFS=$ORIGIFS
     else
         # Unknown keyword
-        RESULT="Unknown keyword."
+        RESULT=$(gettext 'Unknown keyword.')
     fi
 elif echo "$QUERY" | grep -q -e '^[0-9 ]\+$'; then
     # Query contains Kanji numbers.
@@ -75,7 +75,7 @@ elif echo "$QUERY" | grep -q -e '^[0-9 ]\+$'; then
         RESULT="$RESULT${RESULT+ | }$R"
     done
     if [[ $RESULT = '???' ]]; then
-        RESULT="Unknown kanji number."
+        RESULT=$(gettext 'Unknown kanji number.')
     fi
 else
     # Query likely contains Japanese characters.

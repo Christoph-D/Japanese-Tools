@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2010-05-08 02:20+0200\n"
+"POT-Creation-Date: 2010-05-08 02:23+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: Christoph Dittmann <github@christoph-d.de>\n"
 
@@ -16,7 +16,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: romaji/romaji.sh:26
+#: romaji/romaji.sh:28
 msgid "No result."
 msgstr ""
 
@@ -81,6 +81,26 @@ msgstr ""
 msgid "Unknown level \"%s\". Valid levels (number of words): %s"
 msgstr ""
 
+#: rtk/rtk.sh:19
+msgid "Please put \"rtk.txt\" in the same directory as this script."
+msgstr ""
+
+#: rtk/rtk.sh:26 jmdict/ja.sh:26
+msgid "epsilon."
+msgstr ""
+
+#: rtk/rtk.sh:31
+msgid "No regular expressions, please."
+msgstr ""
+
+#: rtk/rtk.sh:63
+msgid "Unknown keyword."
+msgstr ""
+
+#: rtk/rtk.sh:78
+msgid "Unknown kanji number."
+msgstr ""
+
 #: google_translate/gt.sh:33
 msgid "No input."
 msgstr ""
@@ -95,10 +115,6 @@ msgstr ""
 
 #: jmdict/ja.sh:18
 msgid "Please run:"
-msgstr ""
-
-#: jmdict/ja.sh:26
-msgid "epsilon."
 msgstr ""
 
 #: jmdict/ja.sh:107
