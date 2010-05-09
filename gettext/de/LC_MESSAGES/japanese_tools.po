@@ -7,7 +7,7 @@
 msgid ""
 msgstr ""
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2010-05-08 22:59+0200\n"
+"POT-Creation-Date: 2010-05-09 22:03+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: Christoph Dittmann <github@christoph-d.de>\n"
 "MIME-Version: 1.0\n"
@@ -125,11 +125,11 @@ msgstr "Ein KeyboardInterrupt ist aufgetreten, Ende..."
 msgid "Please put \"rtk.txt\" in the same directory as this script."
 msgstr "Bitte \"rtk.txt\" in dasselbe Verzeichnis wie dieses Skript legen."
 
-#: rtk/rtk.sh:26 jmdict/ja.sh:26
+#: rtk/rtk.sh:26 kanjidic/kanjidic.sh:22 jmdict/ja.sh:26
 msgid "epsilon."
 msgstr "epsilon."
 
-#: rtk/rtk.sh:31
+#: rtk/rtk.sh:31 kanjidic/kanjidic.sh:32
 msgid "No regular expressions, please."
 msgstr "Bitte keine regulären Audrücke."
 
@@ -153,9 +153,29 @@ msgstr "Das kann ich nicht übersetzen. :/"
 msgid "No result. :-("
 msgstr "Kein Ergebnis. :-("
 
-#: jmdict/ja.sh:18
+#: kanjidic/kanjidic.sh:15 jmdict/ja.sh:18
 msgid "Please run: %s"
 msgstr "Bitte führe den folgenden Befehl aus: %s"
+
+#: kanjidic/kanjidic.sh:27
+msgid "Please enter some kanji."
+msgstr "Bitte ein paar Kanji angeben."
+
+#: kanjidic/kanjidic.sh:57
+msgid ". In names: "
+msgstr ". In Eigennamen: "
+
+#: kanjidic/kanjidic.sh:74
+msgid "%s: 1 stroke. %s {%s}"
+msgstr "%s: 1 Strich. %s {%s}"
+
+#: kanjidic/kanjidic.sh:76
+msgid "%s: %s strokes. %s {%s}"
+msgstr "%s: %s Striche. %s {%s}"
+
+#: kanjidic/kanjidic.sh:93
+msgid "No kanji found."
+msgstr "Keine Kanji gefunden."
 
 #: jmdict/ja.sh:107
 msgid "Unknown word."
