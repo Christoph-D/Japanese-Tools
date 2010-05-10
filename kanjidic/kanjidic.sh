@@ -11,6 +11,10 @@ DICT=$(dirname "$0")/kanjidic
 MAX_LINE_LENGTH=300
 MAX_NUMBER_OF_LINES=3
 
+if [[ ! ${IRC_PLUGIN:-} ]]; then
+    MAX_NUMBER_OF_LINES=20
+fi
+
 if [[ ! -e $DICT ]]; then
    printf_ 'Please run: %s' './prepare_kanjidic.sh'
    exit 1
