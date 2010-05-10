@@ -228,7 +228,7 @@ class SimpleBot(SingleServerIRCBot):
             self.ircobj.process_once(0.2)
 
 def setup_gettext():
-    gettext.bindtextdomain('japanese_tools', '../gettext/')
+    gettext.bindtextdomain('japanese_tools', '../gettext/locale')
     gettext.textdomain('japanese_tools')
 
 def main():
