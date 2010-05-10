@@ -7,7 +7,7 @@
 msgid ""
 msgstr ""
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2010-05-10 22:28+0200\n"
+"POT-Creation-Date: 2010-05-10 23:32+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: Christoph Dittmann <github@christoph-d.de>\n"
 "MIME-Version: 1.0\n"
@@ -141,15 +141,15 @@ msgstr "Unbekanntes Keyword."
 msgid "Unknown kanji number."
 msgstr "Unbekannte Kanji-Nummer."
 
-#: google_translate/gt.sh:33
+#: google_translate/gt.sh:36
 msgid "No input."
 msgstr "Keine Eingabe."
 
-#: google_translate/gt.sh:116
+#: google_translate/gt.sh:119
 msgid "This is untranslatable. :/"
 msgstr "Das kann ich nicht übersetzen. :/"
 
-#: google_translate/gt.sh:121
+#: google_translate/gt.sh:124
 msgid "No result. :-("
 msgstr "Kein Ergebnis. :-("
 

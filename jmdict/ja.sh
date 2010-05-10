@@ -15,7 +15,7 @@ MAX_LINE_LENGTH=400
 MAX_LINES=2
 
 if [ ! -e "$DICT" ]; then
-   printf_ 'Please run: %s' 'wget http://ftp.monash.edu.au/pub/nihongo/JMdict_e.gz && ./prepare_jmdict.sh JMdict_e.gz > JMdict_e_prepared'
+   printf_ 'Please run: %s' './prepare_jmdict.sh'
    exit 1
 fi
 
