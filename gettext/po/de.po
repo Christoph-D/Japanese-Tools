@@ -7,7 +7,7 @@
 msgid ""
 msgstr ""
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2010-05-10 23:32+0200\n"
+"POT-Creation-Date: 2010-05-11 00:07+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: Christoph Dittmann <github@christoph-d.de>\n"
 "MIME-Version: 1.0\n"
@@ -82,42 +82,42 @@ msgstr "Überspringe %s [%s]..."
 msgid "Unknown level \"%s\". Valid levels (number of words): %s"
 msgstr "Unbekanntes Level \"%s\". Gültige Levels sind (Zahl der Wörter): %s"
 
-#: simple_bot/bot.py:52
+#: simple_bot/bot.py:53
 msgid "An error occured."
 msgstr "Ein Fehler ist aufgetreten."
 
-#: simple_bot/bot.py:76
+#: simple_bot/bot.py:77
 #, python-format
 msgid "Today's magic key for admin commands: %s"
 msgstr "Heutiger Magic-Key für Admin-Befehle: %s"
 
-#: simple_bot/bot.py:131
+#: simple_bot/bot.py:132
 #, python-format
 msgid "Caught exception: %s\n"
 msgstr "Exception gefangen: %s\n"
 
-#: simple_bot/bot.py:163
+#: simple_bot/bot.py:164
 msgid "Unknown command."
 msgstr "Unbekannter Befehl."
 
-#: simple_bot/bot.py:177
+#: simple_bot/bot.py:178
 msgid "A very simple bot with 日本語 support."
 msgstr "Ein sehr einfacher Bot mit 日本語-Features."
 
-#: simple_bot/bot.py:202
+#: simple_bot/bot.py:203
 msgid "Known commands: "
 msgstr "Bekannte Befehle: "
 
-#: simple_bot/bot.py:245
+#: simple_bot/bot.py:246
 msgid "Usage: bot.py <server[:port]> <channel> <nickname> [NickServ password]"
 msgstr ""
 "Aufruf: bot.py <Server[:Port]> <Channel> <Nickname> [NickServ-Passwort]"
 
-#: simple_bot/bot.py:254
+#: simple_bot/bot.py:255
 msgid "Error: Invalid port."
 msgstr "Fehler: Ungültiger Port."
 
-#: simple_bot/bot.py:268
+#: simple_bot/bot.py:269
 msgid "Caught KeyboardInterrupt, exiting..."
 msgstr "Ein KeyboardInterrupt ist aufgetreten, Ende..."
 
@@ -125,7 +125,7 @@ msgstr "Ein KeyboardInterrupt ist aufgetreten, Ende..."
 msgid "Please put \"rtk.txt\" in the same directory as this script."
 msgstr "Bitte \"rtk.txt\" in dasselbe Verzeichnis wie dieses Skript legen."
 
-#: rtk/rtk.sh:26 kanjidic/kanjidic.sh:22 jmdict/ja.sh:26
+#: rtk/rtk.sh:26 kanjidic/kanjidic.sh:22 jmdict/ja.sh:33
 msgid "epsilon."
 msgstr "epsilon."
 
@@ -153,7 +153,7 @@ msgstr "Das kann ich nicht übersetzen. :/"
 msgid "No result. :-("
 msgstr "Kein Ergebnis. :-("
 
-#: kanjidic/kanjidic.sh:15 jmdict/ja.sh:18
+#: kanjidic/kanjidic.sh:15 jmdict/ja.sh:25
 msgid "Please run: %s"
 msgstr "Bitte führe den folgenden Befehl aus: %s"
 
@@ -177,7 +177,11 @@ msgstr "%s: %s Striche. %s {%s}"
 msgid "No kanji found."
 msgstr "Keine Kanji gefunden."
 
-#: jmdict/ja.sh:107
+#: jmdict/ja.sh:128
+msgid "Too little space to show the result."
+msgstr "Zu wenig Platz, um das Ergebnis anzuzeigen."
+
+#: jmdict/ja.sh:131
 msgid "Unknown word."
 msgstr "Unbekanntes Wort."
 

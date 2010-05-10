@@ -8,11 +8,18 @@
 
 set -u
 
-DICT=$(dirname "$0")/JMdict_e_prepared
 MAX_RESULTS_PER_PATTERN=5
 MAX_LENGTH_PER_ENGLISH=150
-MAX_LINE_LENGTH=400
+MAX_LINE_LENGTH=200
 MAX_LINES=2
+
+if [[ ! ${IRC_PLUGIN:-} ]]; then
+    MAX_LENGTH_PER_ENGLISH=250
+    MAX_LINE_LENGTH=300
+    MAX_LINES=5
+fi
+
+DICT=$(dirname "$0")/JMdict_e_prepared
 
 if [ ! -e "$DICT" ]; then
    printf_ 'Please run: %s' './prepare_jmdict.sh'
@@ -27,12 +34,28 @@ if [ -z "$QUERY" ]; then
     exit 0
 fi
 
+get_current_item() {
+    local KANJI=$(echo "$1" | cut -d '\' -f 1)
+    local KANA=$(echo "$1" | cut -d '\' -f 2)
+    local POS=$(echo "$1" | cut -d '\' -f 3)
+    local ENGLISH=$(echo "$1" | cut -d '\' -f 4)
+    if [ -n "$KANJI" ]; then
+        local L="$KANJI [$KANA] ($POS)"
+    else
+        local L="$KANA ($POS)"
+    fi
+    if [ ${#ENGLISH} -gt $MAX_LENGTH_PER_ENGLISH ]; then
+        ENGLISH="${ENGLISH:0:$(expr $MAX_LENGTH_PER_ENGLISH - 3)}..."
+    fi
+    echo "$L, $ENGLISH"
+}
+
 print_result() {
     # Change $IFS to loop over lines instead of words.
-    ORIGIFS=$IFS
-    IFS=$'\n'
-    SEEN=
-    LINE_COUNT=0
+    local IFS=$'\n'
+    local SEEN=
+    local LINE_COUNT=0
+    local LINE_BUFFER=
     for R in $RESULT; do
         # Skip duplicate lines.
         if echo "$SEEN" | grep -qF "$R"; then
@@ -40,33 +63,29 @@ print_result() {
         fi
         SEEN=$(echo "$SEEN" ; echo "$R")
 
-        KANJI=$(echo "$R" | cut -d '\' -f 1)
-        KANA=$(echo "$R" | cut -d '\' -f 2)
-        POS=$(echo "$R" | cut -d '\' -f 3)
-        ENGLISH=$(echo "$R" | cut -d '\' -f 4)
-        if [ -n "$KANJI" ]; then
-            L="$KANJI [$KANA] ($POS)"
+        local CURRENT_ITEM=$(get_current_item "$R")
+        if [[ ${IRC_PLUGIN:-} ]]; then
+            NEXT="${LINE_BUFFER:+$LINE_BUFFER / }$CURRENT_ITEM"
         else
-            L="$KANA ($POS)"
+            NEXT="${LINE_BUFFER:+$LINE_BUFFER\n}$CURRENT_ITEM"
         fi
-        if [ ${#ENGLISH} -gt $MAX_LENGTH_PER_ENGLISH ]; then
-            ENGLISH="${ENGLISH:0:$(expr $MAX_LENGTH_PER_ENGLISH - 3)}..."
-        fi
-        CURRENT_ITEM="$L, $ENGLISH"
-        NEXT="${LINE_BUFFER:+$LINE_BUFFER / }$CURRENT_ITEM"
 
         # If the final string would get too long, we're done.
         if [[ ${#NEXT} -gt $MAX_LINE_LENGTH ]]; then
             # Append the current line to the result.
             FINAL="${FINAL:+$FINAL\n}$LINE_BUFFER"
-            # Remember the current item for the next line.
-            NEXT="$CURRENT_ITEM"
+            # Remember the current item for the next line only if it
+            # fits.
+            LINE_BUFFER=
+            if [[ ${#CURRENT_ITEM} -le $MAX_LINE_LENGTH ]]; then
+                LINE_BUFFER="$CURRENT_ITEM"
+            fi
             let ++LINE_COUNT
             [[ $LINE_COUNT -ge $MAX_LINES ]] && break
+        else
+            LINE_BUFFER=$NEXT
         fi
-        LINE_BUFFER=$NEXT
     done
-    IFS=$ORIGIFS
     if [[ $LINE_COUNT -lt $MAX_LINES ]]; then
         FINAL="${FINAL:+$FINAL\n}$LINE_BUFFER"
     fi
@@ -101,8 +120,13 @@ for I in $(seq 0 1 $(expr ${#PATTERNS[@]} - 1)); do
     RESULT=$(echo "$RESULT" ; grep -m $MAX_RESULTS_PER_PATTERN -e "$P" "$DICT")
 done
 
-if [ -n "$RESULT" ]; then
-    print_result
+if [[ $RESULT ]]; then
+    RESULT=$(print_result)
+    if [[ $RESULT ]]; then
+        echo "$RESULT"
+    else
+        echo_ 'Too little space to show the result.'
+    fi
 else
     echo_ 'Unknown word.'
 fi

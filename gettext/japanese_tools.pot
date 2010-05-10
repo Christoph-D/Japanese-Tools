@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2010-05-10 23:32+0200\n"
+"POT-Creation-Date: 2010-05-11 00:07+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: Christoph Dittmann <github@christoph-d.de>\n"
 
@@ -81,41 +81,41 @@ msgstr ""
 msgid "Unknown level \"%s\". Valid levels (number of words): %s"
 msgstr ""
 
-#: simple_bot/bot.py:52
+#: simple_bot/bot.py:53
 msgid "An error occured."
 msgstr ""
 
-#: simple_bot/bot.py:76
+#: simple_bot/bot.py:77
 #, python-format
 msgid "Today's magic key for admin commands: %s"
 msgstr ""
 
-#: simple_bot/bot.py:131
+#: simple_bot/bot.py:132
 #, python-format
 msgid "Caught exception: %s\n"
 msgstr ""
 
-#: simple_bot/bot.py:163
+#: simple_bot/bot.py:164
 msgid "Unknown command."
 msgstr ""
 
-#: simple_bot/bot.py:177
+#: simple_bot/bot.py:178
 msgid "A very simple bot with 日本語 support."
 msgstr ""
 
-#: simple_bot/bot.py:202
+#: simple_bot/bot.py:203
 msgid "Known commands: "
 msgstr ""
 
-#: simple_bot/bot.py:245
+#: simple_bot/bot.py:246
 msgid "Usage: bot.py <server[:port]> <channel> <nickname> [NickServ password]"
 msgstr ""
 
-#: simple_bot/bot.py:254
+#: simple_bot/bot.py:255
 msgid "Error: Invalid port."
 msgstr ""
 
-#: simple_bot/bot.py:268
+#: simple_bot/bot.py:269
 msgid "Caught KeyboardInterrupt, exiting..."
 msgstr ""
 
@@ -123,7 +123,7 @@ msgstr ""
 msgid "Please put \"rtk.txt\" in the same directory as this script."
 msgstr ""
 
-#: rtk/rtk.sh:26 kanjidic/kanjidic.sh:22 jmdict/ja.sh:26
+#: rtk/rtk.sh:26 kanjidic/kanjidic.sh:22 jmdict/ja.sh:33
 msgid "epsilon."
 msgstr ""
 
@@ -151,7 +151,7 @@ msgstr ""
 msgid "No result. :-("
 msgstr ""
 
-#: kanjidic/kanjidic.sh:15 jmdict/ja.sh:18
+#: kanjidic/kanjidic.sh:15 jmdict/ja.sh:25
 msgid "Please run: %s"
 msgstr ""
 
@@ -175,7 +175,11 @@ msgstr ""
 msgid "No kanji found."
 msgstr ""
 
-#: jmdict/ja.sh:107
+#: jmdict/ja.sh:128
+msgid "Too little space to show the result."
+msgstr ""
+
+#: jmdict/ja.sh:131
 msgid "Unknown word."
 msgstr ""
 

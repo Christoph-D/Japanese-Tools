@@ -46,7 +46,8 @@ def run_script(path, argument, irc_source_target):
                   'DMB_RECEIVER' : irc_source_target[1],
                   'LANGUAGE'     : lang,
                   'LANG'         : lang,
-                  'LC_ALL'       : lang }
+                  'LC_ALL'       : lang,
+                  'IRC_PLUGIN'   : '1' }
             ).communicate()[0]
     except:
         return _('An error occured.')
