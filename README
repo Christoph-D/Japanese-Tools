@@ -1,0 +1,129 @@
+# -*- mode: org; -*-
+
+These are some scripts I wrote while learning Japanese. I currently
+have the following aliases in my shell:
+alias ja="$JAPANESE_TOOLS/jmdict/ja.sh"
+alias rtk="$JAPANESE_TOOLS/rtk/rtk.sh"
+alias sen="$JAPANESE_TOOLS/yahoo_jisho/daijisen.sh"
+alias rin="$JAPANESE_TOOLS/yahoo_jisho/daijirin.sh"
+alias gd="$JAPANESE_TOOLS/google_dictionary/gd.sh"
+
+* audio/
+  find_audio.sh finds an audio version of a given Japanese
+  word on languagepod101.
+** Example
+   $ ./find_audio.sh 星空
+   Audio for 星空 [ほしぞら]: http://tinyurl.com/32uop8k
+* gettext/
+  Internationalization support. Currently supported languages other
+  than English:
+  - German
+
+  You should call gettext/regenerate_mo_files.sh if you want to use
+  any of the translations.
+* google_dictionary/
+  gd.sh looks up English words in the Google dictionary:
+  http://www.google.com/dictionary
+** Example
+   ./gd.sh diligent
+   Someone who is *diligent* works hard in a careful and thorough way.
+* google_translate/
+  gt.sh translates words and sentences using Google Translate. The
+  target language is determined by the environment variable LANG, but
+  it can also be specified explicitly.
+** Example
+   ./gt.sh My hovercraft is full of eels.
+   私のホバークラフトは鰻がいっぱいです。
+
+   ./gt.sh it My hovercraft is full of eels.
+   it: Il mio hovercraft è pieno di anguille.
+
+   ./gt.sh Il mio hovercraft è pieno di anguille.
+   My hovercraft is full of eels.
+* jmdict/
+  ja.sh performs a jmdict lookup. Works best for Japanese->English
+  lookups.
+
+  To start, you first need to run the script prepare_jmdict.sh. It
+  will download and preprocess the jmdict file.
+** Example
+   $ ./ja.sh 村長
+   村長 [そんちょう] (n), village headman
+   市長村長選挙 [しちょうそんちょうせんきょ] (n), mayoral election
+* kana/
+  A simple hiragana and katakana trainer.
+** Example (IRC session)
+   <Christoph>  !hira help
+   <nihongobot> Start with "!hira <level> [count]". Known levels are 0
+                to 10. To learn more about some level please use
+                "!hira help <level>".
+   <nihongobot> To only see the differences between consecutive
+                levels, please use "!hira helpdiff <level>".
+   <Christoph>  !hira 5
+   <nihongobot> Please write in romaji: す と に ね へ
+   <Christoph>  !hira su to ni ne he
+   <nihongobot> Perfect! 5 of 5. Statistics for Christoph: 44.64% of
+                280 characters correct.
+   <nihongobot> Please write in romaji: は と ぬ ほ な
+* kanjidic/
+  Implements a lookup in kanjidic:
+  http://www.csse.monash.edu.au/~jwb/kanjidic.html
+** Example
+   $ ./kanjidic.sh 日本語
+   日: 4 strokes. ニチ, ジツ, ひ, -び, -か. In names: あ, あき, いる, く, くさ, こう, す, たち, に, にっ, につ, へ {day, sun, Japan, counter for days}
+   本: 5 strokes. ホン, もと. In names: まと {book, present, main, origin, true, real, counter for long cylindrical things}
+   語: 14 strokes. ゴ, かた.る, かた.らう {word, speech, language}
+* reading/
+  read.py converts kanji to kana using mecab.
+** Example
+   $ ./read.py 鬱蒼たる樹海の中に舞う人の如き影が在った。
+   鬱蒼[うっそう]　たる　樹海[じゅかい]　の　中[なか]　に　舞[ま]う
+   人[ひと]　の　如[ごと]き　影[かげ]　が　在[あ]っ　た　。
+* reading_quiz/
+  A quiz asking kanji -> kana questions. Only works as an IRC plugin
+  for now.
+** Example (IRC session)
+   <Christoph>  !quiz jlpt2
+   <nihongobot> Please read: 発見
+   <Christoph>  !quiz はっけん
+   <nihongobot> Christoph: Correct! (はっけん:
+                (n,vs) 1. discovery, 2. detection, 3. finding)
+* romaji/
+  romaji.sh converts kanji and kana to romaji using mecab.
+** Example
+   $ ./romaji.sh 鬱蒼たる樹海の中に舞う人の如き影が在った。
+   ussou taru jukai no naka ni mau hito no gotoki kage ga atsu ta 。
+* rtk/
+  Lookup between keyword - kanji - number. The keywords and numbers
+  refer to Heisig's amazing book "Remembering the Kanji".
+** Example
+   $ ./rtk.sh 城壁
+   #362: castle 城 | #1500: wall 壁
+
+   $ ./rtk.sh star
+   #1556: star 星, #237: stare 眺, #1476: starve 餓,
+   #2532: star-anise 樒, #2872: start 孟, #2376: mustard 芥
+
+   $ ./rtk.sh 1 2 3
+   #1: one 一 | #2: two 二 | #3: three 三
+* simple_bot/
+  As the name says, it's a simple IRC bot. You can start it with:
+  ./bot.py <server[:port]> <channel> <nickname> [NickServ password]
+
+  It uses all the other scripts.
+* yahoo_jisho/
+  Binding to Yahoo!辞書, the Yahoo Japanese dictionary. It prints a
+  small excerpt from the dictionary and a link to the full result.
+** Example
+   $ ./daijisen.sh うれしい
+   うれし・い【×嬉しい】 ( http://tinyurl.com/32esm38 )
+   ［形］［文］うれ・し［シク］ １ 物事が自分の望みどおりになって満足で
+   あり、喜ばしい。自分にとってよいことが起き、愉快で、楽しい。「努力が
+   報われてとても―・い」「―・いことに明日は晴れるらしい」⇔悲しい。  ２
+   相手から受けた行...
+
+   $ ./daijirin.sh うれしい
+   うれし・い(3) 【▼嬉しい】 ( http://tinyurl.com/39bwl22 )
+   (形) [文]シク うれ・し 1　（望ましい事態が実現して）心がうきうきとし
+   て楽しい。心が晴れ晴れとして喜ばしい。  ⇔悲しい 2　満足して、相手に
+   感謝する気持ちになるさま。ありがたい。かたじけない。  〔派生〕 ...
