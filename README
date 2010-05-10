@@ -1,8 +1,8 @@
 # -*- coding: utf-8; mode: org; -*-
 
 These are some scripts I wrote which helped me learn Japanese. Most
-scripts are intended to be plugins for an IRC bot. But many scripts
-can be used standalone, as well. For example, I currently have the
+scripts are intended to be plugins for an IRC bot. Many scripts can
+also be used standalone, though. For example, I currently have the
 following aliases in my shell:
 
 alias ja="$JAPANESE_TOOLS/jmdict/ja.sh"
