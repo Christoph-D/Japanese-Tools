@@ -7,7 +7,7 @@
 . "$(dirname "$0")"/../gettext/gettext.sh
 
 # Default target language
-TARGET_LANG=en
+TARGET_LANG=${LANG:0:2}
 # Fallback target language
 SECOND_TARGET_LANG=ja
 # Allowed target languages
@@ -22,6 +22,9 @@ MAX_PATH_LENGTH=5
 TRANSLATE_SERVICE_URL="http://ajax.googleapis.com/ajax/services/language/translate"
 
 set -u
+
+# Make sure TARGET_LANG is not empty.
+[[ $TARGET_LANG ]] || TARGET_LANG=en
 
 # Accumulate all parameters
 QUERY="$*"
