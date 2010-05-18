@@ -31,23 +31,26 @@ scripts = [('rtk', '../rtk/rtk.sh'),
            ('daijisen', '../yahoo_jisho/daijisen.sh'),
            ('daijirin', '../yahoo_jisho/daijirin.sh'),
            ('audio', '../audio/find_audio.sh'),
-           ('quiz', '../reading_quiz/quiz.sh')
+           ('quiz', '../reading_quiz/quiz.sh'),
+           ('calc', '../mueval/eval.sh')
            ]
 
 def run_script(path, argument, irc_source_target):
     try:
         lang = '.'.join(locale.getlocale())
+        env = os.environ
+        env.update({ 'DMB_SENDER'   : irc_source_target[0],
+                     'DMB_RECEIVER' : irc_source_target[1],
+                     'LANGUAGE'     : lang,
+                     'LANG'         : lang,
+                     'LC_ALL'       : lang,
+                     'IRC_PLUGIN'   : '1' })
         return subprocess.Popen(
             [path, argument],
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             cwd=os.path.dirname(os.path.abspath(path)),
-            env={ 'DMB_SENDER'   : irc_source_target[0],
-                  'DMB_RECEIVER' : irc_source_target[1],
-                  'LANGUAGE'     : lang,
-                  'LANG'         : lang,
-                  'LC_ALL'       : lang,
-                  'IRC_PLUGIN'   : '1' }
+            env=env
             ).communicate()[0]
     except:
         return _('An error occured.')

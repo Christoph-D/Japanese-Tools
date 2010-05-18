@@ -8,13 +8,29 @@ msgid ""
 msgstr ""
 
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2010-05-11 00:12+0200\n"
+"POT-Creation-Date: 2010-05-18 18:39+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: Christoph Dittmann <github@christoph-d.de>\n"
 
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+
+#: mueval/eval.sh:13
+msgid "Please install mueval: %s"
+msgstr ""
+
+#: mueval/eval.sh:20
+msgid "Example: !calc 1+1"
+msgstr ""
+
+#: mueval/eval.sh:29
+msgid "Memory limit exceeded."
+msgstr ""
+
+#: mueval/eval.sh:31
+msgid "Time limit exceeded."
+msgstr ""
 
 #: romaji/romaji.sh:28
 msgid "No result."
@@ -81,41 +97,41 @@ msgstr ""
 msgid "Unknown level \"%s\". Valid levels (number of words): %s"
 msgstr ""
 
-#: simple_bot/bot.py:53
+#: simple_bot/bot.py:56
 msgid "An error occured."
 msgstr ""
 
-#: simple_bot/bot.py:77
+#: simple_bot/bot.py:80
 #, python-format
 msgid "Today's magic key for admin commands: %s"
 msgstr ""
 
-#: simple_bot/bot.py:132
+#: simple_bot/bot.py:135
 #, python-format
 msgid "Caught exception: %s\n"
 msgstr ""
 
-#: simple_bot/bot.py:164
+#: simple_bot/bot.py:167
 msgid "Unknown command."
 msgstr ""
 
-#: simple_bot/bot.py:178
+#: simple_bot/bot.py:181
 msgid "A very simple bot with 日本語 support."
 msgstr ""
 
-#: simple_bot/bot.py:203
+#: simple_bot/bot.py:206
 msgid "Known commands: "
 msgstr ""
 
-#: simple_bot/bot.py:246
+#: simple_bot/bot.py:249
 msgid "Usage: bot.py <server[:port]> <channel> <nickname> [NickServ password]"
 msgstr ""
 
-#: simple_bot/bot.py:255
+#: simple_bot/bot.py:258
 msgid "Error: Invalid port."
 msgstr ""
 
-#: simple_bot/bot.py:269
+#: simple_bot/bot.py:272
 msgid "Caught KeyboardInterrupt, exiting..."
 msgstr ""
 
