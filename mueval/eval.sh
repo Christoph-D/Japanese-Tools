@@ -33,7 +33,8 @@ if [[ $? -ne 0 ]]; then
         fi
     fi
     RESULT=${RESULT//<no location info>:/}
-    if printf '%s' "$RESULT" | grep -q '^No instance for (GHC\.Show\.Show (GHC\.IOBase\.IO '; then
+    if printf '%s' "$RESULT" | \
+        grep -q '^No instance for (GHC\.Show\.Show (\(GHC\.IOBase\.\)\?IO '; then
         RESULT="IO not allowed."
     fi
     # Remove line breaks, multiple spaces and other unnecessary parts.
