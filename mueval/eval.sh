@@ -8,7 +8,7 @@
 . "$(dirname "$0")"/../gettext/gettext.sh
 
 MAX_LINE_LENGTH=200
-TIME_LIMIT_SECONDS=2
+TIME_LIMIT_SECONDS=3
 
 if [[ ! -x $(which mueval) ]]; then
     printf_ 'Please install mueval: %s' 'http://hackage.haskell.org/package/mueval'
