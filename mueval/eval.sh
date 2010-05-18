@@ -39,7 +39,7 @@ if [[ $? -ne 0 ]]; then
     # Remove line breaks, multiple spaces and other unnecessary parts.
     RESULT=$(printf '%s\n' "${RESULT//$'\n'/ }" | \
         sed 's/(possibly incorrect indentation)//g' | \
-        sed 's/ at <interactive>:[0-9]\+:[0-9]\+.*$//' | \
+        sed 's/ at <interactive>:[^ ].*$//' | \
         sed 's/GHC\.\(Types\.\)\?//g' | \
         sed 's/ \+/ /g' | \
         sed 's/\(^ \+\)\|\( \+$\)//g')
