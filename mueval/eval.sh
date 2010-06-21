@@ -24,6 +24,10 @@ fi
 
 # Prepend a space to prevent calling other irc bots.
 RESULT=" $(mueval --rlimits --timelimit="$TIME_LIMIT_SECONDS" --expression "$QUERY" 2>&1)"
+# Remove newlines.
+RESULT=${RESULT//$'\n'/\\n}
+# Remove all control characters.
+RESULT=$(printf '%s\n' "$RESULT" | tr --delete '\000-\037')
 
 if [[ $? -ne 0 ]]; then
     if printf '%s' "$RESULT" | grep -q '^mueval\(-core\)\?: '; then
