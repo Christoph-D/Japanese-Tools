@@ -25,7 +25,7 @@ fi
 # Prepend a space to prevent calling other irc bots.
 RESULT=" $(mueval --rlimits --timelimit="$TIME_LIMIT_SECONDS" --expression "$QUERY" 2>&1)"
 # Remove newlines.
-RESULT=${RESULT//$'\n'/\\n}
+RESULT=${RESULT//$'\n'/ }
 # Remove all control characters.
 RESULT=$(printf '%s\n' "$RESULT" | tr --delete '\000-\037')
 
@@ -42,8 +42,8 @@ if [[ $? -ne 0 ]]; then
         grep -q '^No instance for (GHC\.Show\.Show (\(GHC\.IOBase\.\)\?IO '; then
         RESULT="IO not allowed."
     fi
-    # Remove line breaks, multiple spaces and other unnecessary parts.
-    RESULT=$(printf '%s\n' "${RESULT//$'\n'/ }" | \
+    # Remove multiple spaces and other unnecessary parts.
+    RESULT=$(printf '%s\n' "$RESULT" | \
         sed 's/(possibly incorrect indentation)//g' | \
         sed 's/ at <interactive>:[^ ].*$//' | \
         sed 's/GHC\.\(Types\.\)\?//g' | \
