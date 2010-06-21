@@ -8,7 +8,7 @@
 . "$(dirname "$0")"/../gettext/gettext.sh
 
 MAX_LINE_LENGTH=200
-TIME_LIMIT_SECONDS=3
+TIME_LIMIT_SECONDS=6
 
 if [[ ! -x $(which mueval) ]]; then
     printf_ 'Please install mueval: %s' 'http://hackage.haskell.org/package/mueval'
@@ -22,7 +22,8 @@ if [[ $QUERY = 'help' ]]; then
     exit 0
 fi
 
-RESULT=$(mueval --timelimit="$TIME_LIMIT_SECONDS" --expression "$QUERY" 2>&1)
+# Prepend a space to prevent calling other irc bots.
+RESULT=" $(mueval --rlimits --timelimit="$TIME_LIMIT_SECONDS" --expression "$QUERY" 2>&1)"
 
 if [[ $? -ne 0 ]]; then
     if printf '%s' "$RESULT" | grep -q '^mueval\(-core\)\?: '; then
