@@ -22,14 +22,14 @@ if [[ $QUERY = 'help' ]]; then
     exit 0
 fi
 
-# Prepend a space to prevent calling other irc bots.
-RESULT=" $(mueval --rlimits --timelimit="$TIME_LIMIT_SECONDS" --expression "$QUERY" 2>&1)"
+RESULT="$(mueval --rlimits --timelimit="$TIME_LIMIT_SECONDS" --expression "$QUERY" 2>&1)"
+MUEVAL_EXIT_CODE=$?
 # Remove newlines.
 RESULT=${RESULT//$'\n'/ }
 # Remove all control characters.
 RESULT=$(printf '%s\n' "$RESULT" | tr --delete '\000-\037')
 
-if [[ $? -ne 0 ]]; then
+if [[ $MUEVAL_EXIT_CODE -ne 0 ]]; then
     if printf '%s' "$RESULT" | grep -q '^mueval\(-core\)\?: '; then
         if printf '%s' "$RESULT" | grep -q 'memory'; then
             RESULT=$(_ 'Memory limit exceeded.')
@@ -52,9 +52,11 @@ if [[ $? -ne 0 ]]; then
 fi
 
 # Truncate result if too long.
-if [[ ${#RESULT} -gt $MAX_LINE_LENGTH ]]; then
-    RESULT="${RESULT:0:$(( $MAX_LINE_LENGTH-3 ))}..."
+# In any case prepend a space to prevent accidently calling other irc
+# bots.
+if [[ ${#RESULT} -ge $MAX_LINE_LENGTH ]]; then
+    RESULT=" ${RESULT:0:$(( $MAX_LINE_LENGTH-4 ))}..."
 fi
-printf '%s\n' "$RESULT"
+printf '%s\n' " $RESULT"
 
 exit 0
