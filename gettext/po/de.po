@@ -7,26 +7,30 @@
 msgid ""
 msgstr ""
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2010-05-18 18:39+0200\n"
+"POT-Creation-Date: 2010-06-22 22:04+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: Christoph Dittmann <github@christoph-d.de>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: mueval/eval.sh:13
+#: mueval/eval.sh:14
 msgid "Please install mueval: %s"
 msgstr "Bitte mueval installieren: %s"
 
-#: mueval/eval.sh:20
+#: mueval/eval.sh:23
+msgid "Please don't call this script directly."
+msgstr "Dieses Skript bitte nicht direkt ausführen."
+
+#: mueval/eval.sh:28
 msgid "Example: !calc 1+1"
 msgstr "Beispiel: !calc 1+1"
 
-#: mueval/eval.sh:29
+#: mueval/eval.sh:53
 msgid "Memory limit exceeded."
 msgstr "Speicherlimit überschritten."
 
-#: mueval/eval.sh:31
+#: mueval/eval.sh:55
 msgid "Time limit exceeded."
 msgstr "Zeitlimit überschritten."
 
@@ -98,42 +102,42 @@ msgstr "Überspringe %s [%s]..."
 msgid "Unknown level \"%s\". Valid levels (number of words): %s"
 msgstr "Unbekanntes Level \"%s\". Gültige Levels sind (Zahl der Wörter): %s"
 
-#: simple_bot/bot.py:56
+#: simple_bot/bot.py:57
 msgid "An error occured."
 msgstr "Ein Fehler ist aufgetreten."
 
-#: simple_bot/bot.py:80
+#: simple_bot/bot.py:81
 #, python-format
 msgid "Today's magic key for admin commands: %s"
 msgstr "Heutiger Magic-Key für Admin-Befehle: %s"
 
-#: simple_bot/bot.py:135
+#: simple_bot/bot.py:136
 #, python-format
 msgid "Caught exception: %s\n"
 msgstr "Exception gefangen: %s\n"
 
-#: simple_bot/bot.py:167
+#: simple_bot/bot.py:168
 msgid "Unknown command."
 msgstr "Unbekannter Befehl."
 
-#: simple_bot/bot.py:181
+#: simple_bot/bot.py:182
 msgid "A very simple bot with 日本語 support."
 msgstr "Ein sehr einfacher Bot mit 日本語-Features."
 
-#: simple_bot/bot.py:206
+#: simple_bot/bot.py:207
 msgid "Known commands: "
 msgstr "Bekannte Befehle: "
 
-#: simple_bot/bot.py:249
+#: simple_bot/bot.py:250
 msgid "Usage: bot.py <server[:port]> <channel> <nickname> [NickServ password]"
 msgstr ""
 "Aufruf: bot.py <Server[:Port]> <Channel> <Nickname> [NickServ-Passwort]"
 
-#: simple_bot/bot.py:258
+#: simple_bot/bot.py:259
 msgid "Error: Invalid port."
 msgstr "Fehler: Ungültiger Port."
 
-#: simple_bot/bot.py:272
+#: simple_bot/bot.py:273
 msgid "Caught KeyboardInterrupt, exiting..."
 msgstr "Ein KeyboardInterrupt ist aufgetreten, Ende..."
 
