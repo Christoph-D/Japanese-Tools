@@ -1,0 +1,81 @@
+Wed Jun 23 22:51:51 CEST 2010  github@christoph-d.de
+  * Show only the inferred type if asked.
+
+New patches:
+
+[Show only the inferred type if asked.
+github@christoph-d.de**20100623205151
+ Ignore-this: ae96546c7dd066fd8cf46b5346a399d8
+] hunk ./mueval/Mueval/Interpreter.hs 36
+ interpreter Options { extensions = exts, namedExtensions = nexts,
+                       rLimits = rlimits,
+                       loadFile = load, expression = expr,
+-                      modules = m } = do
++                      modules = m, 
++                      printType = typeCheckOnly } = do
+                                   let lexts = (guard exts >> glasgowExtensions) ++ map read nexts
+                                   unless (null lexts) $ set [languageExtensions := lexts]
+ 
+hunk ./mueval/Mueval/Interpreter.hs 63
+                                   -- we don't check if the expression typechecks
+                                   -- this way we get an "InterpreterError" we can display
+                                   etype <- typeOf expr
+-                                  result <- eval expr
++                                  result <- if typeCheckOnly then return "Evaluation didn't happen" else eval expr
+ 
+                                   return (expr, etype, result)
+ 
+hunk ./mueval/Mueval/Interpreter.hs 73
+ interpreterSession opts = do r <- runInterpreter (interpreter opts)
+                              case r of
+                                  Left err -> printInterpreterError err
+-                                 Right (e,et,val) -> when (printType opts) (sayIO e >> sayIO et) >> sayIO val
++                                 Right (e,et,val) -> if printType opts then sayIO et else sayIO val
+ 
+ mvload :: FilePath -> IO ()
+ mvload lfl = do canonfile <- makeRelativeToCurrentDirectory lfl
+
+Context:
+
+[Interpreter.hs: remove temporary file
+gwern0@gmail.com**20100623175009
+ Ignore-this: c229ca9ab00be6d14cf5b426ddcd9d1
+] 
+[rm whitespace
+gwern0@gmail.com**20100622201019
+ Ignore-this: d6b241a92505189b791da95ebb3162cc
+] 
+[no point in using an Int as a Bool
+gwern0@gmail.com**20100601173249
+ Ignore-this: ce5bceb190fd0e7ef966552c041fcb5
+] 
+[update test options
+gwern0@gmail.com**20100601173138
+ Ignore-this: 2f32a0bb96af6d57ef43e38cc2e6b6a5
+] 
+[ArgsParse.hs: harmonize argument names
+gwern0@gmail.com**20100601172920
+ Ignore-this: e5a3b54b7fbf11ad40210ae79744e11a
+] 
+[got the --help stuff really working this time - correct exitcode & all
+gwern0@gmail.com**20100601172530
+ Ignore-this: e8e6c61b15de2d92581ebb929d1f5b58
+] 
+[ArgsParse.hs: add --help
+gwern0@gmail.com**20100601170901
+ Ignore-this: 83e0f6ceb627e29832edf597e27b570a
+] 
+[update HCAR.tex
+gwern0@gmail.com**20100525185754
+ Ignore-this: a5e3781f2e633945e7c9bd98c2bce48c
+] 
+[Context.hs: turns out some people don't have 'parallel' installed
+gwern0@gmail.com**20100507162817
+ Ignore-this: 87ddf2534225b046c577cd749b1c43bc
+] 
+[TAG 0.8
+gwern0@gmail.com**20100409182050
+ Ignore-this: 11c7e001b2ef51851c093799ddc895ef
+] 
+Patch bundle hash:
+9187e7e17a654961847625043b270b23d2ed1056
