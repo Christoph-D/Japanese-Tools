@@ -29,23 +29,14 @@ if [[ $QUERY = 'help' ]]; then
     exit 0
 fi
 
-RESULT="$(mueval --rlimits --inferred-type --timelimit="$TIME_LIMIT_SECONDS" --expression "$QUERY" 2>&1)"
+RESULT="$(mueval --rlimits \
+    $([[ $MODE = 'type' ]] && echo '--inferred-type') \
+    --timelimit="$TIME_LIMIT_SECONDS" \
+    --expression "$QUERY" 2>&1)"
 MUEVAL_EXIT_CODE=$?
-# May contain garbage if $MUEVAL_EXIT_CODE is not 0.
-INFERRED_TYPE="$(printf '%s\n' "$RESULT" | head -n 2 | tail -n 1)"
-# The query as seen by mueval.
-QUERY2="$(printf '%s\n' "$RESULT" | head -n 1)"
 
-if [[ $MUEVAL_EXIT_CODE -eq 0 || $QUERY = $QUERY2 ]]; then
-    RESULT="$(printf '%s\n' "$RESULT" | tail -n +3)"
-    # Even if mueval did not return 0, apparently we've found a type.
-    [[ $MODE = 'type' ]] && MUEVAL_EXIT_CODE=0
-fi
-
-# Remove newlines.
-RESULT=${RESULT//$'\n'/ }
-# Remove all control characters.
-RESULT=$(printf '%s\n' "$RESULT" | tr --delete '\000-\037')
+# Remove newlines and control characters.
+RESULT=$(printf '%s\n' "${RESULT//$'\n'/ }" | tr --delete '\000-\037')
 
 if [[ $MUEVAL_EXIT_CODE -ne 0 ]]; then
     if printf '%s' "$RESULT" | grep -q '^mueval\(-core\)\?: '; then
@@ -68,6 +59,7 @@ if [[ $MUEVAL_EXIT_CODE -ne 0 ]]; then
         sed 's/ \+/ /g' | \
         sed 's/\(^ \+\)\|\( \+$\)//g')
 elif [[ $MODE = 'type' ]]; then
+    INFERRED_TYPE="$RESULT"
     RESULT="$QUERY :: $INFERRED_TYPE"
     # Leave room for $QUERY of at least 4 characters. The space in
     # front plus the " :: " part makes 9 characters in total.
