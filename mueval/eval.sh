@@ -59,6 +59,9 @@ if [[ $MUEVAL_EXIT_CODE -ne 0 ]]; then
         sed 's/ \+/ /g' | \
         sed 's/\(^ \+\)\|\( \+$\)//g')
 elif [[ $MODE = 'type' ]]; then
+    if printf '%s\n' "$QUERY" | grep -q ' '; then
+        QUERY="($QUERY)"
+    fi
     INFERRED_TYPE="$RESULT"
     RESULT="$QUERY :: $INFERRED_TYPE"
     # Leave room for $QUERY of at least 4 characters. The space in
