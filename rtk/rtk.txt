@@ -3005,3 +3005,26 @@
 煕	cheer	3005
 而	and then	3006
 掟	mandate	3007
+嗅	sniff	122a
+喩	metaphor	289a
+訃	obituary	339a
+楷	block letters	449a
+諧	orderliness	449b
+錮	weld	580a
+恣	selfish	596a
+惧	disquieting	632a
+憬	hanker	632b
+拉	yank	644b
+篭	basket	950a
+傲	arrogance	979a
+踪	trail	1287a
+緻	fine	1338a
+璧	holed gem	1500a
+摯	clasp	1506a
+貪	covet	1588a
+慄	shudder	1609a
+辣	bitter	1668a
+瘍	carbuncle	1685a
+哺	suckle	1836a
+鬱	gloom	1968a
+羞	humiliate	2040a

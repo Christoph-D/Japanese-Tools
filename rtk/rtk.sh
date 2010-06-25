@@ -41,7 +41,7 @@ format_entry() {
     KANJI=$(echo "$1" | cut -f 1)
     KEYWORD=$(echo "$1" | cut -f 2)
     NUMBER=$(echo "$1" | cut -f 3)
-    printf "#%d: %s %s" "$NUMBER" "$KEYWORD" "$KANJI" 2> /dev/null
+    printf "#%s: %s %s" "$NUMBER" "$KEYWORD" "$KANJI" 2> /dev/null
 }
 
 if echo "$QUERY" | grep -q -e "^\([a-zA-Z \-]\|\\\.\)*$"; then
@@ -62,7 +62,7 @@ if echo "$QUERY" | grep -q -e "^\([a-zA-Z \-]\|\\\.\)*$"; then
         # Unknown keyword
         RESULT=$(_ 'Unknown keyword.')
     fi
-elif echo "$QUERY" | grep -q -e '^[0-9 ]\+$'; then
+elif echo "$QUERY" | grep -q -e '^[0-9 ]\+[a-z]\?$'; then
     # Query contains Kanji numbers.
     while read -r CURRENT_NUMBER QUERY < <(echo "$QUERY") && \
         [[ -n $CURRENT_NUMBER ]]; do
