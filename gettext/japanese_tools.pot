@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2010-06-22 22:04+0200\n"
+"POT-Creation-Date: 2010-07-01 01:35+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: Christoph Dittmann <github@christoph-d.de>\n"
 
@@ -28,11 +28,11 @@ msgstr ""
 msgid "Example: !calc 1+1"
 msgstr ""
 
-#: mueval/eval.sh:53
+#: mueval/eval.sh:44
 msgid "Memory limit exceeded."
 msgstr ""
 
-#: mueval/eval.sh:55
+#: mueval/eval.sh:46
 msgid "Time limit exceeded."
 msgstr ""
 
@@ -201,6 +201,30 @@ msgstr ""
 
 #: jmdict/ja.sh:131
 msgid "Unknown word."
+msgstr ""
+
+#: compare_encoding/compare_encoding.sh:13
+msgid "Usage: %s lemma "
+msgstr ""
+
+#: compare_encoding/compare_encoding.sh:36
+msgid "Article not found on Wikipedia."
+msgstr ""
+
+#: compare_encoding/compare_encoding.sh:44
+msgid "UTF-8 vs. UTF-16: %d vs. %d bytes."
+msgstr ""
+
+#: compare_encoding/compare_encoding.sh:48
+msgid "UTF-8 wins."
+msgstr ""
+
+#: compare_encoding/compare_encoding.sh:50
+msgid "UTF-16 wins."
+msgstr ""
+
+#: compare_encoding/compare_encoding.sh:52
+msgid "It's a tie."
 msgstr ""
 
 #: audio/find_audio.sh:13

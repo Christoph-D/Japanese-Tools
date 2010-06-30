@@ -33,7 +33,8 @@ scripts = [('rtk', '../rtk/rtk.sh'),
            ('audio', '../audio/find_audio.sh'),
            ('quiz', '../reading_quiz/quiz.sh'),
            ('calc', '../mueval/run.sh'),
-           ('type', '../mueval/type.sh')
+           ('type', '../mueval/type.sh'),
+           ('utf', '../compare_encoding/compare_encoding.sh')
            ]
 
 def run_script(path, argument, irc_source_target):
