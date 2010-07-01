@@ -46,9 +46,15 @@ printf_no_newline_ "UTF-8 vs. UTF-16: %d vs. %d bytes." "$UTF8" "$UTF16"
 echo -n ' '
 
 if [[ $UTF8 -lt $UTF16 ]]; then
-    printf_ "UTF-8 wins by %.1f%%." "$(echo "scale=3;($UTF16-$UTF8)/$UTF16*100" | bc)"
+    # Workaround for printf not accepting numbers like "1.2" on non-US
+    # locale.
+    OUTPUT=$(printf_ "UTF-8 wins by %s." '%.1f%%')
+    export LC_ALL=en_US.UTF8
+    printf "$OUTPUT\n" "$(echo "scale=3;($UTF16-$UTF8)/$UTF16*100" | bc)"
 elif [[ $UTF8 -gt $UTF16 ]]; then
-    printf_ "UTF-16 wins by %.1f%%." "$(echo "scale=3;($UTF8-$UTF16)/$UTF8*100" | bc)"
+    OUTPUT=$(printf_ "UTF-16 wins by %s." '%.1f%%')
+    export LC_ALL=en_US.UTF8
+    printf "$OUTPUT\n" "$(echo "scale=3;($UTF8-$UTF16)/$UTF8*100" | bc)"
 else
     echo_ "It's a tie."
 fi

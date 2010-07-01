@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2010-07-01 12:24+0200\n"
+"POT-Creation-Date: 2010-07-01 12:38+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: Christoph Dittmann <github@christoph-d.de>\n"
 
@@ -215,15 +215,15 @@ msgstr ""
 msgid "UTF-8 vs. UTF-16: %d vs. %d bytes."
 msgstr ""
 
-#: compare_encoding/compare_encoding.sh:49
-msgid "UTF-8 wins by %.1f%%."
-msgstr ""
-
 #: compare_encoding/compare_encoding.sh:51
-msgid "UTF-16 wins by %.1f%%."
+msgid "UTF-8 wins by %s."
 msgstr ""
 
-#: compare_encoding/compare_encoding.sh:53
+#: compare_encoding/compare_encoding.sh:55
+msgid "UTF-16 wins by %s."
+msgstr ""
+
+#: compare_encoding/compare_encoding.sh:59
 msgid "It's a tie."
 msgstr ""
 
