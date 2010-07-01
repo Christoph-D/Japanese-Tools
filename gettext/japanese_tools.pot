@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2010-07-01 01:35+0200\n"
+"POT-Creation-Date: 2010-07-01 12:24+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: Christoph Dittmann <github@christoph-d.de>\n"
 
@@ -101,41 +101,41 @@ msgstr ""
 msgid "Unknown level \"%s\". Valid levels (number of words): %s"
 msgstr ""
 
-#: simple_bot/bot.py:57
+#: simple_bot/bot.py:58
 msgid "An error occured."
 msgstr ""
 
-#: simple_bot/bot.py:81
+#: simple_bot/bot.py:82
 #, python-format
 msgid "Today's magic key for admin commands: %s"
 msgstr ""
 
-#: simple_bot/bot.py:136
+#: simple_bot/bot.py:137
 #, python-format
 msgid "Caught exception: %s\n"
 msgstr ""
 
-#: simple_bot/bot.py:168
+#: simple_bot/bot.py:169
 msgid "Unknown command."
 msgstr ""
 
-#: simple_bot/bot.py:182
+#: simple_bot/bot.py:183
 msgid "A very simple bot with 日本語 support."
 msgstr ""
 
-#: simple_bot/bot.py:207
+#: simple_bot/bot.py:208
 msgid "Known commands: "
 msgstr ""
 
-#: simple_bot/bot.py:250
+#: simple_bot/bot.py:251
 msgid "Usage: bot.py <server[:port]> <channel> <nickname> [NickServ password]"
 msgstr ""
 
-#: simple_bot/bot.py:259
+#: simple_bot/bot.py:260
 msgid "Error: Invalid port."
 msgstr ""
 
-#: simple_bot/bot.py:273
+#: simple_bot/bot.py:274
 msgid "Caught KeyboardInterrupt, exiting..."
 msgstr ""
 
@@ -207,23 +207,23 @@ msgstr ""
 msgid "Usage: %s lemma "
 msgstr ""
 
-#: compare_encoding/compare_encoding.sh:36
+#: compare_encoding/compare_encoding.sh:37
 msgid "Article not found on Wikipedia."
 msgstr ""
 
-#: compare_encoding/compare_encoding.sh:44
+#: compare_encoding/compare_encoding.sh:45
 msgid "UTF-8 vs. UTF-16: %d vs. %d bytes."
 msgstr ""
 
-#: compare_encoding/compare_encoding.sh:48
-msgid "UTF-8 wins."
+#: compare_encoding/compare_encoding.sh:49
+msgid "UTF-8 wins by %.1f%%."
 msgstr ""
 
-#: compare_encoding/compare_encoding.sh:50
-msgid "UTF-16 wins."
+#: compare_encoding/compare_encoding.sh:51
+msgid "UTF-16 wins by %.1f%%."
 msgstr ""
 
-#: compare_encoding/compare_encoding.sh:52
+#: compare_encoding/compare_encoding.sh:53
 msgid "It's a tie."
 msgstr ""
 
