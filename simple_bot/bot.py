@@ -186,7 +186,7 @@ class SimpleBot(SingleServerIRCBot):
         cmd = cmd.split(' ', 1)
         # As a fallback try splitting on full-width space.
         if len(cmd) == 1:
-            cmd = cmd.split('　', 1)
+            cmd = cmd[0].split('　', 1)
         # Make sure we have at least the empty argument.
         cmd.append('')
         e = self.current_event
