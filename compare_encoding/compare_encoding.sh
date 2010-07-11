@@ -32,7 +32,6 @@ TMP_FILE8=$(mktemp)
 TMP_FILE16=$(mktemp)
 trap "rm -f '$TMP_FILE8' '$TMP_FILE16'" EXIT
 
-# Only print the URL if the audio file exists.
 if ! wget -q "$URL" -O "$TMP_FILE8"; then
     echo_ 'Article not found on Wikipedia.'
     exit 0
