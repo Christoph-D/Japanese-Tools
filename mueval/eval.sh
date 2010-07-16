@@ -79,6 +79,6 @@ fi
 if [[ ${#RESULT} -ge $MAX_LINE_LENGTH ]]; then
     RESULT="${RESULT:0:$(( $MAX_LINE_LENGTH-4 ))}..."
 fi
-printf '%s\n' " $RESULT"
+printf '%s\n' " $RESULT" | iconv -f utf8 -t latin1
 
 exit 0
