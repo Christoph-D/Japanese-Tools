@@ -66,9 +66,9 @@ def limit_length(s, max_bytes):
     return u''
 
 class SimpleBot(SingleServerIRCBot):
-    def __init__(self, channel, nickname, nickpass, server, port=6667):
+    def __init__(self, channels, nickname, nickpass, server, port=6667):
         SingleServerIRCBot.__init__(self, [(server, port)], nickname, nickname)
-        self.channel = channel
+        self.initial_channels = channels
         self.nickpass = nickpass
         # magic_key is used for admin commands. E.g., "magic_key say
         # test" in a query with the bot triggers the admin command
@@ -108,7 +108,8 @@ class SimpleBot(SingleServerIRCBot):
             c.privmsg('NickServ', 'identify ' + self.nickpass)
         # Set bot mode.
         c.mode(c.get_nickname(), '+B')
-        c.join(self.channel)
+        for channel in self.initial_channels:
+            c.join(channel)
 
     def on_privmsg(self, c, e):
         self.current_event = e
@@ -154,8 +155,6 @@ class SimpleBot(SingleServerIRCBot):
                 self.die(u'さようなら'.encode('utf-8'))
             else:
                 self.die(cmd[1])
-        elif cmd[0] == 'say':
-            self.say(cmd[1], self.channel)
         elif cmd[0] == 'join':
             self.connection.join(cmd[1])
         elif cmd[0] == 'part':
@@ -251,7 +250,7 @@ def main():
     setup_gettext()
 
     if len(sys.argv) != 4 and len(sys.argv) != 5:
-        print _('Usage: bot.py <server[:port]> <channel> <nickname> [NickServ password]')
+        print _('Usage: bot.py <server[:port]> <channel[,channel...]> <nickname> [NickServ password]')
         sys.exit(1)
 
     s = sys.argv[1].split(':', 1)
@@ -264,13 +263,13 @@ def main():
             sys.exit(1)
     else:
         port = 6667
-    channel = sys.argv[2]
+    channels = sys.argv[2].split(",")
     nickname = sys.argv[3]
     nickpass = None
     if len(sys.argv) == 5:
         nickpass = sys.argv[4]
 
-    bot = SimpleBot(channel, nickname, nickpass, server, port)
+    bot = SimpleBot(channels, nickname, nickpass, server, port)
     try:
         bot.run_forever()
     except KeyboardInterrupt:
