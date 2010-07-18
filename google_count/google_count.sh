@@ -27,12 +27,12 @@ QUERY=${1:0:100}
 if printf '%s\n' "$QUERY" | grep -q '^\([[:punct:]]\|[a-zA-Z0-9]\)*$'; then
     # The query does not contain CJK characters.
     PATTERN='About [0-9,]* results'
-    BASE_URL="http://www.google.com/search?lr=lang_en&as_q="
+    BASE_URL="http://google.com/search?lr=lang_en&as_q="
     NO_RESULTS='No results.'
 else
     # The query does contain CJK characters.
     PATTERN='約 [0-9,]* 件'
-    BASE_URL="http://www.google.co.jp/search?lr=lang_ja&as_q="
+    BASE_URL="http://google.co.jp/search?lr=lang_ja&as_q="
     NO_RESULTS='見つかりませんでした。'
 fi
 
