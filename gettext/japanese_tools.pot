@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2010-07-01 12:38+0200\n"
+"POT-Creation-Date: 2010-07-18 16:14+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: Christoph Dittmann <github@christoph-d.de>\n"
 
@@ -101,16 +101,16 @@ msgstr ""
 msgid "Unknown level \"%s\". Valid levels (number of words): %s"
 msgstr ""
 
-#: simple_bot/bot.py:58
+#: simple_bot/bot.py:59 google_count/google_count.sh:46
 msgid "An error occured."
 msgstr ""
 
-#: simple_bot/bot.py:82
+#: simple_bot/bot.py:83
 #, python-format
 msgid "Today's magic key for admin commands: %s"
 msgstr ""
 
-#: simple_bot/bot.py:137
+#: simple_bot/bot.py:139
 #, python-format
 msgid "Caught exception: %s\n"
 msgstr ""
@@ -123,19 +123,21 @@ msgstr ""
 msgid "A very simple bot with 日本語 support."
 msgstr ""
 
-#: simple_bot/bot.py:208
+#: simple_bot/bot.py:211
 msgid "Known commands: "
 msgstr ""
 
-#: simple_bot/bot.py:251
-msgid "Usage: bot.py <server[:port]> <channel> <nickname> [NickServ password]"
+#: simple_bot/bot.py:254
+msgid ""
+"Usage: bot.py <server[:port]> <channel[,channel...]> <nickname> [NickServ "
+"password]"
 msgstr ""
 
-#: simple_bot/bot.py:260
+#: simple_bot/bot.py:263
 msgid "Error: Invalid port."
 msgstr ""
 
-#: simple_bot/bot.py:274
+#: simple_bot/bot.py:277
 msgid "Caught KeyboardInterrupt, exiting..."
 msgstr ""
 
@@ -157,6 +159,10 @@ msgstr ""
 
 #: rtk/rtk.sh:78
 msgid "Unknown kanji number."
+msgstr ""
+
+#: google_count/google_count.sh:13
+msgid "Usage: %s some_string "
 msgstr ""
 
 #: google_translate/gt.sh:36
@@ -207,23 +213,23 @@ msgstr ""
 msgid "Usage: %s lemma "
 msgstr ""
 
-#: compare_encoding/compare_encoding.sh:37
+#: compare_encoding/compare_encoding.sh:35
 msgid "Article not found on Wikipedia."
 msgstr ""
 
-#: compare_encoding/compare_encoding.sh:45
+#: compare_encoding/compare_encoding.sh:43
 msgid "UTF-8 vs. UTF-16: %d vs. %d bytes."
 msgstr ""
 
-#: compare_encoding/compare_encoding.sh:51
+#: compare_encoding/compare_encoding.sh:49
 msgid "UTF-8 wins by %s."
 msgstr ""
 
-#: compare_encoding/compare_encoding.sh:55
+#: compare_encoding/compare_encoding.sh:53
 msgid "UTF-16 wins by %s."
 msgstr ""
 
-#: compare_encoding/compare_encoding.sh:59
+#: compare_encoding/compare_encoding.sh:57
 msgid "It's a tie."
 msgstr ""
 

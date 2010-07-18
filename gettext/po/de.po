@@ -7,7 +7,7 @@
 msgid ""
 msgstr ""
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2010-07-01 12:38+0200\n"
+"POT-Creation-Date: 2010-07-18 16:14+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: Christoph Dittmann <github@christoph-d.de>\n"
 "MIME-Version: 1.0\n"
@@ -102,16 +102,16 @@ msgstr "Überspringe %s [%s]..."
 msgid "Unknown level \"%s\". Valid levels (number of words): %s"
 msgstr "Unbekanntes Level \"%s\". Gültige Levels sind (Zahl der Wörter): %s"
 
-#: simple_bot/bot.py:58
+#: simple_bot/bot.py:59 google_count/google_count.sh:46
 msgid "An error occured."
 msgstr "Ein Fehler ist aufgetreten."
 
-#: simple_bot/bot.py:82
+#: simple_bot/bot.py:83
 #, python-format
 msgid "Today's magic key for admin commands: %s"
 msgstr "Heutiger Magic-Key für Admin-Befehle: %s"
 
-#: simple_bot/bot.py:137
+#: simple_bot/bot.py:139
 #, python-format
 msgid "Caught exception: %s\n"
 msgstr "Exception gefangen: %s\n"
@@ -124,20 +124,22 @@ msgstr "Unbekannter Befehl."
 msgid "A very simple bot with 日本語 support."
 msgstr "Ein sehr einfacher Bot mit 日本語-Features."
 
-#: simple_bot/bot.py:208
+#: simple_bot/bot.py:211
 msgid "Known commands: "
 msgstr "Bekannte Befehle: "
 
-#: simple_bot/bot.py:251
-msgid "Usage: bot.py <server[:port]> <channel> <nickname> [NickServ password]"
+#: simple_bot/bot.py:254
+msgid ""
+"Usage: bot.py <server[:port]> <channel[,channel...]> <nickname> [NickServ "
+"password]"
 msgstr ""
-"Aufruf: bot.py <Server[:Port]> <Channel> <Nickname> [NickServ-Passwort]"
+"Aufruf: bot.py <Server[:Port]> <Channel[,Channel...]> <Nickname> [NickServ-Passwort]"
 
-#: simple_bot/bot.py:260
+#: simple_bot/bot.py:263
 msgid "Error: Invalid port."
 msgstr "Fehler: Ungültiger Port."
 
-#: simple_bot/bot.py:274
+#: simple_bot/bot.py:277
 msgid "Caught KeyboardInterrupt, exiting..."
 msgstr "Ein KeyboardInterrupt ist aufgetreten, Ende..."
 
@@ -160,6 +162,10 @@ msgstr "Unbekanntes Keyword."
 #: rtk/rtk.sh:78
 msgid "Unknown kanji number."
 msgstr "Unbekannte Kanji-Nummer."
+
+#: google_count/google_count.sh:13
+msgid "Usage: %s some_string "
+msgstr "Aufruf: %s Suchtext"
 
 #: google_translate/gt.sh:36
 msgid "No input."
@@ -209,23 +215,23 @@ msgstr "Unbekanntes Wort."
 msgid "Usage: %s lemma "
 msgstr "Aufruf: %s Lemma"
 
-#: compare_encoding/compare_encoding.sh:37
+#: compare_encoding/compare_encoding.sh:35
 msgid "Article not found on Wikipedia."
 msgstr "Wikipedia-Artikel nicht gefunden."
 
-#: compare_encoding/compare_encoding.sh:45
+#: compare_encoding/compare_encoding.sh:43
 msgid "UTF-8 vs. UTF-16: %d vs. %d bytes."
 msgstr "UTF-8 vs. UTF-16: %d vs. %d Bytes."
 
-#: compare_encoding/compare_encoding.sh:51
+#: compare_encoding/compare_encoding.sh:49
 msgid "UTF-8 wins by %s."
 msgstr "UTF-8 gewinnt mit %s Vorsprung."
 
-#: compare_encoding/compare_encoding.sh:55
+#: compare_encoding/compare_encoding.sh:53
 msgid "UTF-16 wins by %s."
 msgstr "UTF-16 gewinnt mit %s Vorsprung."
 
-#: compare_encoding/compare_encoding.sh:59
+#: compare_encoding/compare_encoding.sh:57
 msgid "It's a tie."
 msgstr "Unentschieden."
 
