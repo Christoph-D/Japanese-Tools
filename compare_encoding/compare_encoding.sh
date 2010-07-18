@@ -2,8 +2,8 @@
 # Copyright: Christoph Dittmann <github@christoph-d.de>
 # License: GNU GPL, version 3 or later; http://www.gnu.org/copyleft/gpl.html
 #
-# This compare the efficiency of different utf encodings for Wikipedia
-# articles.
+# This script compares the efficiency of different utf encodings for
+# Japanese Wikipedia articles.
 
 . "$(dirname "$0")"/../gettext/gettext.sh
 
@@ -22,8 +22,7 @@ encode_query() {
     printf '%s\n' "$ENCODED_QUERY"
 }
 
-QUERY="$*"
-QUERY=${QUERY:0:100}
+QUERY="${1:0:100}"
 
 LEMMA=$(encode_query "$QUERY")
 URL="http://ja.wikipedia.org/wiki/$LEMMA"
