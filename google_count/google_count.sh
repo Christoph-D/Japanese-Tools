@@ -36,8 +36,7 @@ else
     NO_RESULTS='見つかりませんでした。'
 fi
 
-QUERY=${QUERY//\"/}
-QUERY=$(encode_query "\"$QUERY\"")
+QUERY=$(encode_query "$QUERY")
 URL="$BASE_URL$QUERY"
 
 # We need to set the user-agent to something common or google will not
