@@ -24,7 +24,7 @@ encode_query() {
 
 QUERY=${1:0:100}
 
-if printf '%s\n' "$QUERY" | grep -q '^\([[:punct:]]\|[a-zA-Z0-9]\)*$'; then
+if printf '%s\n' "$QUERY" | grep -q '^\([[:punct:]]\|[a-zA-Z0-9 ]\)*$'; then
     # The query does not contain CJK characters.
     PATTERN='About [0-9,]* results'
     BASE_URL="http://google.com/search?lr=lang_en&as_q="
