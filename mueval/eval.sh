@@ -59,18 +59,7 @@ if [[ $MUEVAL_EXIT_CODE -ne 0 ]]; then
         sed 's/ \+/ /g' | \
         sed 's/\(^ \+\)\|\( \+$\)//g')
 elif [[ $MODE = 'type' ]]; then
-    if printf '%s\n' "$QUERY" | grep -q ' '; then
-        QUERY="($QUERY)"
-    fi
-    INFERRED_TYPE="$RESULT"
-    RESULT="$QUERY :: $INFERRED_TYPE"
-    # Leave room for $QUERY of at least 4 characters. The space in
-    # front plus the " :: " part makes 9 characters in total.
-    if [[ ${#INFERRED_TYPE} -ge $(( $MAX_LINE_LENGTH - 9 )) ]]; then
-        RESULT=":: $INFERRED_TYPE"
-    elif [[ ${#RESULT} -ge $MAX_LINE_LENGTH ]]; then
-        RESULT="${QUERY:0:$(( $MAX_LINE_LENGTH - ${#INFERRED_TYPE} - 8 ))}... :: $INFERRED_TYPE"
-    fi
+    RESULT=":: $RESULT"
 fi
 
 # Truncate result if too long.
