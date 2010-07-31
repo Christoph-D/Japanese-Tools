@@ -183,12 +183,16 @@ class SimpleBot(SingleServerIRCBot):
             return self.say(_(u'A very simple bot with 日本語 support.'))
         elif cmd == 'help':
             return self.show_help()
-        cmd = cmd.split(' ', 1)
-        # As a fallback try splitting on full-width space.
-        if len(cmd) == 1:
-            cmd = cmd[0].split('　', 1)
-        # Make sure we have at least the empty argument.
-        cmd.append('')
+        split_pos = cmd.find(' ')
+        split_pos2 = cmd.find('　')
+        split_pos_len = len(' ')
+        if split_pos == -1 or (split_pos2 != -1 and split_pos2 < split_pos):
+            split_pos = split_pos2
+            split_pos_len = len('　')
+        if split_pos == -1:
+            cmd = [cmd, '']
+        else:
+            cmd = [cmd[:split_pos], cmd[split_pos + split_pos_len:]]
         e = self.current_event
         for s in scripts:
             if s[0] == cmd[0]:
