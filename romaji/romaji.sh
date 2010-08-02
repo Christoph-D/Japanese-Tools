@@ -23,7 +23,7 @@ if [ -n "$RESULT" ]; then
     # Remove newlines. There shouldn't be any, but we make sure.
     RESULT=${RESULT//$'\n'/}
     # Restrict length and print result
-    printf "%s\n" "${RESULT:0:300}"
+    printf " %s\n" "${RESULT:0:300}"
 else
     echo_ 'No result.'
 fi
