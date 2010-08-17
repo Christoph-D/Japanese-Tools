@@ -76,6 +76,7 @@ class SimpleBot(SingleServerIRCBot):
         # "say".
         self.magic_key = ''.join([random.choice(string.ascii_letters) for x in range(8)]) + ' '
         self.print_magic_key()
+        self.current_topic = ''
         self._timers = []
         self._connect()
 
@@ -233,12 +234,61 @@ class SimpleBot(SingleServerIRCBot):
         # Remove expired timers.
         self._timers = [ t for t in self._timers if t[0] >= current_time ]
 
+    def next_word_of_the_day(self, old_word):
+        file_done = 'word_of_the_day_done.txt'
+        file_next = 'word_of_the_day_next.txt'
+        try:
+            with open(file_next, 'r') as f:
+                with open(file_next + '.tmp', 'w') as f2:
+                    next_word = f.readline()
+                    for line in f:
+                        f2.write(line)
+            os.rename(file_next + '.tmp', file_next)
+        except IOError:
+            next_word = ''
+        if next_word:
+            with open(file_done, 'a') as f:
+                f.write(old_word + '\n')
+        return next_word.strip()
+    def daily_jobs(self):
+        """This method will be called once per day a few seconds after
+        midnight."""
+        marker = 'Wort des Tages: '
+        if self.current_topic.find(marker) != -1:
+            prefix, old_word = self.current_topic.split(marker, 1)
+            if old_word.find(' ') != -1:
+                print 'old_word: ' + old_word
+                old_word, suffix = old_word.split(' ', 1)
+                suffix = ' ' + suffix
+                print 'suffix: ' + suffix
+            else:
+                suffix = ''
+            new_word = self.next_word_of_the_day(old_word)
+            if new_word:
+                new_topic = '%s%s%s%s' % (prefix, marker, new_word, suffix)
+                print 'new topic: [%s]' % new_topic
+                self.connection.topic(self.initial_channels[0], new_topic)
+
+    def check_daily_jobs(self):
+        current_time = time.strftime('%a')
+        if hasattr(self, 'daily_jobs_last_time') and current_time != self.daily_jobs_last_time:
+            self.daily_jobs()
+        self.daily_jobs_last_time = current_time
+
+    def on_currenttopic(self, c, e):
+        if e.arguments()[0] == self.initial_channels[0]:
+            self.current_topic = e.arguments()[1]
+    def on_topic(self, c, e):
+        if e.target() == self.initial_channels[0]:
+            self.current_topic = e.arguments()[0]
+
     def run_forever(self):
         """In order to support custom timers, we can't call
         self.start()."""
         while True:
             self.check_timers()
             self.ircobj.process_once(0.2)
+            self.check_daily_jobs()
 
 def setup_gettext():
     gettext.bindtextdomain('japanese_tools', '../gettext/locale')
