@@ -238,17 +238,20 @@ class SimpleBot(SingleServerIRCBot):
         file_done = 'word_of_the_day_done.txt'
         file_next = 'word_of_the_day_next.txt'
         try:
-            with open(file_next, 'r') as f:
-                with open(file_next + '.tmp', 'w') as f2:
-                    next_word = f.readline()
-                    for line in f:
-                        f2.write(line)
+            f = open(file_next, 'r')
+            f2 = open(file_next + '.tmp', 'w')
+            next_word = f.readline()
+            for line in f:
+                f2.write(line)
+            f.close()
+            f2.close()
             os.rename(file_next + '.tmp', file_next)
         except IOError:
             next_word = ''
         if next_word:
-            with open(file_done, 'a') as f:
-                f.write(old_word + '\n')
+            f = open(file_done, 'a')
+            f.write(old_word + '\n')
+            f.close()
         return next_word.strip()
     def daily_jobs(self):
         """This method will be called once per day a few seconds after
