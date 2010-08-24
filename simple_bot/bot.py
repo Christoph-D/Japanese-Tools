@@ -35,7 +35,8 @@ scripts = [('rtk', '../rtk/rtk.sh'),
            ('calc', '../mueval/run.sh'),
            ('type', '../mueval/type.sh'),
            ('utf', '../compare_encoding/compare_encoding.sh'),
-           ('count', '../google_count/google_count.sh')
+           ('count', '../google_count/google_count.sh'),
+           ('lhc', '../lhc/lhc_info.sh')
            ]
 
 def run_script(path, argument, irc_source_target):
