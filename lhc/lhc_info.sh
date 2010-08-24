@@ -7,7 +7,10 @@ TMP_DIR=$(mktemp -d)
 trap 'rm -rf "$TMP_DIR"' EXIT
 cd "$TMP_DIR"
 
-wget --quiet http://vistar-capture.web.cern.ch/vistar-capture/lhc1.png
+if ! wget --quiet --tries=1 --timeout=5 http://vistar-capture.web.cern.ch/vistar-capture/lhc1.png; then
+    echo 'LHC data is currently unavailable.'
+    exit 0
+fi
 convert lhc1.png -negate lhc1.png
 convert lhc1.png -crop 1016x54+4+38 -monochrome -scale '200%' title.png
 convert lhc1.png -crop 192x43+142+108 beam_energy.png
