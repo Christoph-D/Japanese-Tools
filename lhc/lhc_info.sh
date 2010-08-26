@@ -18,7 +18,7 @@ convert lhc1.png -crop 509x173+2+557 -scale '200%' comments.png
 
 TITLE=$(gocr -d 0 -C 'A-Z0-9_:;,./--' -s 25 -i title.png | head -n 1)
 ENERGY=$(gocr -d 0 -C '0-9MGeV' -i beam_energy.png | grep '^[0-9]\+ [a-zA-Z]\+$' | head -n 1)
-COMMENTS=$(gocr -d 0 -C 'ABCDEFGHJKLMNOPQRSTUVWXYZa-z0-9_:;,./--=' -s 17 -i comments.png)
+COMMENTS=$(gocr -d 0 -C 'A-Za-z0-9_:;,./--=' -s 17 -i comments.png)
 # Remove newlines.
 COMMENTS="${COMMENTS//,$'\n'/,}"
 COMMENTS="${COMMENTS//$'\n'/, }"
