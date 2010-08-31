@@ -18,16 +18,16 @@ if ! wget --quiet --tries=1 --timeout=5 http://vistar-capture.web.cern.ch/vistar
 fi
 
 ocr() {
-    convert lhc1.png "$@" tmp.tif &> /dev/null
+    convert lhc1.png "$@" +dither -colors 2 -depth 8 tmp.tif &> /dev/null
     tesseract tmp.tif tmp &> /dev/null
     # Trim spaces.
     printf '%s\n' "$(cat tmp.txt 2>/dev/null)"
 }
 
-TITLE=$(ocr -crop 1016x54+4+38 -monochrome)
-ENERGY=$(ocr -crop 148x26+533+5 -monochrome)
+TITLE=$(ocr -crop 1016x54+4+38)
+ENERGY=$(ocr -crop 148x26+533+5)
 
-COMMENTS=$(ocr -crop 509x173+2+557 -monochrome)
+COMMENTS=$(ocr -crop 509x173+2+557)
 # Remove newlines.
 COMMENTS="${COMMENTS//,$'\n'/,}"
 COMMENTS="${COMMENTS//$'\n'/, }"
