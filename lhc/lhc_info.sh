@@ -7,29 +7,36 @@ TMP_DIR=$(mktemp -d)
 trap 'rm -rf "$TMP_DIR"' EXIT
 cd "$TMP_DIR"
 
+if ! which tesseract &> /dev/null; then
+    echo "Please install tesseract."
+    exit 1
+fi
+
 if ! wget --quiet --tries=1 --timeout=5 http://vistar-capture.web.cern.ch/vistar-capture/lhc1.png; then
     echo 'LHC data is currently unavailable.'
     exit 0
 fi
-convert lhc1.png -negate lhc1.png
-convert lhc1.png -crop 1016x54+4+38 -monochrome -scale '200%' title.png
-convert lhc1.png -crop 148x26+533+5 beam_energy.png
-convert lhc1.png -crop 509x173+2+557 -scale '200%' comments.png
 
-TITLE=$(gocr -d 0 -C 'A-Z0-9_:;,./--' -s 25 -i title.png | head -n 1)
-ENERGY=$(gocr -d 0 -C '0-9MGeV' -i beam_energy.png | grep '^[0-9]\+ [a-zA-Z]\+$' | head -n 1)
-COMMENTS=$(gocr -d 0 -C 'A-Za-z0-9_:;,./--=' -s 17 -i comments.png)
+ocr() {
+    convert lhc1.png "$@" tmp.tif &> /dev/null
+    tesseract tmp.tif tmp &> /dev/null
+    # Trim spaces.
+    printf '%s\n' "$(cat tmp.txt 2>/dev/null)"
+}
+
+TITLE=$(ocr -crop 1016x54+4+38 -monochrome)
+ENERGY=$(ocr -crop 148x26+533+5 -monochrome)
+
+COMMENTS=$(ocr -crop 509x173+2+557 -monochrome)
 # Remove newlines.
 COMMENTS="${COMMENTS//,$'\n'/,}"
 COMMENTS="${COMMENTS//$'\n'/, }"
-# For unknown reasons gocr prints ≡ instead of =.
-COMMENTS="${COMMENTS//≡/=}"
 COMMENTS=$(printf '%s' "$COMMENTS" | sed 's/\(, \)\{2,\}/. /g')
 
-BEAM_PRESENCE1=$(convert lhc1.png -crop 58x20+870+647 -negate - | pngtopnm | gocr -i -)
-BEAM_PRESENCE2=$(convert lhc1.png -crop 58x20+942+647 -negate - | pngtopnm | gocr -i -)
-STABLE_BEAM1=$(convert lhc1.png -crop 58x20+870+705 -negate - | pngtopnm | gocr -i -)
-STABLE_BEAM2=$(convert lhc1.png -crop 58x20+942+705 -negate - | pngtopnm | gocr -i -)
+BEAM_PRESENCE1=$(ocr -crop 58x20+870+647)
+BEAM_PRESENCE2=$(ocr -crop 58x20+942+647)
+STABLE_BEAM1=$(ocr -crop 58x20+870+705)
+STABLE_BEAM2=$(ocr -crop 58x20+942+705)
 
 if [[ $BEAM_PRESENCE1 = true && $BEAM_PRESENCE2 = true ]]; then
     if [[ $STABLE_BEAM1 = true && $STABLE_BEAM2 = true ]]; then
