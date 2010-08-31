@@ -3,6 +3,8 @@
 
 set -e -u
 
+URL='http://vistar-capture.web.cern.ch/vistar-capture/lhc1.png'
+
 TMP_DIR=$(mktemp -d)
 trap 'rm -rf "$TMP_DIR"' EXIT
 cd "$TMP_DIR"
@@ -12,7 +14,12 @@ if ! which tesseract &> /dev/null; then
     exit 1
 fi
 
-if ! wget --quiet --tries=1 --timeout=5 http://vistar-capture.web.cern.ch/vistar-capture/lhc1.png; then
+if [[ $# = 1 && $1 = 'help' ]]; then
+    echo "See $URL"
+    exit 0
+fi
+
+if ! wget --quiet --tries=1 --timeout=5 "$URL"; then
     echo 'LHC data is currently unavailable.'
     exit 0
 fi
