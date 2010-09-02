@@ -32,7 +32,7 @@ ocr() {
 TITLE=$(ocr -crop 1016x54+4+38)
 ENERGY=$(ocr -crop 148x26+533+5)
 
-COMMENTS=$(ocr -crop 509x173+2+557)
+COMMENTS=$(ocr -crop 509x173+2+557 -scale 150%)
 # Remove newlines.
 COMMENTS="${COMMENTS//,$'\n'/,}"
 COMMENTS="${COMMENTS//$'\n'/, }"
