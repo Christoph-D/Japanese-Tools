@@ -114,11 +114,16 @@ PATTERNS=(
     "$QUERY"
     )
 
+# Preselect some lines.
+TMP_DICT=$(mktemp)
+trap "rm '$TMP_DICT'" EXIT
+grep -F "$QUERY" "$DICT" > "$TMP_DICT"
+
 # Accumulate results over all patterns.
 RESULT=
 for I in $(seq 0 1 $(expr ${#PATTERNS[@]} - 1)); do
     P="${PATTERNS[$I]}"
-    RESULT=$(echo "$RESULT" ; grep -m $MAX_RESULTS_PER_PATTERN -e "$P" "$DICT")
+    RESULT=$(echo "$RESULT" ; grep -m $MAX_RESULTS_PER_PATTERN -e "$P" "$TMP_DICT")
 done
 
 if [[ $RESULT ]]; then
