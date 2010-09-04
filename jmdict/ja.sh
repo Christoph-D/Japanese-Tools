@@ -28,6 +28,8 @@ fi
 
 # Get query and remove backslashes because we use them internally.
 QUERY=${@//\\/}
+# Escape special characters.
+QUERY=$(printf '%s' "$QUERY" | sed 's/\([][().*+]\)/\\\1/g')
 
 if [ -z "$QUERY" ]; then
     echo_ 'epsilon.'
