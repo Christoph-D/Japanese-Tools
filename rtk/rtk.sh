@@ -44,7 +44,7 @@ format_entry() {
     printf "#%s: %s %s" "$NUMBER" "$KEYWORD" "$KANJI" 2> /dev/null
 }
 
-if echo "$QUERY" | grep -q -e "^\([a-zA-Z \-]\|\\\.\)*$"; then
+if echo "$QUERY" | grep -q -e "^\([a-zA-Z '\"\-]\|\\\.\)*$"; then
     # Query contains a keyword, so look for the matching kanji.
     LINES1=$(grep -i -m 1 -e "	${QUERY}	" "$DICT")
     LINES2=$(grep -i -m $MAX_KEYWORDS -e "	${QUERY}..*	" "$DICT")
