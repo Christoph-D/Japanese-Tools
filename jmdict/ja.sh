@@ -30,7 +30,7 @@ fi
 # separator.
 QUERY=${@//□/}
 # Escape special characters.
-QUERY=$(printf '%s' "$QUERY" | sed 's/\([][().*+^$]\)/\\\1/g')
+QUERY=$(printf '%s' "$QUERY" | sed 's/\([][().*+^$\]\)/\\\1/g')
 
 if [ -z "$QUERY" ]; then
     echo_ 'epsilon.'
