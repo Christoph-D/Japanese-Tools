@@ -34,13 +34,16 @@ read -p "Proceed? [y]" OK
 SOURCE=JMdict_e.gz
 
 echo "Fetching $SOURCE..."
-if ! wget "http://ftp.monash.edu.au/pub/nihongo/$SOURCE"; then
+if [[ -s "$SOURCE" ]]; then
+    echo "Not necessary, found $SOURCE in current directory..."
+    DONT_DELETE=1
+elif ! wget "http://ftp.monash.edu.au/pub/nihongo/$SOURCE"; then
     echo 'Failed.'
     exit 1
 fi
 
 gunzip --to-stdout "$SOURCE" > "$TMP1"
-rm "$SOURCE"
+[[ $DONT_DELETE ]] || rm "$SOURCE"
 
 # abbreviate entities
 ENTITIES=$(grep -n ENTITY "$TMP1") 

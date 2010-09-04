@@ -22,21 +22,21 @@
 <xsl:template name="t1">
   <xsl:for-each select="/JMdict/entry">
     <xsl:value-of select="k_ele/keb"/>
-    <xsl:value-of select="'\'"/>
+    <xsl:value-of select="'□'"/>
     <xsl:for-each select="r_ele/reb">
       <xsl:value-of select="."/>
       <xsl:if test="position()!=last()">
         <xsl:value-of select="','"/>
       </xsl:if>
     </xsl:for-each>
-    <xsl:value-of select="'\'"/>
+    <xsl:value-of select="'□'"/>
     <xsl:for-each select="sense/pos">
       <xsl:value-of select="."/>
       <xsl:if test="position()!=last()">
         <xsl:value-of select="','"/>
       </xsl:if>
     </xsl:for-each>
-    <xsl:value-of select="'\'"/>
+    <xsl:value-of select="'□'"/>
     <xsl:for-each select="sense/gloss">
       <xsl:if test="last()>1">
         <xsl:number value="position()" format="1. "/>
