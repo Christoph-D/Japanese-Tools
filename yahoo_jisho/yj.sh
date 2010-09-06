@@ -73,14 +73,13 @@ ask_dictionary() {
         return
     fi
     local TITLE=$(printf '%s' "$SOURCE" | \
-        grep -A 3 -m 1 -F '<!--詳細 Title-->' | \
+        grep -A 1 -m 1 '^<div class="title-keyword">$' | \
         tail -n 1 | \
-        sed 's#^.*<b>\([^<]*\)</b>.*$#\1#' | \
         sed 's#<[^>]*>##g' | \
         sed 's#\([0-9]\+\)#(\1)#g' | \
         fix_html_entities)
     local DEFINITION=$(printf '%s' "$SOURCE" | \
-        grep -A 5 -m 1 -F '<!--詳細-->' | \
+        grep -A 3 -m 1 '^<table class="d-detail">$' | \
         tail -n 1 | \
         sed 's#\[下接語\].*$##' | \
         sed 's#^[[「【〈『《『][^<]*\(<br>\)*##' | \
