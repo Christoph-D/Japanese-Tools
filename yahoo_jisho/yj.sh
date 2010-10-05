@@ -54,7 +54,7 @@ fix_html_entities() {
 }
 # Creates a tinyurl from $1.
 make_tinyurl() {
-    wget 'http://tinyurl.com/api-create.php?url='"$(encode_query "$1")" \
+    [[ ${NO_TINY_URL-} ]] || wget 'http://tinyurl.com/api-create.php?url='"$(encode_query "$1")" \
         --quiet -O - --timeout=5 --tries=1
 }
 # URL encoding.
