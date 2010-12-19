@@ -25,7 +25,7 @@ scripts = [('rtk', '../rtk/rtk.sh'),
            ('kana', '../reading/read.py'),
            ('hira', '../kana/hira.sh'),
            ('kata', '../kana/kata.sh'),
-           ('ja', '../jmdict/ja.sh'),
+           (['ja','jp'], '../jmdict/ja.sh'),
            ('gt', '../google_translate/gt.sh'),
            ('define', '../google_dictionary/gd.sh'),
            ('daijisen', '../yahoo_jisho/daijisen.sh'),
@@ -198,7 +198,10 @@ class SimpleBot(SingleServerIRCBot):
             cmd = [cmd[:split_pos], cmd[split_pos + split_pos_len:]]
         e = self.current_event
         for s in scripts:
-            if s[0] == cmd[0]:
+            name = s[0]
+            if type(name) is not list:
+                name = [name]
+            if cmd[0] in name:
                 output = run_script(s[1], cmd[1], self.get_source_target())
                 self.handle_script_output(output, s[1])
 
