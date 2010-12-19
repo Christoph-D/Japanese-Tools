@@ -216,7 +216,7 @@ class SimpleBot(SingleServerIRCBot):
         self.say('\n'.join(result))
 
     def show_help(self):
-        possible_commands = [ '!' + s[0] for s in scripts ] + ['!version']
+        possible_commands = [ '!' + str(s[0]) for s in scripts ] + ['!version']
         possible_commands.sort()
         self.say(_('Known commands: ') + ', '.join(possible_commands))
 
