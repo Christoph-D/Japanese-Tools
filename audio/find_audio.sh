@@ -48,7 +48,7 @@ figure_out_reading() {
     local KATAKANA_READING=$(to_katakana "$KANJI")
     if [[ $READING = ${KANJI// /} ]]; then
         # Try to find a Kanji variant for this word.
-        KANJI=$("$(dirname "$0")"/../jmdict/ja "$KANJI" | head -n 1 | sed 's/^\([^ ,]*\).*$/\1/')
+        KANJI=$("$(dirname "$0")"/../jmdict/ja.sh "$KANJI" | head -n 1 | sed 's/^\([^ ,]*\).*$/\1/')
         # If it didn't work, go with the kana variant.
         if [[ $KANJI = 'Unknown' || $(to_hiragana "$KANJI") = $KANJI ]]; then
             KANJI="$READING"
