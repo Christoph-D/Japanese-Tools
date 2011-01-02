@@ -28,13 +28,12 @@ if [[ ! $USER  ]]; then
     exit 0
 fi
 
-RANKING_LINE=$(printf '%s\n' "$RANKING" | grep -ni "^$USER " | sed 's/^\([0-9]\+\).\([^ ]*\).*/\1\t\2/')
-POSITION=$(printf '%s\n' "$RANKING_LINE" | cut -f 1)
-if [[ ! $POSITION ]]; then
+RANKING_LINE=$(printf '%s\n' "$RANKING" | grep -ni "^$USER " | sed 's/^\([0-9]\+\).\([^ ]*\) \(.*\)/\1\t\2\t\3/')
+if [[ ! $RANKING_LINE ]]; then
     printf 'Unknown user: %s\n' "$USER"
     exit 0
 fi
-USER=$(printf '%s\n' "$RANKING_LINE" | cut -f 2)
+read POSITION USER PAGES < <(printf '%s\n' "$RANKING_LINE")
 
 BREAKDOWN=$(curl --silent $(printf "$BREAKDOWN_URL" "$USER"))
 PERCENTS=$(printf '%s' "$BREAKDOWN" | \
@@ -42,8 +41,8 @@ PERCENTS=$(printf '%s' "$BREAKDOWN" | \
 AVERAGE=$(printf '%s' "$BREAKDOWN" | \
     sed "s/^\([0-9]\+\.\?[0-9]*\)<.*$/\1/;t;d")
 
-printf '%s is at position %s with daily reading average of %s pages.\n' \
-    "$USER" "$POSITION" "$AVERAGE"
+printf '%s is at position %s with %s pages and daily reading average of %s pages.\n' \
+    "$USER" "$POSITION" "$PAGES" "$AVERAGE"
 
 TAGS='Books
 Manga
