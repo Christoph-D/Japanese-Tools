@@ -18,10 +18,11 @@ POT_FILE=japanese_tools.pot
 
 mv japanese_tools.po "$POT_FILE"
 
-sed -i 's/charset=CHARSET\\n"$/charset=UTF-8\\n"/' "$POT_FILE"
-sed -i 's/"Project-Id-Version: PACKAGE VERSION\\n"//' "$POT_FILE"
-sed -i 's/^"Language-Team: LANGUAGE <LL@li\.org>\\n"$//' "$POT_FILE"
-sed -i 's/^"Last-Translator: FULL NAME <EMAIL@ADDRESS>\\n"$/"Last-Translator: Christoph Dittmann <github@christoph-d.de>\\n"/' "$POT_FILE"
+sed -i '1,+15s/charset=CHARSET\\n"$/charset=UTF-8\\n"/' "$POT_FILE"
+sed -i '1,+15s/^"POT-Creation-Date: .*\\n"$//' "$POT_FILE"
+sed -i '1,+15s/^"Project-Id-Version: PACKAGE VERSION\\n"//' "$POT_FILE"
+sed -i '1,+15s/^"Language-Team: LANGUAGE <LL@li\.org>\\n"$//' "$POT_FILE"
+sed -i '1,+15s/^"Last-Translator: FULL NAME <EMAIL@ADDRESS>\\n"$/"Last-Translator: Christoph Dittmann <github@christoph-d.de>\\n"/' "$POT_FILE"
 # Remove line numbers so we don't need to update the language files
 # for every little code change.
 sed -i '/^#: /s/:[0-9]\+\($\| \)/\1/g' "$POT_FILE"
