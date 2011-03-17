@@ -5,6 +5,7 @@ cd "$(dirname "$0")"/../
 xgettext -d japanese_tools -p "./$THIS_DIR" --from-code=UTF-8 \
     --keyword=_ --keyword=echo_ \
     --keyword=printf_ --keyword=printf_no_newline_ \
+    --sort-by-file  \
     $(\
     find . \
     -path "./$THIS_DIR" -prune \
