@@ -74,11 +74,8 @@ format_entry() {
     local STROKES=$(find_stroke_count "$1")
     local READINGS=$(find_readings "$1")
     local MEANINGS=$(find_meanings "$1")
-    if [[ $STROKES -eq 1 ]]; then
-        printf_ "%s: 1 stroke. %s {%s}" "${1:0:1}" "$READINGS" "$MEANINGS"
-    else
-        printf_ "%s: %s strokes. %s {%s}" "${1:0:1}" "$STROKES" "$READINGS" "$MEANINGS"
-    fi
+    nprintf_ "%s: %s stroke. %s {%s}" "%s: %s strokes. %s {%s}" "$STROKES" \
+        "${1:0:1}" "$STROKES" "$READINGS" "$MEANINGS"
 }
 
 FOUND=0
