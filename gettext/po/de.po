@@ -7,269 +7,119 @@
 msgid ""
 msgstr ""
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2010-10-05 17:18+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: Christoph Dittmann <github@christoph-d.de>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: mueval/eval.sh:14
-msgid "Please install mueval: %s"
-msgstr "Bitte mueval installieren: %s"
-
-#: mueval/eval.sh:23
-msgid "Please don't call this script directly."
-msgstr "Dieses Skript bitte nicht direkt ausführen."
-
-#: mueval/eval.sh:28
-msgid "Example: !calc 1+1"
-msgstr "Beispiel: !calc 1+1"
-
-#: mueval/eval.sh:44
-msgid "Memory limit exceeded."
-msgstr "Speicherlimit überschritten."
-
-#: mueval/eval.sh:46
-msgid "Time limit exceeded."
-msgstr "Zeitlimit überschritten."
-
-#: romaji/romaji.sh:28
-msgid "No result."
-msgstr "Kein Ergebnis."
-
-#: reading_quiz/quiz.sh:23 kana/kana.sh:49
-msgid "Could not determine nick name. Please fix %s."
-msgstr "Konnte Nickname nicht ermitteln. Bitte %s reparieren."
-
-#: reading_quiz/quiz.sh:27 kana/kana.sh:53
-msgid "Could not determine channel name or query sender. Please fix %s."
-msgstr ""
-"Konnte Channel-Namen bzw. Query-Sender nicht ermitteln. Bitte %s reparieren."
-
-#: reading_quiz/quiz.sh:64
-msgid "Please read: %s"
-msgstr "Bitte lies: %s"
-
-#: reading_quiz/quiz.sh:88
-msgid "Unknown user: %s"
-msgstr "Unbekannter Nutzer: %s"
-
-#: reading_quiz/quiz.sh:95
-msgid ""
-"In the last 2 months, %s answered %s/%s questions correctly, that is %s%%."
-msgstr ""
-"In den letzten 2 Monaten hat %s %s/%s Fragen korrekt beantwortet, das sind %s"
-"%%."
-
-#: reading_quiz/quiz.sh:101
-msgid "Hardest words for %s (number of mistakes): %s"
-msgstr "Schwierigste Wörter für %s (Zahl der Fehler): %s"
-
-#: reading_quiz/quiz.sh:108
-msgid "Please specify a level."
-msgstr "Bitte ein Level angeben."
-
-#: reading_quiz/quiz.sh:117
-msgid "%s: Correct! (%s: %s)"
-msgstr "%s: Richtig! (%s: %s)"
-
-#: reading_quiz/quiz.sh:124
-msgid "%s: Sadly, no."
-msgstr "%s: Leider nein."
-
-#: reading_quiz/quiz.sh:130
-msgid "Try \"%s jlpt4\". With \"%s skip\" you can skip questions."
-msgstr "Beispiel: \"%s jlpt4\". Mit \"%s skip\" kannst du Fragen überspringen."
-
-#: reading_quiz/quiz.sh:131
-msgid "Statistics can be accessed by \"%s stats <nickname>\"."
-msgstr "Statistiken können mit \"%s stats <nickname>\" betrachtet werden."
-
-#: reading_quiz/quiz.sh:140
-msgid "Usage: %s stats <nickname>"
-msgstr "Benutzung: %s stats <nickname>"
-
-#: reading_quiz/quiz.sh:164
-msgid "Nothing to skip!"
-msgstr "Nichts zu überspringen!"
-
-#: reading_quiz/quiz.sh:168
-msgid "Skipping %s [%s]..."
-msgstr "Überspringe %s [%s]..."
-
-#: reading_quiz/quiz.sh:187
-msgid "Unknown level \"%s\". Valid levels (number of words): %s"
-msgstr "Unbekanntes Level \"%s\". Gültige Levels sind (Zahl der Wörter): %s"
-
-#: simple_bot/bot.py:61 google_count/google_count.sh:45
-msgid "An error occured."
-msgstr "Ein Fehler ist aufgetreten."
-
-#: simple_bot/bot.py:86
-#, python-format
-msgid "Today's magic key for admin commands: %s"
-msgstr "Heutiger Magic-Key für Admin-Befehle: %s"
-
-#: simple_bot/bot.py:142
-#, python-format
-msgid "Caught exception: %s\n"
-msgstr "Exception gefangen: %s\n"
-
-#: simple_bot/bot.py:172
-msgid "Unknown command."
-msgstr "Unbekannter Befehl."
-
-#: simple_bot/bot.py:186
-msgid "A very simple bot with 日本語 support."
-msgstr "Ein sehr einfacher Bot mit 日本語-Features."
-
-#: simple_bot/bot.py:218
-msgid "Known commands: "
-msgstr "Bekannte Befehle: "
-
-#: simple_bot/bot.py:313
-msgid ""
-"Usage: bot.py <server[:port]> <channel[,channel...]> <nickname> [NickServ "
-"password]"
-msgstr ""
-"Aufruf: bot.py <Server[:Port]> <Channel[,Channel...]> <Nickname> [NickServ-"
-"Passwort]"
-
-#: simple_bot/bot.py:322
-msgid "Error: Invalid port."
-msgstr "Fehler: Ungültiger Port."
-
-#: simple_bot/bot.py:336
-msgid "Caught KeyboardInterrupt, exiting..."
-msgstr "Ein KeyboardInterrupt ist aufgetreten, Ende..."
-
-#: rtk/rtk.sh:19
-msgid "Please put \"rtk.txt\" in the same directory as this script."
-msgstr "Bitte \"rtk.txt\" in dasselbe Verzeichnis wie dieses Skript legen."
-
-#: rtk/rtk.sh:26 kanjidic/kanjidic.sh:26 jmdict/ja.sh:36
-msgid "epsilon."
-msgstr "epsilon."
-
-#: rtk/rtk.sh:31 kanjidic/kanjidic.sh:36
-msgid "No regular expressions, please."
-msgstr "Bitte keine regulären Audrücke."
-
-#: rtk/rtk.sh:63
-msgid "Unknown keyword."
-msgstr "Unbekanntes Keyword."
-
-#: rtk/rtk.sh:78
-msgid "Unknown kanji number."
-msgstr "Unbekannte Kanji-Nummer."
-
-#: google_count/google_count.sh:13
-msgid "Usage: %s some_string "
-msgstr "Aufruf: %s Suchtext"
-
-#: google_translate/gt.sh:36
-msgid "No input."
-msgstr "Keine Eingabe."
-
-#: google_translate/gt.sh:119
-msgid "This is untranslatable. :/"
-msgstr "Das kann ich nicht übersetzen. :/"
-
-#: google_translate/gt.sh:124
-msgid "No result. :-("
-msgstr "Kein Ergebnis. :-("
-
-#: kanjidic/kanjidic.sh:19 jmdict/ja.sh:25
-msgid "Please run: %s"
-msgstr "Bitte führe den folgenden Befehl aus: %s"
-
-#: kanjidic/kanjidic.sh:31
-msgid "Please enter some kanji."
-msgstr "Bitte ein paar Kanji angeben."
-
-#: kanjidic/kanjidic.sh:61
-msgid ". In names: "
-msgstr ". In Eigennamen: "
-
-#: kanjidic/kanjidic.sh:78
-msgid "%s: 1 stroke. %s {%s}"
-msgstr "%s: 1 Strich. %s {%s}"
-
-#: kanjidic/kanjidic.sh:80
-msgid "%s: %s strokes. %s {%s}"
-msgstr "%s: %s Striche. %s {%s}"
-
-#: kanjidic/kanjidic.sh:97
-msgid "No kanji found."
-msgstr "Keine Kanji gefunden."
-
-#: jmdict/ja.sh:134
-msgid "Too little space to show the result."
-msgstr "Zu wenig Platz, um das Ergebnis anzuzeigen."
-
-#: jmdict/ja.sh:137
-msgid "Unknown word."
-msgstr "Unbekanntes Wort."
-
-#: compare_encoding/compare_encoding.sh:13
-msgid "Usage: %s lemma "
-msgstr "Aufruf: %s Lemma"
-
-#: compare_encoding/compare_encoding.sh:35
-msgid "Article not found on Wikipedia."
-msgstr "Wikipedia-Artikel nicht gefunden."
-
-#: compare_encoding/compare_encoding.sh:43
-msgid "UTF-8 vs. UTF-16: %d vs. %d bytes."
-msgstr "UTF-8 vs. UTF-16: %d vs. %d Bytes."
-
-#: compare_encoding/compare_encoding.sh:49
-msgid "UTF-8 wins by %s."
-msgstr "UTF-8 gewinnt mit %s Vorsprung."
-
-#: compare_encoding/compare_encoding.sh:53
-msgid "UTF-16 wins by %s."
-msgstr "UTF-16 gewinnt mit %s Vorsprung."
-
-#: compare_encoding/compare_encoding.sh:57
-msgid "It's a tie."
-msgstr "Unentschieden."
-
-#: audio/find_audio.sh:13
+#: audio/find_audio.sh
 msgid "Usage: %s word [reading]"
 msgstr "Aufruf: %s Kanji [Hiragana]"
 
-#: audio/find_audio.sh:79
+#: audio/find_audio.sh
 msgid "Please provide a word."
 msgstr "Bitte ein Wort angeben."
 
-#: audio/find_audio.sh:101
+#: audio/find_audio.sh
 msgid "No audio file available for %s."
 msgstr "Keine Audio-Datei gefunden für %s."
 
-#: audio/find_audio.sh:103
+#: audio/find_audio.sh
 msgid "No audio file available."
 msgstr "Keine Audio-Datei gefunden."
 
-#: audio/find_audio.sh:111
+#: audio/find_audio.sh
 msgid "Audio for %s: %s"
 msgstr "Audio für %s: %s"
 
-#: kana/kana.sh:10
+#: bablefish/bf.sh google_translate/gt.sh
+msgid "No input."
+msgstr "Keine Eingabe."
+
+#: bablefish/bf.sh mueval/eval.sh
+msgid "Time limit exceeded."
+msgstr "Zeitlimit überschritten."
+
+#: compare_encoding/compare_encoding.sh
+msgid "Usage: %s lemma "
+msgstr "Aufruf: %s Lemma"
+
+#: compare_encoding/compare_encoding.sh
+msgid "Article not found on Wikipedia."
+msgstr "Wikipedia-Artikel nicht gefunden."
+
+#: compare_encoding/compare_encoding.sh
+msgid "UTF-8 vs. UTF-16: %d vs. %d bytes."
+msgstr "UTF-8 vs. UTF-16: %d vs. %d Bytes."
+
+#: compare_encoding/compare_encoding.sh
+msgid "UTF-8 wins by %s."
+msgstr "UTF-8 gewinnt mit %s Vorsprung."
+
+#: compare_encoding/compare_encoding.sh
+msgid "UTF-16 wins by %s."
+msgstr "UTF-16 gewinnt mit %s Vorsprung."
+
+#: compare_encoding/compare_encoding.sh
+msgid "It's a tie."
+msgstr "Unentschieden."
+
+#: google_count/google_count.sh
+msgid "Usage: %s some_string "
+msgstr "Aufruf: %s Suchtext"
+
+#: google_count/google_count.sh simple_bot/bot.py
+msgid "An error occured."
+msgstr "Ein Fehler ist aufgetreten."
+
+#: google_translate/gt.sh
+msgid "This is untranslatable. :/"
+msgstr "Das kann ich nicht übersetzen. :/"
+
+#: google_translate/gt.sh
+msgid "No result. :-("
+msgstr "Kein Ergebnis. :-("
+
+#: jmdict/ja.sh kanjidic/kanjidic.sh
+msgid "Please run: %s"
+msgstr "Bitte führe den folgenden Befehl aus: %s"
+
+#: jmdict/ja.sh kanjidic/kanjidic.sh rtk/rtk.sh
+msgid "epsilon."
+msgstr "epsilon."
+
+#: jmdict/ja.sh
+msgid "Too little space to show the result."
+msgstr "Zu wenig Platz, um das Ergebnis anzuzeigen."
+
+#: jmdict/ja.sh
+msgid "Unknown word."
+msgstr "Unbekanntes Wort."
+
+#: kana/kana.sh
 msgid "Please don't call this script directly, use %s or %s instead."
 msgstr ""
 "Dieses Skript bitte nicht direkt ausführen, stattdessen %s oder %s benutzen."
 
-#: kana/kana.sh:29
+#: kana/kana.sh
 msgid "Please fix %s."
 msgstr "Bitte repariere %s."
 
-#: kana/kana.sh:38 kana/kana.sh:44
+#: kana/kana.sh
 msgid "Could not create directory %s. Please fix %s."
 msgstr "Konnte Verzeichnis %s nicht erstellen. Bitte %s reparieren."
 
-#: kana/kana.sh:71
+#: kana/kana.sh reading_quiz/quiz.sh
+msgid "Could not determine nick name. Please fix %s."
+msgstr "Konnte Nickname nicht ermitteln. Bitte %s reparieren."
+
+#: kana/kana.sh reading_quiz/quiz.sh
+msgid "Could not determine channel name or query sender. Please fix %s."
+msgstr ""
+"Konnte Channel-Namen bzw. Query-Sender nicht ermitteln. Bitte %s reparieren."
+
+#: kana/kana.sh
 msgid ""
 "Start with \"%s <level> [count]\". Known levels are 0 to %s. To learn more "
 "about some level please use \"%s help <level>\".\n"
@@ -281,52 +131,201 @@ msgstr ""
 "Um nur die neuen Zeichen einer Stufe anzuzeigen bitte \"%s helpdiff <Stufe>"
 "\" verwenden."
 
-#: kana/kana.sh:136
+#: kana/kana.sh
 msgid "Please write in romaji: %s"
 msgstr "Leseübung: %s"
 
-#: kana/kana.sh:156
+#: kana/kana.sh
 msgid "Statistics for %s: %s%% of %s characters correct."
 msgstr "Statistik für %s: %s%% von %s Zeichen korrekt."
 
-#: kana/kana.sh:159
+#: kana/kana.sh
 msgid "No statistics available for %s."
 msgstr "Keine Statistik für %s vorhanden."
 
-#: kana/kana.sh:193
+#: kana/kana.sh
 msgid "No diff available. :-("
 msgstr "Kein Diff verfügbar. :-("
 
-#: kana/kana.sh:225
+#: kana/kana.sh
 msgid "Unfortunately, no character was right. Solution:%s."
 msgstr "Leider kein einziges Zeichen korrekt. Lösung:%s."
 
-#: kana/kana.sh:228
+#: kana/kana.sh
 msgid "Perfect! %s of %s."
 msgstr "Alles korrekt! %s von %s."
 
-#: kana/kana.sh:231
+#: kana/kana.sh
 msgid "Correct: %s of %s, Corrections:%s."
 msgstr "Korrekt: %s von %s, Korrekturen:%s."
 
-#: yahoo_jisho/yj.sh:21
-msgid "Please don't run this script directly."
+#: kanjidic/kanjidic.sh
+msgid "Please enter some kanji."
+msgstr "Bitte ein paar Kanji angeben."
+
+#: kanjidic/kanjidic.sh rtk/rtk.sh
+msgid "No regular expressions, please."
+msgstr "Bitte keine regulären Audrücke."
+
+#: kanjidic/kanjidic.sh
+msgid ". In names: "
+msgstr ". In Eigennamen: "
+
+#: kanjidic/kanjidic.sh
+msgid "%s: 1 stroke. %s {%s}"
+msgstr "%s: 1 Strich. %s {%s}"
+
+#: kanjidic/kanjidic.sh
+msgid "%s: %s strokes. %s {%s}"
+msgstr "%s: %s Striche. %s {%s}"
+
+#: kanjidic/kanjidic.sh
+msgid "No kanji found."
+msgstr "Keine Kanji gefunden."
+
+#: mueval/eval.sh
+msgid "Please install mueval: %s"
+msgstr "Bitte mueval installieren: %s"
+
+#: mueval/eval.sh
+msgid "Please don't call this script directly."
 msgstr "Dieses Skript bitte nicht direkt ausführen."
 
-#: yahoo_jisho/yj.sh:26 yahoo_jisho/pitch.sh:14
+#: mueval/eval.sh
+msgid "Example: !calc 1+1"
+msgstr "Beispiel: !calc 1+1"
+
+#: mueval/eval.sh
+msgid "Memory limit exceeded."
+msgstr "Speicherlimit überschritten."
+
+#: reading_quiz/quiz.sh
+msgid "Please read: %s"
+msgstr "Bitte lies: %s"
+
+#: reading_quiz/quiz.sh
+msgid "Unknown user: %s"
+msgstr "Unbekannter Nutzer: %s"
+
+#: reading_quiz/quiz.sh
+msgid ""
+"In the last 2 months, %s answered %s/%s questions correctly, that is %s%%."
+msgstr ""
+"In den letzten 2 Monaten hat %s %s/%s Fragen korrekt beantwortet, das sind %s"
+"%%."
+
+#: reading_quiz/quiz.sh
+msgid "Hardest words for %s (number of mistakes): %s"
+msgstr "Schwierigste Wörter für %s (Zahl der Fehler): %s"
+
+#: reading_quiz/quiz.sh
+msgid "Please specify a level."
+msgstr "Bitte ein Level angeben."
+
+#: reading_quiz/quiz.sh
+msgid "%s: Correct! (%s: %s)"
+msgstr "%s: Richtig! (%s: %s)"
+
+#: reading_quiz/quiz.sh
+msgid "%s: Sadly, no."
+msgstr "%s: Leider nein."
+
+#: reading_quiz/quiz.sh
+msgid "Try \"%s jlpt4\". With \"%s skip\" you can skip questions."
+msgstr "Beispiel: \"%s jlpt4\". Mit \"%s skip\" kannst du Fragen überspringen."
+
+#: reading_quiz/quiz.sh
+msgid "Statistics can be accessed by \"%s stats <nickname>\"."
+msgstr "Statistiken können mit \"%s stats <nickname>\" betrachtet werden."
+
+#: reading_quiz/quiz.sh
+msgid "Usage: %s stats <nickname>"
+msgstr "Benutzung: %s stats <nickname>"
+
+#: reading_quiz/quiz.sh
+msgid "Nothing to skip!"
+msgstr "Nichts zu überspringen!"
+
+#: reading_quiz/quiz.sh
+msgid "Skipping %s [%s]..."
+msgstr "Überspringe %s [%s]..."
+
+#: reading_quiz/quiz.sh
+msgid "Unknown level \"%s\". Valid levels (number of words): %s"
+msgstr "Unbekanntes Level \"%s\". Gültige Levels sind (Zahl der Wörter): %s"
+
+#: romaji/romaji.sh
+msgid "No result."
+msgstr "Kein Ergebnis."
+
+#: rtk/rtk.sh
+msgid "Please put \"rtk.txt\" in the same directory as this script."
+msgstr "Bitte \"rtk.txt\" in dasselbe Verzeichnis wie dieses Skript legen."
+
+#: rtk/rtk.sh
+msgid "Unknown keyword."
+msgstr "Unbekanntes Keyword."
+
+#: rtk/rtk.sh
+msgid "Unknown kanji number."
+msgstr "Unbekannte Kanji-Nummer."
+
+#: simple_bot/bot.py
+#, python-format
+msgid "Today's magic key for admin commands: %s"
+msgstr "Heutiger Magic-Key für Admin-Befehle: %s"
+
+#: simple_bot/bot.py
+#, python-format
+msgid "Caught exception: %s\n"
+msgstr "Exception gefangen: %s\n"
+
+#: simple_bot/bot.py
+msgid "Unknown command."
+msgstr "Unbekannter Befehl."
+
+#: simple_bot/bot.py
+msgid "A very simple bot with 日本語 support."
+msgstr "Ein sehr einfacher Bot mit 日本語-Features."
+
+#: simple_bot/bot.py
+msgid "Known commands: "
+msgstr "Bekannte Befehle: "
+
+#: simple_bot/bot.py
+msgid ""
+"Usage: bot.py <server[:port]> <channel[,channel...]> <nickname> [NickServ "
+"password]"
+msgstr ""
+"Aufruf: bot.py <Server[:Port]> <Channel[,Channel...]> <Nickname> [NickServ-"
+"Passwort]"
+
+#: simple_bot/bot.py
+msgid "Error: Invalid port."
+msgstr "Fehler: Ungültiger Port."
+
+#: simple_bot/bot.py
+msgid "Caught KeyboardInterrupt, exiting..."
+msgstr "Ein KeyboardInterrupt ist aufgetreten, Ende..."
+
+#: yahoo_jisho/pitch.sh yahoo_jisho/yj.sh
 msgid "Example: %s"
 msgstr "Beispiel: %s"
 
-#: yahoo_jisho/yj.sh:27
+#: yahoo_jisho/pitch.sh
+msgid "No pitch information available."
+msgstr "Keine Pitch-Information gefunden."
+
+#: yahoo_jisho/yj.sh
+msgid "Please don't run this script directly."
+msgstr "Dieses Skript bitte nicht direkt ausführen."
+
+#: yahoo_jisho/yj.sh
 msgid ""
 "Providing the reading is optional. If it is missing, it will be guessed by "
 "mecab."
 msgstr "Das Reading ist optional. Fehlt es, wird mecab es raten."
 
-#: yahoo_jisho/yj.sh:72
+#: yahoo_jisho/yj.sh
 msgid "A network error occured."
 msgstr "Ein Netzwerk-Fehler ist aufgetreten."
-
-#: yahoo_jisho/pitch.sh:24
-msgid "No pitch information available."
-msgstr "Keine Pitch-Information gefunden."
