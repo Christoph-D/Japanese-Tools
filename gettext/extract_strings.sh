@@ -21,6 +21,9 @@ sed -i 's/charset=CHARSET\\n"$/charset=UTF-8\\n"/' "$POT_FILE"
 sed -i 's/"Project-Id-Version: PACKAGE VERSION\\n"//' "$POT_FILE"
 sed -i 's/^"Language-Team: LANGUAGE <LL@li\.org>\\n"$//' "$POT_FILE"
 sed -i 's/^"Last-Translator: FULL NAME <EMAIL@ADDRESS>\\n"$/"Last-Translator: Christoph Dittmann <github@christoph-d.de>\\n"/' "$POT_FILE"
+# Remove line numbers so we don't need to update the language files
+# for every little code change.
+sed -i '/^#: /s/:[0-9]\+\($\| \)/\1/g' "$POT_FILE"
 
 merge_messages() {
     msgmerge --quiet --backup=none --update "po/$1.po" "$POT_FILE"
