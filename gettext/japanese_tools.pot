@@ -13,6 +13,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=INTEGER; plural=EXPRESSION;\n"
 
 #: audio/find_audio.sh
 msgid "Usage: %s word [reading]"
@@ -167,12 +168,10 @@ msgid ". In names: "
 msgstr ""
 
 #: kanjidic/kanjidic.sh
-msgid "%s: 1 stroke. %s {%s}"
-msgstr ""
-
-#: kanjidic/kanjidic.sh
-msgid "%s: %s strokes. %s {%s}"
-msgstr ""
+msgid "%s: %s stroke. %s {%s}"
+msgid_plural "%s: %s strokes. %s {%s}"
+msgstr[0] ""
+msgstr[1] ""
 
 #: kanjidic/kanjidic.sh
 msgid "No kanji found."
