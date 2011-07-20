@@ -1,4 +1,5 @@
 # -*- coding: utf-8; mode: org; -*-
+#+OPTIONS: ^:{}
 
 These are some scripts I wrote which helped me learn Japanese. Most
 scripts are intended to be plugins for an IRC bot. Many scripts can
