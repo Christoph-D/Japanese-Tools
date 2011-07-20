@@ -1,10 +1,12 @@
 # -*- coding: utf-8; mode: org; -*-
 #+OPTIONS: ^:{}
 
-These are some scripts I wrote which helped me learn Japanese. Most
-scripts are intended to be plugins for an IRC bot. Many scripts can
-also be used standalone, though. For example, I currently have the
-following aliases in my shell:
+
+These are some scripts that help me learn Japanese.
+
+Most scripts are supposed to be used as plugins for an IRC bot or run
+on a shell. For example, I currently have the following aliases in my
+shell:
 
 #+BEGIN_EXAMPLE
 alias ja="$JAPANESE_TOOLS/jmdict/ja.sh"
@@ -28,6 +30,7 @@ Audio for 星空 [ほしぞら]: http://tinyurl.com/32uop8k
   Internationalization support. Currently supported languages other
   than English:
   - German
+  - Polish
 
   You should call gettext/regenerate_mo_files.sh if you'd like to use
   any of the translations, or they won't work.
@@ -55,8 +58,8 @@ it: Il mio hovercraft è pieno di anguille.
 My hovercraft is full of eels.
 #+END_EXAMPLE
 * jmdict/
-  ja.sh performs a jmdict lookup. Works best for Japanese->English
-  lookups.
+  ja.sh performs a jmdict lookup. Works best for Japanese->English,
+  not so well for English->Japanese.
 
   To start, you first need to run the script prepare_jmdict.sh. It
   will download and process the jmdict file.
