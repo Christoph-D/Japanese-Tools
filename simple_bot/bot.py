@@ -41,7 +41,7 @@ scripts = [('rtk', '../rtk/rtk.sh'),
            ('lhc', '../lhc/lhc_info.sh')
            ]
 
-def run_script(path, argument, irc_source_target):
+def run_script(path, argument, irc_source_target, ignore_errors=False):
     try:
         lang = '.'.join(locale.getlocale())
         env = os.environ
@@ -59,7 +59,10 @@ def run_script(path, argument, irc_source_target):
             env=env
             ).communicate()[0]
     except:
-        return _('An error occured.')
+        if ignore_errors:
+            return ''
+        else:
+            return _('An error occured.')
 
 def limit_length(s, max_bytes):
     """Limits the length of a unicode string after conversion to
