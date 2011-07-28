@@ -281,11 +281,21 @@ class SimpleBot(SingleServerIRCBot):
                 print 'new topic: [%s]' % new_topic
                 self.connection.topic(self.initial_channels[0], new_topic)
 
+    def polling_jobs(self):
+        if self.connection.is_connected():
+            pass
+
     def check_daily_jobs(self):
         current_time = time.strftime('%a')
         if hasattr(self, 'daily_jobs_last_time') and current_time != self.daily_jobs_last_time:
             self.daily_jobs()
         self.daily_jobs_last_time = current_time
+
+    def check_polling_jobs(self):
+        current_time = time.time()
+        if hasattr(self, 'polling_jobs_last_time') and current_time != self.polling_jobs_last_time:
+            self.polling_jobs()
+        self.polling_jobs_last_time = current_time
 
     def on_currenttopic(self, c, e):
         if e.arguments()[0] == self.initial_channels[0]:
@@ -301,6 +311,7 @@ class SimpleBot(SingleServerIRCBot):
             self.check_timers()
             self.ircobj.process_once(0.2)
             self.check_daily_jobs()
+            self.check_polling_jobs()
 
 def setup_gettext():
     gettext.bindtextdomain('japanese_tools', '../gettext/locale')
