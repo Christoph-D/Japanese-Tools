@@ -33,9 +33,9 @@ encode_query() {
 }
 ask_google() {
     RESULT=$(wget --user-agent='Mozilla/5.0 (X11; Linux x86_64; rv:5.0) Gecko/20100101 Firefox/5.0' "$(encode_query "$1")" --quiet -O - \
-        | sed 's/<li style="list-style:decimal">\(\([^<]\|<[^d]\|<d[^i]\)*\)</[[\1]]/g;t;d' \
-        | sed 's#>&emsp;\(/\([^/]\|/[^&]\)*/\)&emsp;<#[[\1]]#g;s/&emsp;//g' \
-        | sed 's/^[^[]*\[\[//;s/\]\][^]]*$//;s/\]\][^[]*\[\[/.\n/g' \
+        | sed 's/<li style="list-style:decimal">\(\([^<]\|<[^d]\|<d[^i]\)*\)</（\1）/g;t;d' \
+        | sed 's#>&emsp;\(/\([^/]\|/[^&]\)*/\)&emsp;<#（\1）#g;s/&emsp;//g' \
+        | sed 's/^[^（]*（//;s/）[^）]*$//;s/）[^（]*（/.\n/g' \
         | sed 's#/\.#/#g' \
         | sed 's#</\?em>#*#g' \
         | sed 's/<[^>]*>//g' \
