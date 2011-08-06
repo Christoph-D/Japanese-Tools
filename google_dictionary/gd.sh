@@ -5,7 +5,7 @@
 # This script performs a Google dictionary lookup for english words.
 #
 
-URL="http://google.com/dictionary?aq=f&langpair=en%7Cen&q="
+URL='http://www.google.com/search?hl=en&tbs=dfn%3A1&cad=h&q='
 
 MAX_RESULT_LENGTH=300
 
@@ -32,32 +32,19 @@ encode_query() {
     echo "$URL$ENCODED_QUERY"
 }
 ask_google() {
-    RESULT=$(wget "$(encode_query "$1")" \
-        --quiet \
-        -O - \
-        | grep -m 10 -A 1 -e '<div  class="dct-em">' \
-        | grep -v -e '^--$' \
-        | awk 'NR % 2 == 0' \
-        | sed 's#</b> <b># #g' \
-        | sed 's#</\?b>#*#g' \
+    RESULT=$(wget --user-agent='Mozilla/5.0 (X11; Linux x86_64; rv:5.0) Gecko/20100101 Firefox/5.0' "$(encode_query "$1")" --quiet -O - \
+        | sed 's/<li style="list-style:decimal">\(\([^<]\|<[^d]\|<d[^i]\)*\)</[[\1]]/g;t;d' \
+        | sed 's#>&emsp;\(/\([^/]\|/[^&]\)*/\)&emsp;<#[[\1]]#g;s/&emsp;//g' \
+        | sed 's/^[^[]*\[\[//;s/\]\][^]]*$//;s/\]\][^[]*\[\[/.\n/g' \
+        | sed 's#/\.#/#g' \
+        | sed 's#</\?em>#*#g' \
         | sed 's/<[^>]*>//g' \
-        | sed 's/\\u0026/\&/g' \
         | fix_html_entities \
         | fix_html_entities)
     if [[ -n $RESULT ]]; then
         echo "${RESULT//$'\n'/   }"
         return
     fi
-    RESULT=$(wget "$(encode_query "$1")" \
-        --quiet \
-        -O - \
-        | grep -m 1 -A 2 -e '<font color="#CC0000">Did you mean:</font>' \
-        | tail -n 1 \
-        | sed 's/<[^>]*>//g' \
-        | sed 's/\\u0026/\&/g' \
-        | fix_html_entities \
-        | fix_html_entities)
-    [[ -n $RESULT ]] && echo "Did you mean: $RESULT"
 }
 
 RESULT=$(ask_google "$QUERY")
