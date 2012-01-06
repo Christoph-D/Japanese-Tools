@@ -19,7 +19,9 @@ import traceback
 import locale
 _ = gettext.gettext
 
-scripts = [('rtk', '../rtk/rtk.sh'),
+scripts = [('cdecl', '../cdecl/c.sh'),
+           ('c++decl', '../cdecl/c++.sh'),
+           ('rtk', '../rtk/rtk.sh'),
            ('romaji', '../romaji/romaji.sh'),
            ('kanjidic', '../kanjidic/kanjidic.sh'),
            ('kana', '../reading/read.py'),
