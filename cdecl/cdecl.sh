@@ -31,6 +31,6 @@ if [[ ${#RESULT} -ge $(( $MAX_LINE_LENGTH - 3 )) ]]; then
     RESULT=$(printf '%s\n' "$RESULT")...
 fi
 
-printf '%s\n' "> $RESULT"
+printf '%s\n' " $RESULT"
 
 exit 0
