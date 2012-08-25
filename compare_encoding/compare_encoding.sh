@@ -41,20 +41,25 @@ iconv -f utf8 -t utf16 $TMP_FILE8 > $TMP_FILE16
 UTF16="$(du -sb "$TMP_FILE16" | cut -f 1)"
 
 printf_no_newline_ "UTF-8 vs. UTF-16: %d vs. %d bytes." "$UTF8" "$UTF16"
-echo -n ' '
 
-if [[ $UTF8 -lt $UTF16 ]]; then
-    # Workaround for printf not accepting numbers like "1.2" on non-US
-    # locale.
-    OUTPUT=$(printf_ "UTF-8 wins by %s." '%.1f%%')
-    export LC_ALL=en_US.UTF8
-    printf "$OUTPUT\n" "$(echo "scale=3;($UTF16-$UTF8)/$UTF16*100" | bc)"
-elif [[ $UTF8 -gt $UTF16 ]]; then
-    OUTPUT=$(printf_ "UTF-16 wins by %s." '%.1f%%')
-    export LC_ALL=en_US.UTF8
-    printf "$OUTPUT\n" "$(echo "scale=3;($UTF8-$UTF16)/$UTF8*100" | bc)"
-else
-    echo_ "It's a tie."
-fi
+compute_relative_difference() {
+    # Without bc we cannot compute the relative difference.
+    [[ -x $(which bc) ]] || return
+    local UTF8="$1" UTF16="$2"
+    if [[ $UTF8 -lt $UTF16 ]]; then
+        # Workaround for printf not accepting numbers like "1.2" on non-US
+        # locale.
+        OUTPUT=$(printf_ "UTF-8 wins by %s." '%.1f%%')
+        export LC_ALL=en_US.UTF8
+        printf "$OUTPUT" "$(echo "scale=3;($UTF16-$UTF8)/$UTF16*100" | bc)"
+    elif [[ $UTF8 -gt $UTF16 ]]; then
+        OUTPUT=$(printf_ "UTF-16 wins by %s." '%.1f%%')
+        export LC_ALL=en_US.UTF8
+        printf "$OUTPUT" "$(echo "scale=3;($UTF8-$UTF16)/$UTF8*100" | bc)"
+    else
+        echo_ "It's a tie."
+    fi
+}
+printf ' %s\n' "$(compute_relative_difference "$UTF8" "$UTF16")"
 
 exit 0
