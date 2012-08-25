@@ -4,6 +4,9 @@
 #
 # This script translates the command line parameters using Google.
 
+echo "--- Broken ---"
+exit 0
+
 . "$(dirname "$0")"/../gettext/gettext.sh
 
 # Default target language
