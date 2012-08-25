@@ -14,7 +14,7 @@ TARGET_LANG=${LANG:0:2}
 # Fallback target language
 SECOND_TARGET_LANG=ja
 # Allowed target languages
-KNOWN_LANGUAGES=( de en es fi fr it ja sv zh )
+KNOWN_LANGUAGES=( de en es fi fr it ja sv zh ru )
 
 # Default source language (empty string is "guess language")
 SOURCE_LANG=
