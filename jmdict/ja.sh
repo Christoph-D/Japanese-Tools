@@ -62,7 +62,7 @@ print_result() {
         if echo "$SEEN" | grep -qF "$R"; then
             continue
         fi
-        SEEN=$(echo "$SEEN" ; echo "$R")
+        SEEN+="$R"
 
         local CURRENT_ITEM=$(get_current_item "$R")
         if [[ ${IRC_PLUGIN:-} ]]; then
