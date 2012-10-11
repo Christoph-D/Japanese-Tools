@@ -37,10 +37,25 @@ if [ -z "$QUERY" ]; then
     exit 0
 fi
 
+clean_up_kanji() {
+    # $1 is a ◊-delimited string containing the kanji elements.
+    local IFS='◊' KANJI KANJI_BUFFER= REST="$1"
+    while [[ $REST ]]; do
+        read -r KANJI REST < <(printf '%s' "$REST")
+        # Always print the first kanji element and after that only
+        # matching kanji elements.
+        if [[ ! $KANJI_BUFFER || $KANJI = *$QUERY* ]]; then
+            KANJI_BUFFER="${KANJI_BUFFER:+$KANJI_BUFFER }$KANJI"
+        fi
+    done
+    printf '%s' "$KANJI_BUFFER"
+}
+
 get_current_item() {
     local IFS='□' KANJI KANA POS ENGLISH
     read -r KANJI KANA POS ENGLISH < <(printf '%s' "$1")
     if [ -n "$KANJI" ]; then
+        KANJI=$(clean_up_kanji "$KANJI")
         local L="$KANJI [$KANA] ($POS)"
     else
         local L="$KANA ($POS)"
@@ -97,7 +112,7 @@ print_result() {
 # The more specific search patterns are used first.
 PATTERNS=(
     # Perfect match.
-    "\(□\|^\)$QUERY\(\$\|□\)"
+    "\(□\|^\|◊\)$QUERY\(\$\|□\|◊\)"
     # Match primary kana reading.
     "^[^□]*□$QUERY\(,\|□\)"
     # Match secondary kana readings.
@@ -107,7 +122,7 @@ PATTERNS=(
     # Match "1. $QUERY " or "1. $QUERY,".
     "□\(1□. \)\?$QUERY\( \|,\)"
     # Match $QUERY at the beginning of an entry (Kanji, Kana or English).
-    "\(□\|^\)\(1□. \)\?$QUERY"
+    "\(□\|^\|◊\)\(1□. \)\?$QUERY"
     # Match $QUERY at second position in the English definition.
     "2□. $QUERY\( ([^,]*\?)\)\?\(,\|\$\)"
     # Match $QUERY everywhere.
