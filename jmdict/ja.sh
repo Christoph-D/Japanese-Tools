@@ -21,7 +21,7 @@ fi
 
 DICT=$(dirname "$0")/JMdict_e_prepared
 
-if [ ! -e "$DICT" ]; then
+if [[ ! -e $DICT ]]; then
    printf_ 'Please run: %s' './prepare_jmdict.sh'
    exit 1
 fi
@@ -32,7 +32,7 @@ QUERY=${@//□/}
 # Escape special characters.
 QUERY=$(printf '%s' "$QUERY" | sed 's/\([][().*+^$\]\)/\\\1/g')
 
-if [ -z "$QUERY" ]; then
+if [[ -z $QUERY ]]; then
     echo_ 'epsilon.'
     exit 0
 fi
@@ -54,13 +54,13 @@ clean_up_kanji() {
 get_current_item() {
     local IFS='□' KANJI KANA POS ENGLISH
     read -r KANJI KANA POS ENGLISH < <(printf '%s' "$1")
-    if [ -n "$KANJI" ]; then
+    if [[ -n "$KANJI" ]]; then
         KANJI=$(clean_up_kanji "$KANJI")
         local L="$KANJI [$KANA] ($POS)"
     else
         local L="$KANA ($POS)"
     fi
-    if [ ${#ENGLISH} -gt $MAX_LENGTH_PER_ENGLISH ]; then
+    if [[ ${#ENGLISH} -gt $MAX_LENGTH_PER_ENGLISH ]]; then
         ENGLISH="${ENGLISH:0:$(expr $MAX_LENGTH_PER_ENGLISH - 3)}..."
     fi
     echo "$L, $ENGLISH"
