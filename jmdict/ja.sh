@@ -74,9 +74,7 @@ print_result() {
     local LINE_BUFFER=
     for R in $RESULT; do
         # Skip duplicate lines.
-        if echo "$SEEN" | grep -qF "$R"; then
-            continue
-        fi
+        [[ $SEEN != *$R* ]] || continue
         SEEN+="$R"
 
         local CURRENT_ITEM=$(get_current_item "$R")
