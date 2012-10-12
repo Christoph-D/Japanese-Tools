@@ -135,7 +135,7 @@ PATTERNS=(
 # Preselect some lines.
 TMP_DICT=$(mktemp)
 trap "rm '$TMP_DICT'" EXIT
-grep -F "$QUERY" "$DICT" > "$TMP_DICT"
+grep -F "$QUERY" "$DICT" | head -n 10000 > "$TMP_DICT"
 
 # Accumulate results over all patterns.
 RESULT=
