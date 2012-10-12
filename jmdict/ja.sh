@@ -6,8 +6,6 @@
 
 . "$(dirname "$0")"/../gettext/gettext.sh
 
-set -u
-
 MAX_RESULTS_PER_PATTERN=5
 MAX_LENGTH_PER_ENGLISH=150
 MAX_LINE_LENGTH=200
@@ -19,12 +17,16 @@ if [[ ! ${IRC_PLUGIN:-} ]]; then
     MAX_LINES=5
 fi
 
-DICT=$(dirname "$0")/JMdict_e_prepared
-
-if [[ ! -e $DICT ]]; then
-   printf_ 'Please run: %s' './prepare_jmdict.sh'
+if [[ ! $DICT ]]; then
+   printf_ 'Please call jm.sh or wa.sh instead.'
    exit 1
 fi
+if [[ ! -e $DICT ]]; then
+   printf_ 'Could not find the dictionary.'
+   exit 1
+fi
+
+set -u
 
 # Get query and remove the character we use internally as a field
 # separator.
@@ -54,11 +56,14 @@ clean_up_kanji() {
 get_current_item() {
     local IFS='□' KANJI KANA POS ENGLISH
     read -r KANJI KANA POS ENGLISH < <(printf '%s' "$1")
+    if [[ -n "$POS" ]]; then
+        POS=" ($POS)"
+    fi
     if [[ -n "$KANJI" ]]; then
         KANJI=$(clean_up_kanji "$KANJI")
-        local L="$KANJI [$KANA] ($POS)"
+        local L="$KANJI [$KANA]$POS"
     else
-        local L="$KANA ($POS)"
+        local L="$KANA$POS"
     fi
     if [[ ${#ENGLISH} -gt $MAX_LENGTH_PER_ENGLISH ]]; then
         ENGLISH="${ENGLISH:0:$(expr $MAX_LENGTH_PER_ENGLISH - 3)}..."
