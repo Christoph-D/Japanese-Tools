@@ -51,6 +51,22 @@ remove_redundant_information() {
     done
     )
 }
+merge_alternative_readings() {
+    local LINE PREFIX LAST_PREFIX= KANA KANA_BUFFER
+    while read -r LINE; do
+        PREFIX="${LINE%□*}"
+        KANA="${LINE##*□}"
+        if [[ $PREFIX = $LAST_PREFIX ]]; then
+            KANA_BUFFER+=",$KANA"
+        else
+            if [[ $LAST_PREFIX ]]; then
+                printf '%s□%s\n' "$LAST_PREFIX" "$KANA_BUFFER"
+            fi
+            KANA_BUFFER="$KANA"
+        fi
+        LAST_PREFIX="$PREFIX"
+    done | sed 's#\([^□]*\)□\(.*\)□\([^□]*\)#\1□\3□\2#'
+}
 
 echo "Transforming XML..."
 cp "$SOURCE" "$TMP1"
@@ -64,6 +80,11 @@ sed 's#,\+#,#g;s#,□#□#g;s#×##g;s# \+$##' -i wadoku_prepared
 echo 'Removing redundant information...'
 remove_redundant_information < wadoku_prepared > "$TMP1"
 mv "$TMP1" wadoku_prepared
+echo 'Merging alternative readings...'
+sed 's#\([^□]*\)□\([^□]*\)□\(.*\)#\1□\3□\2#' -i wadoku_prepared
+LC_ALL=C sort wadoku_prepared > "$TMP1"
+merge_alternative_readings < "$TMP1" > wadoku_prepared
+rm "$TMP1"
 echo "Done."
 
 exit 0
