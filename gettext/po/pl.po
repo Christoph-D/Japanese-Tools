@@ -4,7 +4,7 @@
 msgid ""
 msgstr ""
 "Report-Msgid-Bugs-To: \n"
-"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"PO-Revision-Date: 2012-10-12 14:37+2\n"
 "Last-Translator: Tomek <eustachy.kapusta@gmail.com>\n"
 "Language: PL\n"
 "MIME-Version: 1.0\n"
@@ -43,7 +43,7 @@ msgstr "Przekroczono limit czasu."
 
 #: cdecl/cdecl.sh
 msgid "Usage: !%s [explain|declare] <something>"
-msgstr ""
+msgstr "Sposób użycia: !%s [explain|declare] <coś>"
 
 #: compare_encoding/compare_encoding.sh
 msgid "Usage: %s lemma "
@@ -87,11 +87,11 @@ msgstr "Nic nie znaleziono. :-("
 
 #: jmdict/ja.sh
 msgid "Please call jm.sh or wa.sh instead."
-msgstr ""
+msgstr "Proszę użyj jm.sh albo wa.sh"
 
 #: jmdict/ja.sh
 msgid "Could not find the dictionary."
-msgstr ""
+msgstr "Nie można znaleźć słownika"
 
 #: jmdict/ja.sh kanjidic/kanjidic.sh rtk/rtk.sh
 msgid "epsilon."
@@ -107,7 +107,7 @@ msgstr "Nieznane słowo."
 
 #: jmdict/ja2.sh
 msgid "Please run: source_dict=<source> ./ja.sh"
-msgstr ""
+msgstr "Proszę użyć: słownik_źródłowy=<źródło> ./ja.sh"
 
 #: jmdict/jm.sh jmdict/wa.sh kanjidic/kanjidic.sh
 msgid "Please run: %s"
@@ -119,19 +119,19 @@ msgstr "Proszę nie używać tego skryptu bezpośrednio, użyj %s albo %s."
 
 #: kana/kana.sh
 msgid "Please fix %s."
-msgstr "Napraw to %s."
+msgstr "Napraw %s."
 
 #: kana/kana.sh
 msgid "Could not create directory %s. Please fix %s."
-msgstr "Nie można utworzyć folderu %s. Napraw to %s."
+msgstr "Nie można utworzyć folderu %s. Napraw %s."
 
 #: kana/kana.sh reading_quiz/quiz.sh
 msgid "Could not determine nick name. Please fix %s."
-msgstr "Nie można ustalić nicka. Napraw to %s."
+msgstr "Nie można ustalić nicka. Napraw %s."
 
 #: kana/kana.sh reading_quiz/quiz.sh
 msgid "Could not determine channel name or query sender. Please fix %s."
-msgstr "Nie można ustalić nazwy kanału lub nadawcy wiadomości. Napraw to %s."
+msgstr "Nie można ustalić nazwy kanału lub nadawcy wiadomości. Napraw %s."
 
 #: kana/kana.sh
 msgid ""
@@ -249,7 +249,7 @@ msgstr "Spróbuj \"%s jlpt4\". Używając \"%s skip\" możesz pomijać pytania."
 
 #: reading_quiz/quiz.sh
 msgid "Statistics can be accessed by \"%s stats <nickname>\"."
-msgstr "Statystyki można włączyć poprzez \"%s stats <nick>\"."
+msgstr "Statystyki można zobaczyć poprzez \"%s stats <nick>\"."
 
 #: reading_quiz/quiz.sh
 msgid "Usage: %s stats <nickname>"
