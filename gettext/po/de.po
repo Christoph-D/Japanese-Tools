@@ -42,6 +42,10 @@ msgstr "Keine Eingabe."
 msgid "Time limit exceeded."
 msgstr "Zeitlimit überschritten."
 
+#: cdecl/cdecl.sh
+msgid "Usage: !%s [explain|declare] <something>"
+msgstr "Aufruf: !%s [explain|declare] <irgendwas>"
+
 #: compare_encoding/compare_encoding.sh
 msgid "Usage: %s lemma "
 msgstr "Aufruf: %s Lemma"
@@ -82,9 +86,13 @@ msgstr "Das kann ich nicht übersetzen. :/"
 msgid "No result. :-("
 msgstr "Kein Ergebnis. :-("
 
-#: jmdict/ja.sh kanjidic/kanjidic.sh
-msgid "Please run: %s"
-msgstr "Bitte führe den folgenden Befehl aus: %s"
+#: jmdict/ja.sh
+msgid "Please call jm.sh or wa.sh instead."
+msgstr "Bitte jm.sh oder wa.sh aufrufen."
+
+#: jmdict/ja.sh
+msgid "Could not find the dictionary."
+msgstr "Konnte das Wörterbuch nicht finden."
 
 #: jmdict/ja.sh kanjidic/kanjidic.sh rtk/rtk.sh
 msgid "epsilon."
@@ -97,6 +105,14 @@ msgstr "Zu wenig Platz, um das Ergebnis anzuzeigen."
 #: jmdict/ja.sh
 msgid "Unknown word."
 msgstr "Unbekanntes Wort."
+
+#: jmdict/ja2.sh
+msgid "Please run: source_dict=<source> ./ja.sh"
+msgstr "Aufruf: source_dict=<source> ./ja.sh"
+
+#: jmdict/jm.sh jmdict/wa.sh kanjidic/kanjidic.sh
+msgid "Please run: %s"
+msgstr "Bitte führe den folgenden Befehl aus: %s"
 
 #: kana/kana.sh
 msgid "Please don't call this script directly, use %s or %s instead."
