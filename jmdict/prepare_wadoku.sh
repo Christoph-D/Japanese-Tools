@@ -60,7 +60,7 @@ xsltproc prepare_wadoku.xslt "$TMP1" > wadoku_prepared
 # Remove redundant spaces
 echo 'Compressing dictionary file...'
 sed 's# ,#,#g;s# \+# #g;s# \([“)]\)#\1#g;s#\([„(]\) #\1#g' -i wadoku_prepared
-sed 's#,\+#,#g;s#,□#□#g;s#×##g' -i wadoku_prepared
+sed 's#,\+#,#g;s#,□#□#g;s#×##g;s# \+$##' -i wadoku_prepared
 echo 'Removing redundant information...'
 remove_redundant_information < wadoku_prepared > "$TMP1"
 mv "$TMP1" wadoku_prepared
