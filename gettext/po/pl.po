@@ -4,7 +4,7 @@
 msgid ""
 msgstr ""
 "Report-Msgid-Bugs-To: \n"
-"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"PO-Revision-Date: 2012-10-12 14:37+2\n"
 "Last-Translator: Tomek <eustachy.kapusta@gmail.com>\n"
 "Language: PL\n"
 "MIME-Version: 1.0\n"
@@ -249,7 +249,7 @@ msgstr "Spróbuj \"%s jlpt4\". Używając \"%s skip\" możesz pomijać pytania."
 
 #: reading_quiz/quiz.sh
 msgid "Statistics can be accessed by \"%s stats <nickname>\"."
-msgstr "Statystyki można włączyć poprzez \"%s stats <nick>\"."
+msgstr "Statystyki można zobaczyć poprzez \"%s stats <nick>\"."
 
 #: reading_quiz/quiz.sh
 msgid "Usage: %s stats <nickname>"
