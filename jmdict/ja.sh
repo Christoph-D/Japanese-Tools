@@ -68,7 +68,12 @@ get_current_item() {
     if [[ ${#ENGLISH} -gt $MAX_LENGTH_PER_ENGLISH ]]; then
         ENGLISH="${ENGLISH:0:$(expr $MAX_LENGTH_PER_ENGLISH - 3)}..."
     fi
-    echo "$L, $ENGLISH"
+    local RESULT="$L, $ENGLISH"
+    if [[ ${#RESULT} -gt $MAX_LINE_LENGTH ]]; then
+        ENGLISH="${ENGLISH:0:$(expr $MAX_LINE_LENGTH - 5 - ${#L})}..."
+        RESULT="$L, $ENGLISH"
+    fi
+    printf '%s' "$RESULT"
 }
 
 print_result() {
