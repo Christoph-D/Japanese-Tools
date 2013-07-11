@@ -114,7 +114,7 @@ check_if_answer() {
     for R in $READINGS; do
         if [[ $R = $PROPOSED ]]; then
             ### The argument order is $USER $READINGS $MEANING
-            printf_ '%s: Correct! (%s: %s)' "$USER" "$READINGS" "$MEANING"
+            printf_ '%s: Correct!' "$USER"
             record_answer 1
             # Ignore additional answers for a few seconds.
             set_timer 2
@@ -165,7 +165,7 @@ if printf '%s\n' "$QUERY" | grep -q '^\(next\|skip\) *$'; then
         exit 0
     fi
     split_lines "$(cat "$QUESTION_FILE")"
-    printf_ 'Skipping %s [%s]...' "$KANJI" "$READINGS"
+    printf_ 'Skipping %s (%s: %s)' "$KANJI" "$READINGS" "$MEANING"
     set_timer 2
     exit 0
 fi
