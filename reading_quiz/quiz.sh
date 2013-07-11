@@ -58,7 +58,7 @@ split_lines() {
 # $1 is the level. Returns non-zero on invalid levels.
 ask_question() {
     check_level "$1" || return 1
-    SOURCE=$(load_source_line "$1")
+    local SOURCE=$(load_source_line "$1")
     split_lines "${SOURCE//|/$'\n'}"
     printf '%s\n%s\n%s\n%s\n' "$KANJI" "$READINGS" "$MEANING" "$1" > "$QUESTION_FILE"
     printf_ 'Please read: %s' "$KANJI"
@@ -108,9 +108,9 @@ check_if_answer() {
         echo_ 'Please specify a level.'
         return
     fi
-    PROPOSED="${1// /}"
+    local PROPOSED="${1// /}"
     split_lines "$(cat "$QUESTION_FILE")"
-    IFS=','
+    local IFS=','
     for R in $READINGS; do
         if [[ $R = $PROPOSED ]]; then
             ### The argument order is $USER $READINGS $MEANING
