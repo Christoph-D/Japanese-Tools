@@ -171,8 +171,9 @@ if printf '%s\n' "$QUERY" | grep -q '^\(next\|skip\) *$'; then
 fi
 
 # Handle answers.
-if echo "$QUERY" | grep -v -q '^[][a-zA-Z0-9 ./-_`]\+$'; then
-    # $QUERY contains non-latin characters, so assume it's an answer.
+if echo "$QUERY" | LC_ALL=C grep -vq '^[a-zA-Z0-9 -]\+$'; then
+    # $QUERY contains non-latin characters or characters unsafe for a
+    # filename, so assume it's an answer.
     check_if_answer "$QUERY"
     exit 0
 fi
