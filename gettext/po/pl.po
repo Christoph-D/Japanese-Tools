@@ -236,8 +236,8 @@ msgid "Please specify a level."
 msgstr "Proszę wybrać poziom."
 
 #: reading_quiz/quiz.sh
-msgid "%s: Correct! (%s: %s)"
-msgstr "%s: Poprawnie! (%s: %s)"
+msgid "%s: Correct!"
+msgstr "%s: Poprawnie!"
 
 #: reading_quiz/quiz.sh
 msgid "%s: Sadly, no."
@@ -260,8 +260,8 @@ msgid "Nothing to skip!"
 msgstr "Nie ma nic do pominięcia!"
 
 #: reading_quiz/quiz.sh
-msgid "Skipping %s [%s]..."
-msgstr "Pomijanie %s [%s]..."
+msgid "Skipping %s (%s: %s)..."
+msgstr "Pomijanie %s (%s: %s)..."
 
 #: reading_quiz/quiz.sh
 msgid "Unknown level \"%s\". Valid levels (number of words): %s"
