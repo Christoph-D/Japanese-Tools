@@ -8,7 +8,6 @@ set -u
 
 DICT=$(dirname "$0")/../jmdict/JMdict_e_prepared
 MAX_RESULTS_PER_PATTERN=10
-MAX_LENGTH_PER_ENGLISH=100
 NOT_FOUND_MSG="Unknown word."
 
 if [ ! -e "$DICT" ]; then
@@ -16,53 +15,38 @@ if [ ! -e "$DICT" ]; then
    exit 1
 fi
 
-# Get query and remove backslashes because we use them internally.
-QUERY=${@//\\/}
+QUERY=$@
 
 if [ -z "$QUERY" ]; then
     echo "epsilon."
     exit 0
 fi
 
-print_result() {
-    # Change $IFS to loop over lines instead of words.
-    ORIGIFS=$IFS
-    IFS=$'\n'
-    SEEN=
-    for R in $RESULT; do
-        # Skip duplicate lines.
-        if echo "$SEEN" | grep -qF "$R"; then
-            continue
-        fi
-        SEEN=$(echo "$SEEN" ; echo "$R")
+MAX_LINE_LENGTH=200
 
-        KANJI=$(echo "$R" | cut -d '\' -f 1)
-        KANA=$(echo "$R" | cut -d '\' -f 2)
-        POS=$(echo "$R" | cut -d '\' -f 3)
-        ENGLISH=$(echo "$R" | cut -d '\' -f 4)
-        ENGLISH="($POS) $ENGLISH"
-        if [ ${#ENGLISH} -gt $MAX_LENGTH_PER_ENGLISH ]; then
-            ENGLISH="${ENGLISH:0:$(expr $MAX_LENGTH_PER_ENGLISH - 3)}..."
-        fi
-        FINAL="${FINAL:+$FINAL,}$KANA"
-        FINAL_ENGLISH="${FINAL_ENGLISH:+$FINAL_ENGLISH / }$ENGLISH"
-    done
-    IFS=$ORIGIFS
-
-    echo -e "$QUERY|$FINAL|$FINAL_ENGLISH"
+split_result() {
+    local IFS='□'
+    read -r KANJI KANA POS ENGLISH < <(printf '%s' "$1")
 }
 
-# The more specific search patterns are used first
-PATTERNS=( "^$QUERY\\\\" )
+print_result() {
+    # Change $IFS to loop over lines instead of words.
+    local IFS=$'\n'
+    local KANA_BUFFER= ENGLISH_BUFFER=
+    for R in $RESULT; do
+        split_result "$R"
+        KANA_BUFFER="${KANA_BUFFER:+$KANA_BUFFER,}$KANA"
+        ENGLISH_BUFFER="${ENGLISH_BUFFER:+$ENGLISH_BUFFER / }$ENGLISH"
+    done
+    FINAL="$QUERY|$KANA_BUFFER|$ENGLISH_BUFFER"
+    if [[ ${#FINAL} -gt $MAX_LINE_LENGTH ]]; then
+        FINAL="${FINAL:0:$(expr $MAX_LINE_LENGTH - 3)}..."
+    fi
+    echo -e "$FINAL"
+}
 
-# Accumulate results over all patterns
-RESULT=
-for I in $(seq 0 1 $(expr ${#PATTERNS[@]} - 1)); do
-    P="${PATTERNS[$I]}"
-    RESULT=$(echo "$RESULT" ; grep -m $MAX_RESULTS_PER_PATTERN -e "$P" "$DICT")
-done
-
-if [ -n "$RESULT" ]; then
+RESULT=$(grep -m $MAX_RESULTS_PER_PATTERN -e "^\([^□]*◊\)\?$QUERY\(□\|◊\)" "$DICT")
+if [[ -n "$RESULT" ]]; then
     print_result
 else
     echo "$NOT_FOUND_MSG"
