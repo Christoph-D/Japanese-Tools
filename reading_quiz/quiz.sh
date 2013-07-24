@@ -88,8 +88,8 @@ GROUP BY correct ORDER BY correct ASC;")
         printf_ 'Unknown user: %s' "$1"
         return 1
     fi
-    WRONG=${WRONG-0}
-    CORRECT=${CORRECT-0}
+    WRONG=${WRONG:-0}
+    CORRECT=${CORRECT:-0}
     local TOTAL=$(( $WRONG + $CORRECT ))
     local PERCENT=$(echo "scale=2; $CORRECT * 100 / ($TOTAL)" | bc)
     printf_ 'In the last 2 months, %s answered %s/%s questions correctly, that is %s%%.' \
