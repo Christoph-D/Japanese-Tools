@@ -72,7 +72,7 @@ My hovercraft is full of eels.
   reverse direction.
 
   To start, you first need to run the scripts prepare_jmdict.sh and
-  prepare_wadoku.sh. It will download and process the respective
+  prepare_wadoku.sh. This will download and process the respective
   dictionary files.
 
 #+BEGIN_EXAMPLE
