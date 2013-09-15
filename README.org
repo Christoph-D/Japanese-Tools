@@ -1,15 +1,14 @@
 # -*- coding: utf-8; mode: org; -*-
 #+OPTIONS: ^:{}
 
-
 These are some scripts that help me learn Japanese.
 
 Most scripts are supposed to be used as plugins for an IRC bot or run
-on a shell. For example, I currently have the following aliases in my
-shell:
+on a shell.  I find the following aliases to be useful:
 
 #+BEGIN_EXAMPLE
-alias ja="$JAPANESE_TOOLS/jmdict/ja.sh"
+alias ja="$JAPANESE_TOOLS/jmdict/jm.sh"
+alias wa="$JAPANESE_TOOLS/jmdict/wa.sh"
 alias rtk="$JAPANESE_TOOLS/rtk/rtk.sh"
 alias sen="$JAPANESE_TOOLS/yahoo_jisho/daijisen.sh"
 alias rin="$JAPANESE_TOOLS/yahoo_jisho/daijirin.sh"
@@ -23,8 +22,15 @@ I do most of my dictionary lookups with these aliases.
   word on languagepod101.
 
 #+BEGIN_EXAMPLE
-$ ./find_audio.sh 星空
-Audio for 星空 [ほしぞら]: http://tinyurl.com/32uop8k
+$ ./find_audio.sh 夜空
+Audio for 夜空 [よぞら]: http://tinyurl.com/p8aq8jo
+#+END_EXAMPLE
+* compare_encoding
+  Compares the size of different encodings of the same Japanese
+  Wikipedia article. In almost all cases UTF-8 is smaller than UTF-16.
+#+BEGIN_EXAMPLE
+$ ./compare_encoding.sh 夜空
+UTF-8 vs. UTF-16: 91213 vs. 156876 bytes. UTF-8 wins by 41.8%.
 #+END_EXAMPLE
 * gettext/
   Internationalization support. Currently supported languages other
@@ -33,8 +39,10 @@ Audio for 星空 [ほしぞら]: http://tinyurl.com/32uop8k
   - Polish
 
   You should call gettext/regenerate_mo_files.sh if you'd like to use
-  any of the translations, or they won't work.
-
+  any of the translations or they won't work.
+* google_count
+  Counts the number of Google results.  Uses google.co.jp for queries
+  containing Japanese characters and google.com otherwise.
 * google_dictionary/
   gd.sh looks up English words in the Google dictionary.
 #+BEGIN_EXAMPLE
@@ -56,15 +64,19 @@ it: Il mio hovercraft è pieno di anguille.
 ./gt.sh Il mio hovercraft è pieno di anguille.
 My hovercraft is full of eels.
 #+END_EXAMPLE
+  Currently this script is broken because Google switched off the
+  translate API.
 * jmdict/
-  ja.sh performs a jmdict lookup. Works best for Japanese->English,
-  not so well for English->Japanese.
+  jm.sh provides jmdict lookups and wa.sh wadoku lookups. Works best
+  for Japanese->English (or Japanese->German), not so well for the
+  reverse direction.
 
-  To start, you first need to run the script prepare_jmdict.sh. It
-  will download and process the jmdict file.
+  To start, you first need to run the scripts prepare_jmdict.sh and
+  prepare_wadoku.sh. It will download and process the respective
+  dictionary files.
 
 #+BEGIN_EXAMPLE
-$ ./ja.sh 村長
+$ ./jm.sh 村長
 村長 [そんちょう] (n), village headman
 市長村長選挙 [しちょうそんちょうせんきょ] (n), mayoral election
 #+END_EXAMPLE
@@ -94,6 +106,10 @@ $ ./kanjidic.sh 日本語
 本: 5 strokes. ホン, もと. In names: まと {book, present, main, origin, true, real, counter for long cylindrical things}
 語: 14 strokes. ゴ, かた.る, かた.らう {word, speech, language}
 #+END_EXAMPLE
+* lhc
+  This script has nothing to do with Japanese. It OCRs the image on
+  http://op-webtools.web.cern.ch/op-webtools/vistar/vistars.php?usr=LHC1
+  to provide live statistics of the status of the LHC.
 * reading/
   read.py converts kanji to kana using mecab.
 #+BEGIN_EXAMPLE
