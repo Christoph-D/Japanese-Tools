@@ -36,11 +36,10 @@ Audio for 星空 [ほしぞら]: http://tinyurl.com/32uop8k
   any of the translations, or they won't work.
 
 * google_dictionary/
-  gd.sh looks up English words in the Google dictionary:
-  http://www.google.com/dictionary
+  gd.sh looks up English words in the Google dictionary.
 #+BEGIN_EXAMPLE
-./gd.sh diligent
-Someone who is *diligent* works hard in a careful and thorough way.
+$ ./gd.sh diligent
+/ˈdiləjənt/ having or showing care and conscientiousness in one's work or duties
 #+END_EXAMPLE
 * google_translate/
   gt.sh translates words and sentences using Google Translate. The
