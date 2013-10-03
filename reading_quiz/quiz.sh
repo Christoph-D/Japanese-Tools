@@ -114,7 +114,7 @@ check_if_answer() {
     for R in $READINGS; do
         if [[ $R = $PROPOSED ]]; then
             ### The argument order is $USER $READINGS $MEANING
-            printf_ '%s: Correct!' "$USER"
+            printf_ '%s: Correct! (%s: %s)' "$USER" "$READINGS" "$MEANING"
             record_answer 1
             # Ignore additional answers for a few seconds.
             set_timer 2
