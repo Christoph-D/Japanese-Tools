@@ -29,9 +29,9 @@ if [[ $QUERY = 'help' ]]; then
     exit 0
 fi
 
-RESULT="$(mueval --rlimits \
+RESULT="$(mueval \
     $([[ $MODE = 'type' ]] && echo '--inferred-type') \
-    --timelimit="$TIME_LIMIT_SECONDS" \
+    --time-limit="$TIME_LIMIT_SECONDS" \
     --expression "$QUERY" 2>&1)"
 MUEVAL_EXIT_CODE=$?
 
