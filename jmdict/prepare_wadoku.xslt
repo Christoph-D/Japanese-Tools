@@ -46,16 +46,16 @@
 
 <xsl:template name="t1">
   <xsl:for-each select="entries/entry">
-    <xsl:for-each select="form/orth/text">
+    <xsl:for-each select="form/orth">
       <xsl:value-of select="."/>
       <xsl:if test="position()!=last()">
         <xsl:value-of select="'◊'"/>
       </xsl:if>
     </xsl:for-each>
     <xsl:value-of select="'□'"/>
-    <xsl:for-each select="form/pron/text">
+    <xsl:for-each select="form/pron">
       <xsl:choose>
-        <xsl:when test="../@type and ../@type='hatsuon'">
+        <xsl:when test="@type and @type='hatsuon'">
         </xsl:when>
         <xsl:otherwise>
           <xsl:value-of select="."/>
