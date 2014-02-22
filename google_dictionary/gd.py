@@ -20,7 +20,11 @@ else:
 fp = urllib.urlopen(API_URL + word)
 stripped_string = urllib.unquote(re.sub("^a\((.*),[^,]+,[^,]+\)$", "\\1", fp.read()))
 answer_string = stripped_string.decode('string-escape')
-answer = json.loads(answer_string)
+try:
+    answer = json.loads(answer_string)
+except ValueError:
+    print "It looks like the Google dictionary API is offline. Ideas for alternatives are welcome."
+    sys.exit(0)
 
 def find_phonetic(answer):
     for t in answer["primaries"][0]["terms"]:
