@@ -68,37 +68,58 @@ sql() {
     sqlite3 "$stats_db" "$1" 2> /dev/null
 }
 
-# $1 = 0 is "wrong answer" and $1 = 1 is "correct answer".
-record_answer() {
+initialize_database() {
     sql 'CREATE TABLE IF NOT EXISTS user_stats (
 user NOT NULL,
 word NOT NULL,
 correct NOT NULL,
 timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP );'
-    sql "INSERT INTO user_stats (user, word, correct) VALUES ('$user', '$kanji', $1);"
+    # correct used to be an integer column.  Upgrade old databases.
+    sql "UPDATE user_stats SET correct = 'wrong' WHERE correct = 0;"
+    sql "UPDATE user_stats SET correct = 'correct' WHERE correct = 1;"
+}
+
+# $1 should be one of 'wrong', 'correct', 'skipped'
+record_answer() {
+    initialize_database
+    sql "INSERT INTO user_stats (user, word, correct) VALUES ('$user', '$kanji', '$1');"
 }
 
 get_user_stats() {
+    initialize_database
     local stats=$(sql "SELECT correct,COUNT(*) FROM user_stats WHERE user = '$1'
 AND julianday(timestamp) > julianday('now', '-2 month')
-GROUP BY correct ORDER BY correct ASC;")ss
-    local wrong=$(echo "$stats" | grep -m 1 '^0|' | sed 's/^0|//')
-    local correct=$(echo "$stats" | grep -m 1 '^1|' | sed 's/^1|//')
-    if [[ ! $wrong && ! $correct ]]; then
+GROUP BY correct ORDER BY correct ASC;")
+    local wrong=$(echo "$stats" | grep -m 1 '^wrong|' | sed 's/^wrong|//')
+    local correct=$(echo "$stats" | grep -m 1 '^correct|' | sed 's/^correct|//')
+    local skipped=$(echo "$stats" | grep -m 1 '^skipped|' | sed 's/^skipped|//')
+    if [[ ! $wrong && ! $correct && ! $skipped ]]; then
         printf_ 'Unknown user: %s' "$1"
         return 1
     fi
     wrong=${wrong:-0}
     correct=${correct:-0}
-    local total=$(( $wrong + $correct ))
-    local percent=$(echo "scale=2; $correct * 100 / ($total)" | bc)
-    printf_ 'In the last 2 months, %s answered %s/%s questions correctly, that is %s%%.' \
-        "$1" "$correct" "$total" "$percent"
-    local hard_words=$(sql "SELECT word, COUNT(*) FROM user_stats WHERE user = '$1' AND correct = 0 
-AND julianday(timestamp) > julianday('now', '-2 month')
-GROUP BY word ORDER BY COUNT(*) DESC LIMIT 10;" | \
-        sed 's/^\([^|]*\)|\(.*\)$/\1 (\2)/')
-    [[ $hard_words ]] && printf_ 'Hardest words for %s (number of mistakes): %s' \
+    skipped=${skipped:-0}
+    local total=$(( $wrong + $correct + $skipped ))
+    local correct_percentage=$(echo "scale=2; $correct * 100 / ($total)" | bc)
+    local skipped_percentage=$(echo "scale=2; $skipped * 100 / ($total)" | bc)
+    printf_ 'In the last 2 months, %s answered %s/%s (%s%%) questions correctly and skipped %s/%s (%s%%).' \
+        "$1" "$correct" "$total" "$correct_percentage" "$skipped" "$total" "$skipped_percentage"
+    local hard_words=$(sql "
+        SELECT u.word,ifnull(wrong,0) AS wrong0, ifnull(skipped,0) AS skipped0
+        FROM user_stats AS u
+            LEFT JOIN
+                (SELECT word AS w, COUNT(*) AS wrong FROM user_stats WHERE correct = 'wrong' GROUP BY word)
+                ON u.word = w
+            LEFT JOIN
+                (SELECT word AS s, COUNT(*) AS skipped FROM user_stats WHERE correct = 'skipped' GROUP BY word)
+                ON u.word = s
+        WHERE user = '$1' AND (wrong0 != 0 OR skipped0 != 0)
+        GROUP BY word
+        ORDER BY wrong0 + skipped0 DESC
+        LIMIT 10;" | \
+        sed 's/^\([^|]*\)|\([^|]*\)|\(.*\)$/\1 (\2\/\3)/')
+    [[ $hard_words ]] && printf_ 'Hardest words for %s (#mistakes/#skipped): %s' \
         "$1" "${hard_words//$'\n'/, }"
 }
 
@@ -115,14 +136,14 @@ check_if_answer() {
         if [[ $r = $proposed ]]; then
             ### The argument order is $user $readings $meaning
             printf_ '%s: Correct! (%s: %s)' "$user" "$readings" "$meaning"
-            record_answer 1
+            record_answer 'correct'
             # Ignore additional answers for a few seconds.
             set_timer 2
             return 0
         fi
     done
     printf_ '%s: Sadly, no.' "$user"
-    record_answer 0
+    record_answer 'wrong'
 }
 
 # Handle the help command.
@@ -166,6 +187,7 @@ if printf '%s\n' "$query" | grep -q '^\(next\|skip\) *$'; then
     fi
     split_lines "$(cat "$question_file")"
     printf_ 'Skipping %s (%s: %s)' "$kanji" "$readings" "$meaning"
+    record_answer 'skipped'
     set_timer 2
     exit 0
 fi
