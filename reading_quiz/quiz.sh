@@ -4,68 +4,68 @@
 
 set -u -e
 
-DATA_DIR=$(dirname "$0")/data
-VOCAB_DIR=$(dirname "$0")/vocabulary
+data_dir=$(dirname "$0")/data
+vocab_dir=$(dirname "$0")/vocabulary
 
-IRC_COMMAND='!quiz'
+irc_command='!quiz'
 
-USER=$DMB_SENDER
-CHANNEL_NAME=${DMB_RECEIVER-}
+user=$DMB_SENDER
+channel_name=${DMB_RECEIVER-}
 
-QUERY="$*"
+query="$*"
 # Strip whitespace.
-QUERY="$(printf '%s\n' "$QUERY" | sed 's/\(^[ 　]*\|[ 　]*$\)//g')"
+query="$(printf '%s\n' "$query" | sed 's/\(^[ 　]*\|[ 　]*$\)//g')"
 
-[[ -d $DATA_DIR ]] || mkdir -p "$DATA_DIR"
-[[ -d $VOCAB_DIR ]] || mkdir -p "$VOCAB_DIR"
+[[ -d $data_dir ]] || mkdir -p "$data_dir"
+[[ -d $vocab_dir ]] || mkdir -p "$vocab_dir"
 
-if [[ ! $USER ]]; then
-    printf_ 'Could not determine nick name. Please fix %s.' '$USER'
+if [[ ! $user ]]; then
+    printf_ 'Could not determine nick name. Please fix %s.' '$user'
     exit 1
 fi
-if [[ ! $CHANNEL_NAME ]]; then
-    printf_ 'Could not determine channel name or query sender. Please fix %s.' '$CHANNEL_NAME'
+if [[ ! $channel_name ]]; then
+    printf_ 'Could not determine channel name or query sender. Please fix %s.' '$channel_name'
     exit 1
 fi
 
-TIMER_FILE="$DATA_DIR/timer.key.$CHANNEL_NAME"
-STATS_DB="$DATA_DIR/stats.db"
-QUESTION_FILE="$DATA_DIR/question.status.$CHANNEL_NAME"
+timer_file="$data_dir/timer.key.$channel_name"
+stats_db="$data_dir/stats.db"
+question_file="$data_dir/question.status.$channel_name"
 
 # Checks if $1 is a valid level.
 check_level() {
-    [[ -s $VOCAB_DIR/$1.txt ]]
+    [[ -s $vocab_dir/$1.txt ]]
 }
 
 # Starts a timer. Delay in seconds is $1.
 set_timer() {
-    local TIMER_KEY=$RANDOM$RANDOM$RANDOM$RANDOM
-    echo "$TIMER_KEY" > $TIMER_FILE
-    echo "/timer $1 $TIMER_KEY"
+    local timer_key=$RANDOM$RANDOM$RANDOM$RANDOM
+    echo "$timer_key" > $timer_file
+    echo "/timer $1 $timer_key"
 }
 
 # $1 is the level. Loads a random line out that list.
 load_source_line() {
-    sort --random-sort "$VOCAB_DIR/$1.txt" | head -n 1
+    sort --random-sort "$vocab_dir/$1.txt" | head -n 1
 }
 
 split_lines() {
-    KANJI=$(printf '%s\n' "$1" | head -n 1)
-    READINGS=$(printf '%s\n' "$1" | head -n 2 | tail -n 1)
-    MEANING=$(printf '%s\n' "$1" | head -n 3 | tail -n 1)
+    kanji=$(printf '%s\n' "$1" | head -n 1)
+    readings=$(printf '%s\n' "$1" | head -n 2 | tail -n 1)
+    meaning=$(printf '%s\n' "$1" | head -n 3 | tail -n 1)
 }
 
 # $1 is the level. Returns non-zero on invalid levels.
 ask_question() {
     check_level "$1" || return 1
-    local SOURCE=$(load_source_line "$1")
-    split_lines "${SOURCE//|/$'\n'}"
-    printf '%s\n%s\n%s\n%s\n' "$KANJI" "$READINGS" "$MEANING" "$1" > "$QUESTION_FILE"
-    printf_ 'Please read: %s' "$KANJI"
+    local source=$(load_source_line "$1")
+    split_lines "${source//|/$'\n'}"
+    printf '%s\n%s\n%s\n%s\n' "$kanji" "$readings" "$meaning" "$1" > "$question_file"
+    printf_ 'Please read: %s' "$kanji"
 }
 
 sql() {
-    sqlite3 "$STATS_DB" "$1" 2> /dev/null
+    sqlite3 "$stats_db" "$1" 2> /dev/null
 }
 
 # $1 = 0 is "wrong answer" and $1 = 1 is "correct answer".
@@ -75,118 +75,118 @@ user NOT NULL,
 word NOT NULL,
 correct NOT NULL,
 timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP );'
-    sql "INSERT INTO user_stats (user, word, correct) VALUES ('$USER', '$KANJI', $1);"
+    sql "INSERT INTO user_stats (user, word, correct) VALUES ('$user', '$kanji', $1);"
 }
 
 get_user_stats() {
-    local STATS=$(sql "SELECT correct,COUNT(*) FROM user_stats WHERE user = '$1'
+    local stats=$(sql "SELECT correct,COUNT(*) FROM user_stats WHERE user = '$1'
 AND julianday(timestamp) > julianday('now', '-2 month')
-GROUP BY correct ORDER BY correct ASC;")
-    local WRONG=$(echo "$STATS" | grep -m 1 '^0|' | sed 's/^0|//')
-    local CORRECT=$(echo "$STATS" | grep -m 1 '^1|' | sed 's/^1|//')
-    if [[ ! $WRONG && ! $CORRECT ]]; then
+GROUP BY correct ORDER BY correct ASC;")ss
+    local wrong=$(echo "$stats" | grep -m 1 '^0|' | sed 's/^0|//')
+    local correct=$(echo "$stats" | grep -m 1 '^1|' | sed 's/^1|//')
+    if [[ ! $wrong && ! $correct ]]; then
         printf_ 'Unknown user: %s' "$1"
         return 1
     fi
-    WRONG=${WRONG:-0}
-    CORRECT=${CORRECT:-0}
-    local TOTAL=$(( $WRONG + $CORRECT ))
-    local PERCENT=$(echo "scale=2; $CORRECT * 100 / ($TOTAL)" | bc)
+    wrong=${wrong:-0}
+    correct=${correct:-0}
+    local total=$(( $wrong + $correct ))
+    local percent=$(echo "scale=2; $correct * 100 / ($total)" | bc)
     printf_ 'In the last 2 months, %s answered %s/%s questions correctly, that is %s%%.' \
-        "$1" "$CORRECT" "$TOTAL" "$PERCENT"
-    local HARD_WORDS=$(sql "SELECT word, COUNT(*) FROM user_stats WHERE user = '$1' AND correct = 0 
+        "$1" "$correct" "$total" "$percent"
+    local hard_words=$(sql "SELECT word, COUNT(*) FROM user_stats WHERE user = '$1' AND correct = 0 
 AND julianday(timestamp) > julianday('now', '-2 month')
 GROUP BY word ORDER BY COUNT(*) DESC LIMIT 10;" | \
         sed 's/^\([^|]*\)|\(.*\)$/\1 (\2)/')
-    [[ $HARD_WORDS ]] && printf_ 'Hardest words for %s (number of mistakes): %s' \
-        "$1" "${HARD_WORDS//$'\n'/, }"
+    [[ $hard_words ]] && printf_ 'Hardest words for %s (number of mistakes): %s' \
+        "$1" "${hard_words//$'\n'/, }"
 }
 
 # Checks if $1 is a correct answer.
 check_if_answer() {
-    if [[ ! -s $QUESTION_FILE ]]; then
+    if [[ ! -s $question_file ]]; then
         echo_ 'Please specify a level.'
         return
     fi
-    local PROPOSED="${1// /}"
-    split_lines "$(cat "$QUESTION_FILE")"
+    local proposed="${1// /}"
+    split_lines "$(cat "$question_file")"
     local IFS=','
-    for R in $READINGS; do
-        if [[ $R = $PROPOSED ]]; then
-            ### The argument order is $USER $READINGS $MEANING
-            printf_ '%s: Correct! (%s: %s)' "$USER" "$READINGS" "$MEANING"
+    for r in $readings; do
+        if [[ $r = $proposed ]]; then
+            ### The argument order is $user $readings $meaning
+            printf_ '%s: Correct! (%s: %s)' "$user" "$readings" "$meaning"
             record_answer 1
             # Ignore additional answers for a few seconds.
             set_timer 2
             return 0
         fi
     done
-    printf_ '%s: Sadly, no.' "$USER"
+    printf_ '%s: Sadly, no.' "$user"
     record_answer 0
 }
 
 # Handle the help command.
-if [[ ! $QUERY || $QUERY = 'help' ]]; then
-    printf_ 'Try "%s jlpt4". With "%s skip" you can skip questions.' "$IRC_COMMAND" "$IRC_COMMAND"
-    printf_ 'Statistics can be accessed by "%s stats <nickname>".' "$IRC_COMMAND"
+if [[ ! $query || $query = 'help' ]]; then
+    printf_ 'Try "%s jlpt4". With "%s skip" you can skip questions.' "$irc_command" "$irc_command"
+    printf_ 'Statistics can be accessed by "%s stats <nickname>".' "$irc_command"
     exit 0
 fi
 
 # Handle the stats command.
-if printf '%s\n' "$QUERY" | grep -q '^stats'; then
-    if printf '%s\n' "$QUERY" | grep -q '^stats \+[][a-zA-Z0-9|_-`]\+$'; then
-        get_user_stats "$(printf '%s\n' "$QUERY" | sed 's/^stats \+//')"
+if printf '%s\n' "$query" | grep -q '^stats'; then
+    if printf '%s\n' "$query" | grep -q '^stats \+[][a-zA-Z0-9|_-`]\+$'; then
+        get_user_stats "$(printf '%s\n' "$query" | sed 's/^stats \+//')"
     else
-        printf_ 'Usage: %s stats <nickname>' "$IRC_COMMAND"
+        printf_ 'Usage: %s stats <nickname>' "$irc_command"
     fi
     exit 0
 fi
 
 # Handle the timer.
-if [[ -s $TIMER_FILE ]]; then
-    if [[ ! $(find "$TIMER_FILE" -cmin 1) ]]; then
-        rm "$TIMER_FILE"
+if [[ -s $timer_file ]]; then
+    if [[ ! $(find "$timer_file" -cmin 1) ]]; then
+        rm "$timer_file"
     else
         # The timer is running, so ignore answers.
-        if [[ $(cat "$TIMER_FILE") = $QUERY ]]; then
-            rm "$TIMER_FILE"
+        if [[ $(cat "$timer_file") = $query ]]; then
+            rm "$timer_file"
             # The timer expired. Ask next question.
-            ask_question "$(tail -n 1 "$QUESTION_FILE")"
+            ask_question "$(tail -n 1 "$question_file")"
         fi
         exit 0
     fi
 fi
 
 # Handle the skip/next command.
-if printf '%s\n' "$QUERY" | grep -q '^\(next\|skip\) *$'; then
+if printf '%s\n' "$query" | grep -q '^\(next\|skip\) *$'; then
     # Display answer and skip current question.
-    if [[ ! -s $QUESTION_FILE ]]; then
+    if [[ ! -s $question_file ]]; then
         echo_ 'Nothing to skip!'
         exit 0
     fi
-    split_lines "$(cat "$QUESTION_FILE")"
-    printf_ 'Skipping %s (%s: %s)' "$KANJI" "$READINGS" "$MEANING"
+    split_lines "$(cat "$question_file")"
+    printf_ 'Skipping %s (%s: %s)' "$kanji" "$readings" "$meaning"
     set_timer 2
     exit 0
 fi
 
 # Handle answers.
-if echo "$QUERY" | LC_ALL=C grep -vq '^[a-zA-Z0-9 -]\+$'; then
-    # $QUERY contains non-latin characters or characters unsafe for a
+if echo "$query" | LC_ALL=C grep -vq '^[a-zA-Z0-9 -]\+$'; then
+    # $query contains non-latin characters or characters unsafe for a
     # filename, so assume it's an answer.
-    check_if_answer "$QUERY"
+    check_if_answer "$query"
     exit 0
 fi
 
-# The only remaining possibility is that $QUERY contains a level.
-if ! ask_question "$QUERY"; then
-    for LEVEL in "$VOCAB_DIR"/*.txt; do
-        BASE_NAME="$(basename "$LEVEL" | sed 's/\.txt$//')"
-        LINE_COUNT="$(wc -l "$LEVEL" | cut -d ' ' -f 1)"
-        VALID_LEVELS="${VALID_LEVELS:+$VALID_LEVELS$'\n'}$BASE_NAME ($LINE_COUNT)"
+# The only remaining possibility is that $query contains a level.
+if ! ask_question "$query"; then
+    for level in "$vocab_dir"/*.txt; do
+        base_name="$(basename "$level" | sed 's/\.txt$//')"
+        line_count="$(wc -l "$level" | cut -d ' ' -f 1)"
+        valid_levels="${valid_levels:+$valid_levels$'\n'}$base_name ($line_count)"
     done
     printf_ 'Unknown level "%s". Valid levels (number of words): %s' \
-        "$QUERY" "${VALID_LEVELS//$'\n'/, }"
+        "$query" "${valid_levels//$'\n'/, }"
 fi
 
 exit 0
