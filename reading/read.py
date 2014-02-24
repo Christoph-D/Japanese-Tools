@@ -13,7 +13,7 @@ import sys, os, platform, re, subprocess, codecs
 
 MAX_OUTPUT_LENGTH = 300
 
-kakasiCmd = ["kakasi", "-isjis", "-osjis", "-u", "-JH", "-KH"]
+kakasiCmd = ["kakasi", "-iutf8", "-outf8", "-u", "-JH", "-KH"]
 mecabCmd = ["mecab", '--node-format=%m[%f[5]] ', '--eos-format=\n',
             '--unk-format=%m[] ']
 
@@ -32,9 +32,9 @@ class KakasiController(object):
 
     def toHiragana(self, expr):
         self.ensureOpen()
-        self.kakasi.stdin.write(expr.encode("sjis", "ignore")+'\n')
+        self.kakasi.stdin.write(expr.encode("utf8", "ignore")+'\n')
         self.kakasi.stdin.flush()
-        res = unicode(self.kakasi.stdout.readline().rstrip('\r\n'), "sjis")
+        res = unicode(self.kakasi.stdout.readline().rstrip('\r\n'), "utf8")
         return res
 
 kakasi = KakasiController()

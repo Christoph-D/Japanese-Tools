@@ -15,10 +15,7 @@ READING=$(printf '%s' "$*" | mecab --node-format="%f[5] " --eos-format= --unk-fo
 # Unfortunately, this breaks the backslash '\' (among other, less
 # important things), so we remove it first.
 READING=${READING//\\/}
-RESULT=$(echo "$READING" | \
-    iconv -s -c -f utf-8 -t sjis | \
-    kakasi -isjis -osjis -Ka -Ha -Ja | \
-    iconv -s -c -f sjis -t utf-8)
+RESULT=$(printf '%s' "$READING" | kakasi -iutf8 -outf8 -Ka -Ha -Ja)
 if [ -n "$RESULT" ]; then
     # Remove newlines. There shouldn't be any, but we make sure.
     RESULT=${RESULT//$'\n'/}
