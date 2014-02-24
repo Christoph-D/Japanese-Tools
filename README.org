@@ -4,7 +4,7 @@
 These are some scripts that help me learn Japanese.
 
 Most scripts are supposed to be used as plugins for an IRC bot or run
-on a shell.  I find the following aliases to be useful:
+on a shell.  I find the following aliases quite useful:
 
 #+BEGIN_EXAMPLE
 alias ja="$JAPANESE_TOOLS/jmdict/jm.sh"
@@ -17,10 +17,15 @@ alias gd="$JAPANESE_TOOLS/google_dictionary/gd.sh"
 
 I do most of my dictionary lookups with these aliases.
 
+All scripts have only been tested on Ubuntu 12.04 and later.  There
+are a few dependencies not present on a default Ubuntu system.  You
+can install them with
+#+BEGIN_EXAMPLE
+$ sudo apt-get install mecab-jumandic-utf8 mecab kakasi xmlstarlet xsltproc python-irclib sqlite3 bc liburi-perl tesseract-ocr imagemagick
+#+END_EXAMPLE
 * audio/
   find_audio.sh finds an audio version of a given Japanese
   word on languagepod101.
-
 #+BEGIN_EXAMPLE
 $ ./find_audio.sh 夜空
 Audio for 夜空 [よぞら]: http://tinyurl.com/p8aq8jo
@@ -38,8 +43,8 @@ UTF-8 vs. UTF-16: 91213 vs. 156876 bytes. UTF-8 wins by 41.8%.
   - German
   - Polish
 
-  You should call gettext/regenerate_mo_files.sh if you'd like to use
-  any of the translations or they won't work.
+  Be sure to run gettext/regenerate_mo_files.sh if you would like to
+  use a translation.
 * google_count
   Counts the number of Google results.  Uses google.co.jp for queries
   containing Japanese characters and google.com otherwise.
@@ -49,11 +54,13 @@ UTF-8 vs. UTF-16: 91213 vs. 156876 bytes. UTF-8 wins by 41.8%.
 $ ./gd.sh diligent
 /ˈdiləjənt/ having or showing care and conscientiousness in one's work or duties
 #+END_EXAMPLE
+
+  Currently broken because it appears like Google shut down their
+  dictionary JSON API.
 * google_translate/
   gt.sh translates words and sentences using Google Translate. The
   target language is determined by the environment variable LANG, but
   it can also be specified explicitly.
-
 #+BEGIN_EXAMPLE
 ./gt.sh My hovercraft is full of eels.
 私のホバークラフトは鰻がいっぱいです。
@@ -64,12 +71,12 @@ it: Il mio hovercraft è pieno di anguille.
 ./gt.sh Il mio hovercraft è pieno di anguille.
 My hovercraft is full of eels.
 #+END_EXAMPLE
-  Currently this script is broken because Google switched off the
-  translate API.
+  Currently broken because Google shut down the translate API.
 * jmdict/
-  jm.sh provides jmdict lookups and wa.sh wadoku lookups. Works best
+  jm.sh provides jmdict lookups and wa.sh wadoku lookups.  Works best
   for Japanese->English (or Japanese->German), not so well for the
-  reverse direction.
+  reverse direction.  This is because jmdict is a Japanese English
+  dictionary and not an English Japanese dictionary.
 
   To start, you first need to run the scripts prepare_jmdict.sh and
   prepare_wadoku.sh. This will download and process the respective
@@ -114,8 +121,8 @@ $ ./kanjidic.sh 日本語
   read.py converts kanji to kana using mecab.
 #+BEGIN_EXAMPLE
 $ ./read.py 鬱蒼たる樹海の中に舞う人の如き影が在った。
-鬱蒼[うっそう]　たる　樹海[じゅかい]　の　中[なか]　に　舞[ま]う
-人[ひと]　の　如[ごと]き　影[かげ]　が　在[あ]っ　た　。
+鬱蒼[うっそう]たる　樹海[じゅかい]　の　中[なか]　に　舞[ま]う
+人[じん]　の　如[ごと]き　影[かげ]　が　在[あ]った　。
 #+END_EXAMPLE
 * reading_quiz/
   A quiz asking kanji -> kana questions. Only works as an IRC plugin
@@ -132,11 +139,11 @@ $ ./read.py 鬱蒼たる樹海の中に舞う人の如き影が在った。
   romaji.sh converts kanji and kana to romaji using mecab.
 #+BEGIN_EXAMPLE
 $ ./romaji.sh 鬱蒼たる樹海の中に舞う人の如き影が在った。
-ussou taru jukai no naka ni mau hito no gotoki kage ga atsu ta 。
+ ussoutaru jukai no naka ni mau jin no gotoki kage ga atta 。
 #+END_EXAMPLE
 * rtk/
-  rtk.sh does a lookup between keyword - kanji - number. The keywords
-  and numbers refer to Heisig's amazing book "Remembering the Kanji".
+  rtk.sh looks up keywords, kanji and numbers. The keywords and
+  numbers refer to Heisig's amazing book "Remembering the Kanji".
 #+BEGIN_EXAMPLE
 $ ./rtk.sh 城壁
 #362: castle 城 | #1500: wall 壁
@@ -149,14 +156,14 @@ $ ./rtk.sh 1 2 3
 #1: one 一 | #2: two 二 | #3: three 三
 #+END_EXAMPLE
 * simple_bot/
-  As the name says, it's a simple IRC bot. You can start it with:
+  As the name says, this is a simple IRC bot. You can start it with:
 #+BEGIN_EXAMPLE
 $ ./bot.py <server[:port]> <channel> <nickname> [NickServ password]
 #+END_EXAMPLE
   It uses all the other scripts.
 * yahoo_jisho/
-  Binding to Yahoo!辞書, the Yahoo Japanese dictionary. It prints a
-  small excerpt from the dictionary and a link to the full result.
+  Calls Yahoo!辞書, the Yahoo Japanese dictionary.  It prints a small
+  excerpt from the dictionary and a link to the full result.
 #+BEGIN_EXAMPLE
 $ ./daijisen.sh うれしい
 うれし・い【×嬉しい】 ( http://tinyurl.com/32esm38 )
@@ -171,3 +178,4 @@ $ ./daijirin.sh うれしい
 て楽しい。心が晴れ晴れとして喜ばしい。  ⇔悲しい 2　満足して、相手に
 感謝する気持ちになるさま。ありがたい。かたじけない。  〔派生〕 ...
 #+END_EXAMPLE
+  Currently broken because Yahoo changed their website.
