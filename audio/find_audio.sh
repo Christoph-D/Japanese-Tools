@@ -29,17 +29,15 @@ is_english() {
     printf '%s' "$1" | grep -q '^[][/'"'"' a-zA-Z0-9.()]*$'
 }
 to_katakana() {
+    # We need kakasi to convert to katakana. mecab only prints
+    # hiragana.
     printf '%s\n' "$1" | \
-        mecab --node-format='%f[7]' --eos-format= --unk-format='%m'
+        mecab --node-format='%f[5]' --eos-format= --unk-format='%m' | \
+        kakasi -iutf8 -outf8 -KK -HK -JK
 }
 to_hiragana() {
-    # We need kakasi to convert to Hiragana. mecab only prints
-    # Katakana.
     printf '%s\n' "$1" | \
-        mecab --node-format='%f[7]' --eos-format= --unk-format='%m' | \
-        iconv -s -c -f utf-8 -t sjis | \
-        kakasi -isjis -osjis -KH -HH -JH | \
-        iconv -s -c -f sjis -t utf-8
+        mecab --node-format='%f[5]' --eos-format= --unk-format='%m'
 }
 # Takes $KANJI as input and sets $READING, $KANJI and $WORD
 # appropriately.

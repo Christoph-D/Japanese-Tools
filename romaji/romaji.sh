@@ -8,7 +8,7 @@
 
 . "$(dirname "$0")"/../gettext/gettext.sh
 
-READING=$(echo "$*" | mecab --node-format="%f[7] " --eos-format= --unk-format=%m)
+READING=$(printf '%s' "$*" | mecab --node-format="%f[5] " --eos-format= --unk-format=%m)
 # For some reason utf-8 support in kakasi on Ubuntu 9.04 seems to be
 # broken.
 # Fortunately, we have iconv.

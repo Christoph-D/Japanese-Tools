@@ -14,7 +14,7 @@ import sys, os, platform, re, subprocess, codecs
 MAX_OUTPUT_LENGTH = 300
 
 kakasiCmd = ["kakasi", "-isjis", "-osjis", "-u", "-JH", "-KH"]
-mecabCmd = ["mecab", '--node-format=%m[%f[7]] ', '--eos-format=\n',
+mecabCmd = ["mecab", '--node-format=%m[%f[5]] ', '--eos-format=\n',
             '--unk-format=%m[] ']
 
 class KakasiController(object):
