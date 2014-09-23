@@ -53,16 +53,8 @@
       </xsl:if>
     </xsl:for-each>
     <xsl:value-of select="'□'"/>
-    <xsl:for-each select="form/pron">
-      <xsl:choose>
-        <xsl:when test="@type and @type='hatsuon'">
-        </xsl:when>
-        <xsl:otherwise>
-          <xsl:value-of select="."/>
-          <xsl:value-of select="','"/>
-        </xsl:otherwise>
-      </xsl:choose>
-    </xsl:for-each>
+    <xsl:value-of select="form/reading/hira"/>
+    <xsl:value-of select="','"/>
     <xsl:value-of select="'□'"/>
     <xsl:for-each select="gramGrp/pos">
       <xsl:value-of select="@type"/>

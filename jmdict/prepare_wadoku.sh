@@ -2,7 +2,7 @@
 # Copyright: Christoph Dittmann <github@christoph-d.de>
 # License: GNU GPL, version 3 or later; http://www.gnu.org/copyleft/gpl.html
 #
-# Fetches and prepares wadoku for use with the lookup script "wa.sh".
+# Prepares wadoku for use with the lookup script "wa.sh".
 
 cd "$(dirname "$0")"
 
@@ -76,7 +76,7 @@ xsltproc prepare_wadoku.xslt "$TMP1" > wadoku_prepared
 # Remove redundant spaces
 echo 'Compressing dictionary file...'
 sed 's# ,#,#g;s# \+# #g;s# \([“)]\)#\1#g;s#\([„(]\) #\1#g' -i wadoku_prepared
-sed 's#,\+#,#g;s#,□#□#g;s#[×〈〉△]##g;s# \+$##' -i wadoku_prepared
+sed 's#,\+#,#g;s#,□#□#g;s#[×〈〉△{}]##g;s# \+$##' -i wadoku_prepared
 echo 'Removing redundant information...'
 remove_redundant_information < wadoku_prepared > "$TMP1"
 mv "$TMP1" wadoku_prepared
