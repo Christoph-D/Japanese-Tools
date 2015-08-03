@@ -68,7 +68,7 @@ LESSON_STATUS_FILE=$TEMP_PATH/status-$CHANNEL_NAME
 min() { if (( "$1" < "$2" )); then echo "$1"; else echo "$2"; fi; }
 
 show_help() {
-    printf_ 'Start with "%s <level> [count]". Known levels are 0 to %s. To learn more about some level please use "%s help <level>".
+    printf_ 'Start with "%s <level> [count]". Known levels are 0 to %s. To learn more about a level please use "%s help <level>".
 To only see the differences between consecutive levels, please use "%s helpdiff <level>".' \
         "$IRC_COMMAND" "$(( ${#LESSON_MAP[*]} - 1))" \
         "$IRC_COMMAND" "$IRC_COMMAND"
