@@ -136,7 +136,7 @@ msgstr "Nie można ustalić nazwy kanału lub nadawcy wiadomości. Napraw %s."
 #: kana/kana.sh
 msgid ""
 "Start with \"%s <level> [count]\". Known levels are 0 to %s. To learn more "
-"about some level please use \"%s help <level>\".\n"
+"about a level please use \"%s help <level>\".\n"
 "To only see the differences between consecutive levels, please use \"%s "
 "helpdiff <level>\"."
 msgstr ""
@@ -222,22 +222,24 @@ msgstr "Nieznany użytkownik: %s"
 
 #: reading_quiz/quiz.sh
 msgid ""
-"In the last 2 months, %s answered %s/%s questions correctly, that is %s%%."
+"In the last 2 months, %s answered %s/%s (%s%%) questions correctly and "
+"skipped %s/%s (%s%%)."
 msgstr ""
 "Przez ostatnie 2 miesiące, %s odpowiedział poprawnie na %s/%s pytań, to jest "
 "%s%%."
 
 #: reading_quiz/quiz.sh
-msgid "Hardest words for %s (number of mistakes): %s"
-msgstr "Najtrudniejsze słowo dla %s (liczba błędów): %s"
+msgid "Hardest words for %s (#mistakes/#skipped): %s"
+msgstr ""
+#msgstr "Najtrudniejsze słowo dla %s (liczba błędów): %s"
 
 #: reading_quiz/quiz.sh
 msgid "Please specify a level."
 msgstr "Proszę wybrać poziom."
 
 #: reading_quiz/quiz.sh
-msgid "%s: Correct!"
-msgstr "%s: Poprawnie!"
+msgid "%s: Correct! (%s: %s)"
+msgstr "%s: Poprawnie! (%s: %s)"
 
 #: reading_quiz/quiz.sh
 msgid "%s: Sadly, no."
@@ -260,8 +262,8 @@ msgid "Nothing to skip!"
 msgstr "Nie ma nic do pominięcia!"
 
 #: reading_quiz/quiz.sh
-msgid "Skipping %s (%s: %s)..."
-msgstr "Pomijanie %s (%s: %s)..."
+msgid "Skipping %s (%s: %s)"
+msgstr "Pomijanie %s (%s: %s)"
 
 #: reading_quiz/quiz.sh
 msgid "Unknown level \"%s\". Valid levels (number of words): %s"
@@ -321,9 +323,18 @@ msgstr "Błąd: Nieprawidłowy port."
 msgid "Caught KeyboardInterrupt, exiting..."
 msgstr "Przechwycono KeyboardInterrupt, wyłączanie..."
 
-#: yahoo_jisho/pitch.sh yahoo_jisho/yj.sh
+#: yahoo_jisho/daijisen_wa.sh yahoo_jisho/pitch.sh yahoo_jisho/yj.sh
 msgid "Example: %s"
 msgstr "Przykład: %s"
+
+#: yahoo_jisho/daijisen_wa.sh
+#, fuzzy
+msgid "Providing the reading is optional. If it is missing, I will guess it."
+msgstr "Pisownia jest opcjonalna. Jeśli jej nie ma, mecab się tym zajmie."
+
+#: yahoo_jisho/daijisen_wa.sh yahoo_jisho/yj.sh
+msgid "A network error occured."
+msgstr "Nastąpił błąd sieci."
 
 #: yahoo_jisho/pitch.sh
 msgid "No pitch information available."
@@ -338,7 +349,3 @@ msgid ""
 "Providing the reading is optional. If it is missing, it will be guessed by "
 "mecab."
 msgstr "Pisownia jest opcjonalna. Jeśli jej nie ma, mecab się tym zajmie."
-
-#: yahoo_jisho/yj.sh
-msgid "A network error occured."
-msgstr "Nastąpił błąd sieci."

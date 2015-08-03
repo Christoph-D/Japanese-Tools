@@ -138,7 +138,7 @@ msgstr ""
 #: kana/kana.sh
 msgid ""
 "Start with \"%s <level> [count]\". Known levels are 0 to %s. To learn more "
-"about some level please use \"%s help <level>\".\n"
+"about a level please use \"%s help <level>\".\n"
 "To only see the differences between consecutive levels, please use \"%s "
 "helpdiff <level>\"."
 msgstr ""
@@ -219,11 +219,12 @@ msgstr ""
 
 #: reading_quiz/quiz.sh
 msgid ""
-"In the last 2 months, %s answered %s/%s questions correctly, that is %s%%."
+"In the last 2 months, %s answered %s/%s (%s%%) questions correctly and "
+"skipped %s/%s (%s%%)."
 msgstr ""
 
 #: reading_quiz/quiz.sh
-msgid "Hardest words for %s (number of mistakes): %s"
+msgid "Hardest words for %s (#mistakes/#skipped): %s"
 msgstr ""
 
 #: reading_quiz/quiz.sh
@@ -255,7 +256,7 @@ msgid "Nothing to skip!"
 msgstr ""
 
 #: reading_quiz/quiz.sh
-msgid "Skipping %s [%s]..."
+msgid "Skipping %s (%s: %s)"
 msgstr ""
 
 #: reading_quiz/quiz.sh
@@ -314,8 +315,16 @@ msgstr ""
 msgid "Caught KeyboardInterrupt, exiting..."
 msgstr ""
 
-#: yahoo_jisho/pitch.sh yahoo_jisho/yj.sh
+#: yahoo_jisho/daijisen_wa.sh yahoo_jisho/pitch.sh yahoo_jisho/yj.sh
 msgid "Example: %s"
+msgstr ""
+
+#: yahoo_jisho/daijisen_wa.sh
+msgid "Providing the reading is optional. If it is missing, I will guess it."
+msgstr ""
+
+#: yahoo_jisho/daijisen_wa.sh yahoo_jisho/yj.sh
+msgid "A network error occured."
 msgstr ""
 
 #: yahoo_jisho/pitch.sh
@@ -330,8 +339,4 @@ msgstr ""
 msgid ""
 "Providing the reading is optional. If it is missing, it will be guessed by "
 "mecab."
-msgstr ""
-
-#: yahoo_jisho/yj.sh
-msgid "A network error occured."
 msgstr ""
