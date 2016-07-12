@@ -97,7 +97,7 @@ def fixExpr(expr):
         fin += s
     fin = fin.strip()
     fin = re.sub(u"\[\]", u"", fin)
-    fin = re.sub(u" +", u"　", fin)
+    fin = re.sub(u" +", u" ", fin)
     return fin
 
 def get_readings(expr):
