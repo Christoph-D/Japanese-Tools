@@ -314,29 +314,3 @@ msgstr ""
 #: simple_bot/bot.py
 msgid "Caught KeyboardInterrupt, exiting..."
 msgstr ""
-
-#: yahoo_jisho/daijisen_wa.sh yahoo_jisho/pitch.sh yahoo_jisho/yj.sh
-msgid "Example: %s"
-msgstr ""
-
-#: yahoo_jisho/daijisen_wa.sh
-msgid "Providing the reading is optional. If it is missing, I will guess it."
-msgstr ""
-
-#: yahoo_jisho/daijisen_wa.sh yahoo_jisho/yj.sh
-msgid "A network error occured."
-msgstr ""
-
-#: yahoo_jisho/pitch.sh
-msgid "No pitch information available."
-msgstr ""
-
-#: yahoo_jisho/yj.sh
-msgid "Please don't run this script directly."
-msgstr ""
-
-#: yahoo_jisho/yj.sh
-msgid ""
-"Providing the reading is optional. If it is missing, it will be guessed by "
-"mecab."
-msgstr ""

@@ -322,30 +322,3 @@ msgstr "Błąd: Nieprawidłowy port."
 #: simple_bot/bot.py
 msgid "Caught KeyboardInterrupt, exiting..."
 msgstr "Przechwycono KeyboardInterrupt, wyłączanie..."
-
-#: yahoo_jisho/daijisen_wa.sh yahoo_jisho/pitch.sh yahoo_jisho/yj.sh
-msgid "Example: %s"
-msgstr "Przykład: %s"
-
-#: yahoo_jisho/daijisen_wa.sh
-#, fuzzy
-msgid "Providing the reading is optional. If it is missing, I will guess it."
-msgstr "Pisownia jest opcjonalna. Jeśli jej nie ma, mecab się tym zajmie."
-
-#: yahoo_jisho/daijisen_wa.sh yahoo_jisho/yj.sh
-msgid "A network error occured."
-msgstr "Nastąpił błąd sieci."
-
-#: yahoo_jisho/pitch.sh
-msgid "No pitch information available."
-msgstr "Brak dostepnych informacji."
-
-#: yahoo_jisho/yj.sh
-msgid "Please don't run this script directly."
-msgstr "Proszę nie uruchamiaj tego skryptu bezpośrednio."
-
-#: yahoo_jisho/yj.sh
-msgid ""
-"Providing the reading is optional. If it is missing, it will be guessed by "
-"mecab."
-msgstr "Pisownia jest opcjonalna. Jeśli jej nie ma, mecab się tym zajmie."
