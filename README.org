@@ -10,8 +10,6 @@ on a shell.  I find the following aliases quite useful:
 alias ja="$JAPANESE_TOOLS/jmdict/jm.sh"
 alias wa="$JAPANESE_TOOLS/jmdict/wa.sh"
 alias rtk="$JAPANESE_TOOLS/rtk/rtk.sh"
-alias sen="$JAPANESE_TOOLS/yahoo_jisho/daijisen.sh"
-alias rin="$JAPANESE_TOOLS/yahoo_jisho/daijirin.sh"
 alias gd="$JAPANESE_TOOLS/google_dictionary/gd.sh"
 #+END_EXAMPLE
 
@@ -161,21 +159,3 @@ $ ./rtk.sh 1 2 3
 $ ./bot.py <server[:port]> <channel> <nickname> [NickServ password]
 #+END_EXAMPLE
   It uses all the other scripts.
-* yahoo_jisho/
-  Calls Yahoo!辞書, the Yahoo Japanese dictionary.  It prints a small
-  excerpt from the dictionary and a link to the full result.
-#+BEGIN_EXAMPLE
-$ ./daijisen.sh うれしい
-うれし・い【×嬉しい】 ( http://tinyurl.com/32esm38 )
-［形］［文］うれ・し［シク］ １ 物事が自分の望みどおりになって満足で
-あり、喜ばしい。自分にとってよいことが起き、愉快で、楽しい。「努力が
-報われてとても―・い」「―・いことに明日は晴れるらしい」⇔悲しい。  ２
-相手から受けた行...
-
-$ ./daijirin.sh うれしい
-うれし・い(3) 【▼嬉しい】 ( http://tinyurl.com/39bwl22 )
-(形) [文]シク うれ・し 1　（望ましい事態が実現して）心がうきうきとし
-て楽しい。心が晴れ晴れとして喜ばしい。  ⇔悲しい 2　満足して、相手に
-感謝する気持ちになるさま。ありがたい。かたじけない。  〔派生〕 ...
-#+END_EXAMPLE
-  Currently broken because Yahoo changed their website.
