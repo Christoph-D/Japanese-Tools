@@ -1,7 +1,8 @@
 #!/bin/bash
 # Prints some status data from the Large Hadron Collider.
 
-set -e -u
+set -eu
+shopt -s extglob
 
 TMP_DIR=$(mktemp -d)
 trap 'rm -rf "$TMP_DIR"' EXIT
@@ -9,6 +10,9 @@ cd "$TMP_DIR"
 
 if ! which tesseract &> /dev/null; then
     echo "Please install tesseract."
+    if [[ $(lsb_release --short --id) == Ubuntu ]]; then
+        echo "You can install it with: sudo apt install tesseract-ocr"
+    fi
     exit 1
 fi
 
@@ -17,26 +21,28 @@ if [[ $# = 1 && $1 = 'help' ]]; then
     exit 0
 fi
 
-if ! wget --quiet --tries=1 --timeout=5 'http://vistar-capture.web.cern.ch/vistar-capture/lhc1.png'; then
+if ! wget --quiet --tries=1 --timeout=5 \
+     'http://vistar-capture.web.cern.ch/vistar-capture/lhc1.png'; then
     echo 'LHC data is currently unavailable.'
     exit 0
 fi
 
 ocr() {
-    convert lhc1.png "$@" +dither -colors 2 -depth 8 tmp.tif &> /dev/null
+    convert lhc1.png "$@" tmp.tif &> /dev/null
     tesseract tmp.tif tmp &> /dev/null
-    # Trim spaces.
-    printf '%s\n' "$(cat tmp.txt 2>/dev/null)"
+    local result=$(cat tmp.txt 2>/dev/null)
+    # Remove newlines and trim spaces.
+    result="${result//,$'\n'/,}"
+    result="${result//$'\n'/ }"
+    result="${result##*( )}"
+    result="${result%%*( )}"
+    printf '%s' "$result"
 }
 
 TITLE=$(ocr -crop 1016x54+4+38)
-ENERGY=$(ocr -crop 148x26+533+5)
-
+ENERGY=$(ocr -crop 190x45+140+104)
 COMMENTS=$(ocr -crop 509x173+2+557 -scale 150%)
-# Remove newlines.
-COMMENTS="${COMMENTS//,$'\n'/,}"
-COMMENTS="${COMMENTS//$'\n'/, }"
-COMMENTS=$(printf '%s' "$COMMENTS" | sed 's/\(, \)\{2,\}/. /g')
+COMMENTS=$(printf '%s' "$COMMENTS" | sed 's/\(, \)\{2,\}/. /g;s/ \+/ /g')
 
 BEAM_PRESENCE1=$(ocr -crop 58x20+870+647)
 BEAM_PRESENCE2=$(ocr -crop 58x20+942+647)
