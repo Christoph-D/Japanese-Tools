@@ -19,7 +19,7 @@ All scripts have only been tested on Ubuntu 12.04 and later.  There
 are a few dependencies not present on a default Ubuntu system.  You
 can install them with
 #+BEGIN_EXAMPLE
-$ sudo apt-get install mecab-jumandic-utf8 mecab kakasi xmlstarlet xsltproc python-irclib sqlite3 bc liburi-perl tesseract-ocr imagemagick
+$ sudo apt install mecab-jumandic-utf8 mecab kakasi xmlstarlet xsltproc python-irclib sqlite3 bc liburi-perl tesseract-ocr imagemagick
 #+END_EXAMPLE
 * audio/
   find_audio.sh finds an audio version of a given Japanese
@@ -36,8 +36,8 @@ $ ./compare_encoding.sh 夜空
 UTF-8 vs. UTF-16: 91213 vs. 156876 bytes. UTF-8 wins by 41.8%.
 #+END_EXAMPLE
 * gettext/
-  Internationalization support. Currently supported languages other
-  than English:
+  Internationalization support. Currently supported languages:
+  - English
   - German
   - Polish
 
