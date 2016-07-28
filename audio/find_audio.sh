@@ -19,12 +19,13 @@ NOT_FOUND=7e2c2f954ef6051373ba916f000168dc
 
 # URL encoding.
 encode_query() {
-    # Escape single quotes for use in perl
-    local ENCODED_QUERY=${1//\'/\\\'}
+    # Make the query safe: Remove backslashes and escape single quotes.
+    local ENCODED_QUERY=${1//\\/}
+    ENCODED_QUERY=${ENCODED_QUERY//\'/\\\'}
     ENCODED_QUERY=$(perl -MURI::Escape -e "print uri_escape('$ENCODED_QUERY');")
     printf '%s\n' "$ENCODED_QUERY"
 }
-# Returns 0 if $1 does not contain characters not present in English.
+# Returns 0 if $1 contains only English characters (no kanji etc.).
 is_english() {
     printf '%s' "$1" | grep -q '^[][/'"'"' a-zA-Z0-9.()]*$'
 }

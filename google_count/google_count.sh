@@ -16,8 +16,9 @@ fi
 
 # URL encoding.
 encode_query() {
-    # Escape single quotes for use in perl
-    local ENCODED_QUERY=${1//\'/\\\'}
+    # Make the query safe: Remove backslashes and escape single quotes.
+    local ENCODED_QUERY=${1//\\/}
+    ENCODED_QUERY=${ENCODED_QUERY//\'/\\\'}
     ENCODED_QUERY=$(perl -MURI::Escape -e "print uri_escape('$ENCODED_QUERY');")
     printf '%s\n' "$ENCODED_QUERY"
 }
