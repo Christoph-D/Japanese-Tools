@@ -41,7 +41,7 @@ fi
 
 clean_up_kanji() {
     # $1 is a ◊-delimited string containing the kanji elements.
-    local IFS='◊' KANJI KANJI_BUFFER= REST="$1"
+    local IFS='◊' KANJI= KANJI_BUFFER= REST="$1"
     while [[ $REST ]]; do
         read -r KANJI REST < <(printf '%s' "$REST")
         # Always print the first kanji element and after that only
@@ -54,7 +54,7 @@ clean_up_kanji() {
 }
 
 get_current_item() {
-    local IFS='□' KANJI KANA POS ENGLISH
+    local IFS='□' KANJI= KANA= POS= ENGLISH=
     read -r KANJI KANA POS ENGLISH < <(printf '%s' "$1")
     if [[ -n "$POS" ]]; then
         POS=" ($POS)"
