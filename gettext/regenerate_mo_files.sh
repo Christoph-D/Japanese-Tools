@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 generate_mo() {
     mkdir -p "locale/$1/LC_MESSAGES"

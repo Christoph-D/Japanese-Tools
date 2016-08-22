@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # Copyright: Christoph Dittmann <github@christoph-d.de>
 # License: GNU GPL, version 3 or later; http://www.gnu.org/copyleft/gpl.html
 #

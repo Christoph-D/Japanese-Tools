@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # Prints some status data from the Large Hadron Collider.
 
 set -eu

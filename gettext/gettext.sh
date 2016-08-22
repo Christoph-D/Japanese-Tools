@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 THIS_DIR=$(readlink -f "$(dirname "$BASH_SOURCE")")
 export TEXTDOMAINDIR="$THIS_DIR/locale"

@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 THIS_DIR=$(basename "$(readlink -f "$(dirname "$0")")")
 cd "$(dirname "$0")"/../
