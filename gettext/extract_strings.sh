@@ -1,6 +1,6 @@
 #!/bin/bash
 
-THIS_DIR=$(basename "$(readlink -e "$(dirname "$0")")")
+THIS_DIR=$(basename "$(readlink -f "$(dirname "$0")")")
 cd "$(dirname "$0")"/../
 xgettext -d japanese_tools -p "./$THIS_DIR" --from-code=UTF-8 \
     --keyword=_ --keyword=echo_ \

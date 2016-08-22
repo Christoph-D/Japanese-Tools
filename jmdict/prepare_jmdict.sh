@@ -26,7 +26,7 @@ fi
 
 echo 'This script will download and preprocess the jmdic file for use with the kanjidic script.
 The file will be placed in the following directory:'
-echo "$(readlink -e .)/"
+echo "$(readlink -f .)/"
 read -p "Proceed? [y]" OK
 
 [[ $OK && $OK != 'y' && $OK != 'Y' ]] && exit 1

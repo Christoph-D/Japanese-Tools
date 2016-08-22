@@ -1,6 +1,6 @@
 #!/bin/bash
 
-THIS_DIR=$(readlink -e "$(dirname "$BASH_SOURCE")")
+THIS_DIR=$(readlink -f "$(dirname "$BASH_SOURCE")")
 export TEXTDOMAINDIR="$THIS_DIR/locale"
 export TEXTDOMAIN=japanese_tools
 
