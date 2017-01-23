@@ -111,6 +111,16 @@ $ ./kanjidic.sh 日本語
 本: 5 strokes. ホン, もと. In names: まと {book, present, main, origin, true, real, counter for long cylindrical things}
 語: 14 strokes. ゴ, かた.る, かた.らう {word, speech, language}
 #+END_EXAMPLE
+* kumitate_quiz/
+  A quiz asking JLPT style 文の組み立て questions. Only works as an IRC plugin
+  for now.
+** Example IRC session
+#+BEGIN_EXAMPLE
+<Flamerokz> !kuiz skm2
+<nihongobot> Please select the correct choice [1-4]: 周囲の人たちの　＿　＿　★　＿　と思う。 (1: 協力を 2: 優勝は 3: 無理だった 4: 抜きにしては).
+<Flamerokz> !kuiz 2
+<nihongobot> Flamerokz: Correct! (2: 優勝は)
+#+END_EXAMPLE
 * lhc
   This script has nothing to do with Japanese. It OCRs the image on
   http://op-webtools.web.cern.ch/op-webtools/vistar/vistars.php?usr=LHC1
@@ -132,16 +142,6 @@ $ ./read.py 鬱蒼たる樹海の中に舞う人の如き影が在った。
 <Christoph>  !quiz はっけん
 <nihongobot> Christoph: Correct! (はっけん:
              (n,vs) 1. discovery, 2. detection, 3. finding)
-#+END_EXAMPLE
-* kumitate_quiz/
-  A quiz asking JLPT style 文の組み立て questions. Only works as an IRC plugin
-  for now.
-** Example IRC session
-#+BEGIN_EXAMPLE
-<Flamerokz> !kuiz skm2
-<nihongobot> Please select the correct choice [1-4]: 周囲の人たちの　＿　＿　★　＿　と思う。 (1: 協力を 2: 優勝は 3: 無理だった 4: 抜きにしては).
-<Flamerokz> !kuiz 2
-<nihongobot> Flamerokz: Correct! (2: 優勝は)
 #+END_EXAMPLE
 * romaji/
   romaji.sh converts kanji and kana to romaji using mecab.
