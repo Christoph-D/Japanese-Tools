@@ -52,8 +52,7 @@ load_source_line() {
 split_lines() {
     question=$(printf '%s\n' "$1" | head -n 1)
     choices=$(printf '%s\n' "$1" | head -n 2 | tail -n 1)
-    local IFS=','
-    read -ra choices_arr <<< "$choices"
+    IFS=',' read -ra choices_arr <<< "$choices"
     answer=$(printf '%s\n' "$1" | head -n 3 | tail -n 1)
 }
 
