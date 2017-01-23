@@ -62,7 +62,7 @@ ask_question() {
     local source=$(load_source_line "$1")
     split_lines "${source//|/$'\n'}"
     printf '%s\n%s\n%s\n%s\n' "$question" "$choices" "$answer" "$1" > "$question_file"
-    printf_ 'Please select the correct choice [1-4]: %s (1: %s 2: %s 3: %s 4: %s).' \
+    printf_ 'Please choose [1-4]: %s (1: %s 2: %s 3: %s 4: %s).' \
             "$question" "${choices_arr[0]}" "${choices_arr[1]}" "${choices_arr[2]}" "${choices_arr[3]}"
 }
 
