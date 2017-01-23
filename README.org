@@ -117,9 +117,16 @@ $ ./kanjidic.sh 日本語
 ** Example IRC session
 #+BEGIN_EXAMPLE
 <Flamerokz> !kuiz skm2
-<nihongobot> Please select the correct choice [1-4]: 周囲の人たちの　＿　＿　★　＿　と思う。 (1: 協力を 2: 優勝は 3: 無理だった 4: 抜きにしては).
+<nihongobot> Please choose [1-4]: 周囲の人たちの　＿　＿　★　＿　と思う。 (1: 協力を 2: 優勝は 3: 無理だった 4: 抜きにしては).
 <Flamerokz> !kuiz 2
 <nihongobot> Flamerokz: Correct! (2: 優勝は)
+#+END_EXAMPLE
+** Example question file
+   A question file (a file ending in =.txt= in
+   =kumitate_quiz/questions/=) should contains lines of the following
+   form:
+#+BEGIN_EXAMPLE
+周囲の人たちの　＿　＿　★　＿　と思う。|協力を,優勝は,無理だった,抜きにしては|2
 #+END_EXAMPLE
 * lhc
   This script has nothing to do with Japanese. It OCRs the image on
