@@ -139,9 +139,9 @@ $ ./read.py 鬱蒼たる樹海の中に舞う人の如き影が在った。
 ** Example IRC session
 #+BEGIN_EXAMPLE
 <Flamerokz> !kuiz skm2
-<moebot> Please select the correct choice [1-4]: 周囲の人たちの　＿　＿　★　＿　と思う。 (1: 協力を 2: 優勝は 3: 無理だった 4: 抜きにしては).
+<nihongobot> Please select the correct choice [1-4]: 周囲の人たちの　＿　＿　★　＿　と思う。 (1: 協力を 2: 優勝は 3: 無理だった 4: 抜きにしては).
 <Flamerokz> !kuiz 2
-<moebot> Flamerokz: Correct! (2: 優勝は)
+<nihongobot> Flamerokz: Correct! (2: 優勝は)
 #+END_EXAMPLE
 * romaji/
   romaji.sh converts kanji and kana to romaji using mecab.
