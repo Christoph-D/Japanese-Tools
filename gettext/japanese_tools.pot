@@ -127,11 +127,11 @@ msgstr ""
 msgid "Could not create directory %s. Please fix %s."
 msgstr ""
 
-#: kana/kana.sh reading_quiz/quiz.sh
+#: kana/kana.sh kumitate_quiz/kuiz.sh reading_quiz/quiz.sh
 msgid "Could not determine nick name. Please fix %s."
 msgstr ""
 
-#: kana/kana.sh reading_quiz/quiz.sh
+#: kana/kana.sh kumitate_quiz/kuiz.sh reading_quiz/quiz.sh
 msgid "Could not determine channel name or query sender. Please fix %s."
 msgstr ""
 
@@ -193,6 +193,56 @@ msgstr[1] ""
 msgid "No kanji found."
 msgstr ""
 
+#: kumitate_quiz/kuiz.sh
+msgid "Please choose [1-4]: %s (1: %s 2: %s 3: %s 4: %s)."
+msgstr ""
+
+#: kumitate_quiz/kuiz.sh reading_quiz/quiz.sh
+msgid "Unknown user: %s"
+msgstr ""
+
+#: kumitate_quiz/kuiz.sh reading_quiz/quiz.sh
+msgid ""
+"In the last 2 months, %s answered %s/%s (%s%%) questions correctly and "
+"skipped %s/%s (%s%%)."
+msgstr ""
+
+#: kumitate_quiz/kuiz.sh reading_quiz/quiz.sh
+msgid "Please specify a level."
+msgstr ""
+
+#: kumitate_quiz/kuiz.sh reading_quiz/quiz.sh
+msgid "%s: Correct! (%s: %s)"
+msgstr ""
+
+#: kumitate_quiz/kuiz.sh reading_quiz/quiz.sh
+msgid "%s: Sadly, no."
+msgstr ""
+
+#: kumitate_quiz/kuiz.sh
+msgid "Try \"%s skm2\". With \"%s skip\" you can skip questions."
+msgstr ""
+
+#: kumitate_quiz/kuiz.sh reading_quiz/quiz.sh
+msgid "Statistics can be accessed by \"%s stats <nickname>\"."
+msgstr ""
+
+#: kumitate_quiz/kuiz.sh reading_quiz/quiz.sh
+msgid "Usage: %s stats <nickname>"
+msgstr ""
+
+#: kumitate_quiz/kuiz.sh reading_quiz/quiz.sh
+msgid "Nothing to skip!"
+msgstr ""
+
+#: kumitate_quiz/kuiz.sh
+msgid "Skipping... (%s: %s)"
+msgstr ""
+
+#: kumitate_quiz/kuiz.sh
+msgid "Unknown level \"%s\". Valid levels (number of questions): %s"
+msgstr ""
+
 #: mueval/eval.sh
 msgid "Please install mueval: %s"
 msgstr ""
@@ -214,45 +264,11 @@ msgid "Please read: %s"
 msgstr ""
 
 #: reading_quiz/quiz.sh
-msgid "Unknown user: %s"
-msgstr ""
-
-#: reading_quiz/quiz.sh
-msgid ""
-"In the last 2 months, %s answered %s/%s (%s%%) questions correctly and "
-"skipped %s/%s (%s%%)."
-msgstr ""
-
-#: reading_quiz/quiz.sh
 msgid "Hardest words for %s (#mistakes/#skipped): %s"
 msgstr ""
 
 #: reading_quiz/quiz.sh
-msgid "Please specify a level."
-msgstr ""
-
-#: reading_quiz/quiz.sh
-msgid "%s: Correct! (%s: %s)"
-msgstr ""
-
-#: reading_quiz/quiz.sh
-msgid "%s: Sadly, no."
-msgstr ""
-
-#: reading_quiz/quiz.sh
 msgid "Try \"%s jlpt4\". With \"%s skip\" you can skip questions."
-msgstr ""
-
-#: reading_quiz/quiz.sh
-msgid "Statistics can be accessed by \"%s stats <nickname>\"."
-msgstr ""
-
-#: reading_quiz/quiz.sh
-msgid "Usage: %s stats <nickname>"
-msgstr ""
-
-#: reading_quiz/quiz.sh
-msgid "Nothing to skip!"
 msgstr ""
 
 #: reading_quiz/quiz.sh

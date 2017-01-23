@@ -167,7 +167,7 @@ if printf '%s\n' "$query" | grep -q '^\(next\|skip\) *$'; then
         exit 0
     fi
     split_lines "$(cat "$question_file")"
-    printf_ 'Skipping (%s: %s)' "$answer" "${choices_arr[answer-1]}"
+    printf_ 'Skipping... (%s: %s)' "$answer" "${choices_arr[answer-1]}"
     record_answer 'skipped'
     set_timer 2
     exit 0
