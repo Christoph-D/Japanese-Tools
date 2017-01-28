@@ -55,7 +55,9 @@ load_shuffle_line() {
     if [[ ! -s "$shuffle_file" ]]; then
         generate_shuffle_file "$(tail -n 1 "$question_file")"
     fi
-    sed -e 1$'{w/dev/stdout\n;d}' -i "$shuffle_file"
+    # Print the first line and remove it from the file.
+    sed -e '1{w/dev/stdout
+             ;d}' -i "$shuffle_file"
 }
 
 split_lines() {
