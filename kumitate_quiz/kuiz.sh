@@ -31,6 +31,7 @@ fi
 timer_file="$data_dir/timer.key.$channel_name"
 stats_db="$data_dir/stats.db"
 question_file="$data_dir/question.status.$channel_name"
+shuffle_file="$data_dir/shuffle.$channel_name"
 
 # Checks if $1 is a valid level.
 check_level() {
@@ -44,9 +45,17 @@ set_timer() {
     echo "/timer $1 $timer_key"
 }
 
-# $1 is the level. Loads a random line out that list.
-load_source_line() {
-    sort --random-sort "$questions_dir/$1.txt" | head -n 1
+# $1 is the level.
+generate_shuffle_file() {
+    sort -o "$shuffle_file" --random-sort "$questions_dir/$1.txt"
+}
+
+# Pops a line out of the shuffle file.
+load_shuffle_line() {
+    if [[ ! -s "$shuffle_file" ]]; then
+        generate_shuffle_file "$(tail -n 1 "$question_file")"
+    fi
+    sed -e 1$'{w/dev/stdout\n;d}' -i "$shuffle_file"
 }
 
 split_lines() {
@@ -56,14 +65,19 @@ split_lines() {
     answer=$(printf '%s\n' "$1" | head -n 3 | tail -n 1)
 }
 
-# $1 is the level. Returns non-zero on invalid levels.
 ask_question() {
-    check_level "$1" || return 1
-    local source=$(load_source_line "$1")
+    local source=$(load_shuffle_line)
     split_lines "${source//|/$'\n'}"
     printf '%s\n%s\n%s\n%s\n' "$question" "$choices" "$answer" "$1" > "$question_file"
     printf_ 'Please choose [1-4]: %s (1: %s 2: %s 3: %s 4: %s).' \
             "$question" "${choices_arr[0]}" "${choices_arr[1]}" "${choices_arr[2]}" "${choices_arr[3]}"
+}
+
+# $1 is the level. Returns non-zero on invalid levels.
+new_session() {
+    check_level "$1" || return 1
+    generate_shuffle_file "$1"
+    ask_question "$1"
 }
 
 sql() {
@@ -180,7 +194,7 @@ if echo "$query" | LC_ALL=C grep -q '^[1-4]$'; then
 fi
 
 # The only remaining possibility is that $query contains a level.
-if ! ask_question "$query"; then
+if ! new_session "$query"; then
     for level in "$questions_dir"/*.txt; do
         base_name="$(basename "$level" | sed 's/\.txt$//')"
         line_count="$(wc -l "$level" | cut -d ' ' -f 1)"
