@@ -109,10 +109,12 @@ GROUP BY correct ORDER BY correct ASC;")
         SELECT u.word,ifnull(wrong,0) AS wrong0, ifnull(skipped,0) AS skipped0
         FROM user_stats AS u
             LEFT JOIN
-                (SELECT word AS w, COUNT(*) AS wrong FROM user_stats WHERE correct = 'wrong' GROUP BY word)
+                (SELECT word AS w, COUNT(*) AS wrong FROM user_stats
+                 WHERE user = '$1' AND correct = 'wrong' GROUP BY word)
                 ON u.word = w
             LEFT JOIN
-                (SELECT word AS s, COUNT(*) AS skipped FROM user_stats WHERE correct = 'skipped' GROUP BY word)
+                (SELECT word AS s, COUNT(*) AS skipped FROM user_stats
+                 WHERE user = '$1' AND correct = 'skipped' GROUP BY word)
                 ON u.word = s
         WHERE user = '$1'
             AND julianday(timestamp) > julianday('now', '-2 month')
