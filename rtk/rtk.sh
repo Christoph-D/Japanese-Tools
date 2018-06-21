@@ -10,24 +10,24 @@
 
 . "$(dirname "$0")"/../gettext/gettext.sh
 
-DICT=$(dirname "$0")/rtk.txt
-MAX_KEYWORDS=10
+readonly DICT=$(dirname "$0")/rtk.txt
+readonly MAX_KEYWORDS=10
 # Hardcoded limit on line length for IRC
-MAX_LINE_LENGTH=300
+readonly MAX_LINE_LENGTH=300
 
 if [[ ! -e $DICT ]]; then
    echo_ 'Please put "rtk.txt" in the same directory as this script.'
    exit 1
 fi
 
-QUERY=$@
+QUERY=$*
 
 if [[ -z $QUERY ]]; then
     echo_ 'epsilon.'
     exit 0
 fi
 
-if echo "$QUERY" | grep -q -e "[*+()$^]"; then
+if grep -q -e "[*+()$^]" <<<"$QUERY"; then
     echo_ 'No regular expressions, please.'
     exit 0
 fi
@@ -44,12 +44,12 @@ format_entry() {
     printf "#%s: %s %s" "$NUMBER" "$KEYWORD" "$KANJI" 2> /dev/null
 }
 
-if echo "$QUERY" | grep -q -e "^\([a-zA-Z '\"\-]\|\\\.\)*$"; then
+if grep -q -e "^\([a-zA-Z '\"\-]\|\\\.\)*$" <<<"$QUERY"; then
     # Query contains a keyword, so look for the matching kanji.
     LINES1=$(grep -i -m 1 -e "	${QUERY}	" "$DICT")
-    LINES2=$(grep -i -m $MAX_KEYWORDS -e "	${QUERY}..*	" "$DICT")
-    LINES3=$(grep -i -m $MAX_KEYWORDS -e "	..*${QUERY}.*	" "$DICT")
-    LINES=$(echo -e "$LINES1\n$LINES2\n$LINES3" | head -n $MAX_KEYWORDS)
+    LINES2=$(grep -i -m "$MAX_KEYWORDS" -e "	${QUERY}..*	" "$DICT")
+    LINES3=$(grep -i -m "$MAX_KEYWORDS" -e "	..*${QUERY}.*	" "$DICT")
+    LINES=$(printf '%s\n%s\n%s' "$LINES1" "$LINES2" "$LINES3" | head -n "$MAX_KEYWORDS")
     if [[ -n $LINES ]]; then
         # Change $IFS to loop over lines instead of words.
         ORIGIFS=$IFS
@@ -62,9 +62,9 @@ if echo "$QUERY" | grep -q -e "^\([a-zA-Z '\"\-]\|\\\.\)*$"; then
         # Unknown keyword
         RESULT=$(_ 'Unknown keyword.')
     fi
-elif echo "$QUERY" | grep -q -e '^[0-9 ]\+[a-z]\?$'; then
+elif grep -q -e '^[0-9 ]\+[a-z]\?$' <<<"$QUERY"; then
     # Query contains Kanji numbers.
-    while read -r CURRENT_NUMBER QUERY < <(echo "$QUERY") && \
+    while read -r CURRENT_NUMBER QUERY <<<"$QUERY" && \
         [[ -n $CURRENT_NUMBER ]]; do
         ENTRY=$(grep -m 1 -e "^[^	]*	[^	]*	$CURRENT_NUMBER\$" "$DICT")
         R='???'
