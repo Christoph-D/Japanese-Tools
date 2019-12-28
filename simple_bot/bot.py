@@ -345,7 +345,7 @@ def main():
             sys.exit(1)
     else:
         port = 6667
-    channels = sys.argv[2].split(",")
+    channels = [ c.decode('utf-8') for c in sys.argv[2].split(",") ]
     nickname = sys.argv[3]
     nickpass = None
     if len(sys.argv) == 5:
