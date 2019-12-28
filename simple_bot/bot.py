@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python2
 # -*- coding: utf-8 -*-
 # Copyright: Christoph Dittmann <github@christoph-d.de>
 # License: GNU GPL, version 3 or later; http://www.gnu.org/copyleft/gpl.html
@@ -7,8 +7,8 @@
 # Japanese tools.
 # 
 
-from ircbot import SingleServerIRCBot
-from irclib import nm_to_n, nm_to_h, irc_lower, ip_numstr_to_quad, ip_quad_to_numstr
+from irc.bot import SingleServerIRCBot
+from irc.client import ip_numstr_to_quad, ip_quad_to_numstr
 import gettext
 import string
 import random
@@ -96,17 +96,21 @@ class SimpleBot(SingleServerIRCBot):
         # Print magic key again.
         self.print_magic_key()
 
+    def _decode(self, text):
+        if not isinstance(text, str):
+            return lines
+        try:
+            return unicode(text, 'utf-8')
+        except ValueError:
+            return unicode(text, 'iso-8859-15')
+
     def say(self, lines, to=None):
         if to is None:
             to = self.say_target
-        if isinstance(lines, str):
-            try:
-                lines = unicode(lines, 'utf-8')
-            except ValueError:
-                lines = unicode(lines, 'iso-8859-15')
+        lines = self._decode(lines)
         # Limit maximum number of lines and line length.
         for line in lines.splitlines()[:4]:
-            self.connection.privmsg(to, limit_length(line, 410).encode('utf-8'))
+            self.connection.privmsg(to, limit_length(line, 410))
 
     def on_nicknameinuse(self, c, e):
         c.nick(c.get_nickname() + '_')
@@ -121,18 +125,18 @@ class SimpleBot(SingleServerIRCBot):
 
     def on_privmsg(self, c, e):
         self.current_event = e
-        self.say_target = nm_to_n(e.source())
-        line = e.arguments()[0]
+        self.say_target = e.source.nick
+        line = e.arguments[0]
         if len(line) > 0 and line[0] == '!':
             line = line[1:]
         self.do_command(line)
-        self.debug_out('<%s> %s' % (e.source(), line))
+        self.debug_out('<%s> %s' % (e.source, line))
 
     def on_pubmsg(self, c, e):
         self.current_event = e
-        a = e.arguments()[0]
+        a = e.arguments[0]
         if len(a) > 0 and a[0] == '!':
-            self.say_target = e.target()
+            self.say_target = e.target
             self.do_command(a[1:])
         return
 
@@ -160,9 +164,9 @@ class SimpleBot(SingleServerIRCBot):
         cmd = cmd.split(' ', 1)
         if cmd[0] == 'die':
             if len(cmd) == 1:
-                self.die(u'さようなら'.encode('utf-8'))
+                self.die(u'さようなら')
             else:
-                self.die(cmd[1])
+                self.die(self._decode(cmd[1]))
         elif cmd[0] == 'join':
             self.connection.join(cmd[1])
         elif cmd[0] == 'part':
@@ -177,8 +181,8 @@ class SimpleBot(SingleServerIRCBot):
 
     def get_source_target(self):
         e = self.current_event
-        source = nm_to_n(e.source())
-        target = e.target()
+        source = e.source.nick
+        target = e.target
         if target == self.connection.get_nickname():
             return (source, source)
         else:
@@ -191,7 +195,7 @@ class SimpleBot(SingleServerIRCBot):
         elif cmd == 'help':
             return self.show_help()
         split_pos = cmd.find(' ')
-        split_pos2 = cmd.find('　')
+        split_pos2 = cmd.find(u'　')
         split_pos_len = len(' ')
         if split_pos == -1 or (split_pos2 != -1 and split_pos2 < split_pos):
             split_pos = split_pos2
@@ -298,11 +302,11 @@ class SimpleBot(SingleServerIRCBot):
         self.polling_jobs_last_time = current_time
 
     def on_currenttopic(self, c, e):
-        if e.arguments()[0] == self.initial_channels[0]:
-            self.current_topic = e.arguments()[1]
+        if e.arguments[0] == self.initial_channels[0]:
+            self.current_topic = e.arguments[1]
     def on_topic(self, c, e):
-        if e.target() == self.initial_channels[0]:
-            self.current_topic = e.arguments()[0]
+        if e.target == self.initial_channels[0]:
+            self.current_topic = e.arguments[0]
 
     def run_forever(self):
         """In order to support custom timers, we can't call
