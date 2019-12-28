@@ -45,8 +45,8 @@ def run_script(path, argument, irc_source_target, ignore_errors=False):
     try:
         env = os.environ
         lang = env['LANG'] if 'LANG' in env else 'en_US.utf8'
-        env.update({ 'DMB_SENDER'   : irc_source_target[0],
-                     'DMB_RECEIVER' : irc_source_target[1],
+        env.update({ 'DMB_SENDER'   : irc_source_target[0].encode('utf-8'),
+                     'DMB_RECEIVER' : irc_source_target[1].encode('utf-8'),
                      'LANGUAGE'     : lang,
                      'LANG'         : lang,
                      'LC_ALL'       : lang,
