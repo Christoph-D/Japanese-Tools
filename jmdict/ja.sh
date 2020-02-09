@@ -41,78 +41,75 @@ fi
 
 clean_up_kanji() {
     # $1 is a ◊-delimited string containing the kanji elements.
-    local IFS='◊' KANJI='' KANJI_BUFFER='' REST="$1"
-    while [[ $REST ]]; do
-        read -r KANJI REST < <(printf '%s' "$REST")
+    local IFS='◊' kanji='' kanji_buffer='' rest="$1"
+    while [[ $rest ]]; do
+        read -r kanji rest < <(printf '%s' "$rest")
         # Always print the first kanji element and after that only
         # matching kanji elements.
-        if [[ ! $KANJI_BUFFER || $KANJI = *$QUERY* ]]; then
-            KANJI_BUFFER="${KANJI_BUFFER:+$KANJI_BUFFER }$KANJI"
+        if [[ ! $kanji_buffer || $kanji = *$QUERY* ]]; then
+            kanji_buffer="${kanji_buffer:+$kanji_buffer }$kanji"
         fi
     done
-    printf '%s' "$KANJI_BUFFER"
+    printf '%s' "$kanji_buffer"
 }
 
 get_current_item() {
-    local IFS='□' KANJI KANA POS ENGLISH
-    read -r KANJI KANA POS ENGLISH < <(printf '%s' "$1")
-    if [[ -n "$POS" ]]; then
-        POS=" ($POS)"
-    fi
-    if [[ -n "$KANJI" ]]; then
-        KANJI=$(clean_up_kanji "$KANJI")
-        local L="$KANJI [$KANA]$POS"
+    local IFS='□' kanji kana pos english japanese
+    read -r kanji kana pos english <<< "$1"
+    pos=${pos:+ ($pos)}
+    if [[ -n "$kanji" ]]; then
+        kanji=$(clean_up_kanji "$kanji")
+        japanese="$kanji [$kana]$pos"
     else
-        local L="$KANA$POS"
+        japanese="$kana$pos"
     fi
-    if [[ ${#ENGLISH} -gt $MAX_LENGTH_PER_ENGLISH ]]; then
-        ENGLISH="${ENGLISH:0:$(( MAX_LENGTH_PER_ENGLISH - 3))}..."
+    if [[ ${#english} -gt $MAX_LENGTH_PER_ENGLISH ]]; then
+        english="${english:0:$(( MAX_LENGTH_PER_ENGLISH - 3))}..."
     fi
-    local RESULT="$L, $ENGLISH"
-    if [[ ${#RESULT} -gt $MAX_LINE_LENGTH ]]; then
-        ENGLISH="${ENGLISH:0:$(( MAX_LINE_LENGTH - 5 - ${#L} ))}..."
-        RESULT="$L, $ENGLISH"
+    local result="$japanese, $english"
+    if [[ ${#result} -gt $MAX_LINE_LENGTH ]]; then
+        english="${english:0:$(( MAX_LINE_LENGTH - 5 - ${#L} ))}..."
+        result="$japanese, $english"
     fi
-    printf '%s' "$RESULT"
+    printf '%s' "$result"
 }
 
-print_result() {
+format_result() {
     # Change $IFS to loop over lines instead of words.
-    local IFS=$'\n' SEEN='' LINE_COUNT=0 LINE_BUFFER=''
-    for R in $RESULT; do
+    local IFS=$'\n' seen='' line_count=0 line_buffer='' r final
+    for r in $1; do
         # Skip duplicate lines.
-        [[ $SEEN != *$R* ]] || continue
-        SEEN+="$R"
+        [[ $seen != *$r* ]] || continue
+        seen+="$r"
 
-        local CURRENT_ITEM
-        CURRENT_ITEM=$(get_current_item "$R")
+        local current_item next
+        current_item=$(get_current_item "$r")
         if [[ ${IRC_PLUGIN:-} ]]; then
-            NEXT="${LINE_BUFFER:+$LINE_BUFFER / }$CURRENT_ITEM"
+            next="${line_buffer:+$line_buffer / }$current_item"
         else
-            NEXT="${LINE_BUFFER:+$LINE_BUFFER\n}$CURRENT_ITEM"
+            next="${line_buffer:+$line_buffer\n}$current_item"
         fi
 
         # If the final string would get too long, we're done.
-        if [[ ${#NEXT} -gt $MAX_LINE_LENGTH ]]; then
+        if [[ ${#next} -gt $MAX_LINE_LENGTH ]]; then
             # Append the current line to the result.
-            FINAL="${FINAL:+$FINAL\n}$LINE_BUFFER"
+            final="${final:+$final\n}$line_buffer"
             # Remember the current item for the next line only if it
             # fits.
-            LINE_BUFFER=
-            if [[ ${#CURRENT_ITEM} -le $MAX_LINE_LENGTH ]]; then
-                LINE_BUFFER="$CURRENT_ITEM"
+            line_buffer=
+            if [[ ${#current_item} -le $MAX_LINE_LENGTH ]]; then
+                line_buffer="$current_item"
             fi
-            (( ++LINE_COUNT ))
-            [[ $LINE_COUNT -ge $MAX_LINES ]] && break
+            (( ++line_count ))
+            [[ $line_count -ge $MAX_LINES ]] && break
         else
-            LINE_BUFFER=$NEXT
+            line_buffer=$next
         fi
     done
-    if [[ $LINE_COUNT -lt $MAX_LINES ]]; then
-        FINAL="${FINAL:+$FINAL\n}$LINE_BUFFER"
+    if [[ $line_count -lt $MAX_LINES ]]; then
+        final="${final:+$final\n}$line_buffer"
     fi
-
-    echo -e "$FINAL"
+    printf '%s\n' "${final//\\n/$'\n'}"
 }
 
 # The more specific search patterns are used first.
@@ -136,22 +133,22 @@ PATTERNS=(
     )
 
 # Preselect some lines.
-TMP_DICT=$(mktemp)
+tmp_dict=$(mktemp)
 # shellcheck disable=SC2064
-trap "rm '$TMP_DICT'" EXIT
-grep -F "$QUERY" "$DICT" | head -n 10000 > "$TMP_DICT"
+trap "rm '$tmp_dict'" EXIT
+grep -F "$QUERY" "$DICT" | head -n 10000 > "$tmp_dict"
 
 # Accumulate results over all patterns.
-RESULT=
-for I in $(seq 0 1 $(( ${#PATTERNS[@]} - 1 ))); do
-    P="${PATTERNS[$I]}"
-    RESULT=$(echo "$RESULT" ; grep -m $MAX_RESULTS_PER_PATTERN -e "$P" "$TMP_DICT") || true
+result=
+for i in $(seq 0 1 $(( ${#PATTERNS[@]} - 1 ))); do
+    pattern="${PATTERNS[$i]}"
+    result="${result:+$result$'\n'}$(grep -m $MAX_RESULTS_PER_PATTERN -e "$pattern" "$tmp_dict")" || true
 done
 
-if [[ $RESULT ]]; then
-    RESULT=$(print_result)
-    if [[ $RESULT ]]; then
-        echo "$RESULT"
+if [[ $result ]]; then
+    result=$(format_result "$result")
+    if [[ $result ]]; then
+        echo "$result"
     else
         echo_ 'Too little space to show the result.'
     fi
