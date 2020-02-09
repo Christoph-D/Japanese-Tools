@@ -5,6 +5,7 @@
 # Dictionary lookup for Japanese words.
 set -eu
 
+# shellcheck source=gettext/gettext.sh
 . "$(dirname "$0")"/../gettext/gettext.sh
 
 MAX_RESULTS_PER_PATTERN=5
@@ -101,7 +102,7 @@ print_result() {
             if [[ ${#CURRENT_ITEM} -le $MAX_LINE_LENGTH ]]; then
                 LINE_BUFFER="$CURRENT_ITEM"
             fi
-            let ++LINE_COUNT
+            (( ++LINE_COUNT ))
             [[ $LINE_COUNT -ge $MAX_LINES ]] && break
         else
             LINE_BUFFER=$NEXT

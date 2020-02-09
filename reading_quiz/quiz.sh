@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 set -eu
+# shellcheck source=gettext/gettext.sh
 . "$(dirname "$0")"/../gettext/gettext.sh
 
 data_dir=$(dirname "$0")/data

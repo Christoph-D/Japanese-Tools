@@ -4,6 +4,7 @@
 #
 # This script wraps cdecl and c++decl.
 
+# shellcheck source=gettext/gettext.sh
 . "$(dirname "$0")"/../gettext/gettext.sh
 
 set -u

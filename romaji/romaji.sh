@@ -6,6 +6,7 @@
 # heavily depends on kakasi and mecab. Kanji readings might be a bit
 # off.
 
+# shellcheck source=gettext/gettext.sh
 . "$(dirname "$0")"/../gettext/gettext.sh
 
 READING=$(printf '%s' "$*" | mecab --node-format="%f[5] " --eos-format= --unk-format=%m)

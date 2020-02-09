@@ -5,12 +5,13 @@
 # This script evaluates Haskell expressions using mueval:
 # http://hackage.haskell.org/package/mueval
 
+# shellcheck source=gettext/gettext.sh
 . "$(dirname "$0")"/../gettext/gettext.sh
 
 MAX_LINE_LENGTH=200
 TIME_LIMIT_SECONDS=6
 
-if [[ ! -x $(which mueval) ]]; then
+if ! command -v mueval &>/dev/null; then
     printf_ 'Please install mueval: %s' 'http://hackage.haskell.org/package/mueval'
     exit 1
 fi

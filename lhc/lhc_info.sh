@@ -8,7 +8,7 @@ TMP_DIR=$(mktemp -d)
 trap 'rm -rf "$TMP_DIR"' EXIT
 cd "$TMP_DIR"
 
-if ! which tesseract &> /dev/null; then
+if ! command -v tesseract &> /dev/null; then
     echo "Please install tesseract."
     if [[ $(lsb_release --short --id) == Ubuntu ]]; then
         echo "You can install it with: sudo apt install tesseract-ocr"

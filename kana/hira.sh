@@ -8,4 +8,5 @@ DIRECTORY="$(dirname "$0")"
 KANA_FILE="$DIRECTORY/hiragana.txt"
 IRC_COMMAND='!hira'
 
+# shellcheck source=kana/kana.sh
 . "$(dirname "$0")/kana.sh"

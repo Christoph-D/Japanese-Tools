@@ -7,6 +7,7 @@
 echo "--- Broken ---"
 exit 0
 
+# shellcheck source=gettext/gettext.sh
 . "$(dirname "$0")"/../gettext/gettext.sh
 
 # Default target language
@@ -42,7 +43,8 @@ fi
 
 get_lang_selector() {
     # The first word might be a language selector.
-    local LANG_CANDIDATE_LIST=( $1 ) LANG_CANDIDATE L
+    local LANG_CANDIDATE_LIST LANG_CANDIDATE L
+    read -r -a LANG_CANDIDATE_LIST <<< "$1"
     LANG_CANDIDATE=${LANG_CANDIDATE_LIST[0]}
     for L in "${KNOWN_LANGUAGES[@]}"; do
         if [ "$LANG_CANDIDATE" = "$L" ]; then
@@ -64,7 +66,7 @@ LAST_LANG_SELECTOR=
 I=0
 while true; do
     LANG_SELECTOR=$(get_lang_selector "$QUERY") || break
-    let ++I
+    (( ++I ))
     [[ $I -gt $MAX_PATH_LENGTH ]] && break
     QUERY=$(remove_lang_selector "$QUERY")
     if [[ $LANG_SELECTOR != "$LAST_LANG_SELECTOR" ]]; then

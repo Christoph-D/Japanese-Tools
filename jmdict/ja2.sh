@@ -22,6 +22,7 @@
 #    intermediate file, but this file grows fast.  And it's still very
 #    slow because processing a single line takes very long in bash.
 
+# shellcheck source=gettext/gettext.sh
 . "$(dirname "$0")"/../gettext/gettext.sh
 
 set -u
@@ -58,16 +59,16 @@ init_database() {
         fi
         translation=${translation%EntL*/}
 
-        IFS=';' kana=( $kana )
-        IFS=';' kanji=( $kanji )
-        IFS='/' translation=( $translation )
+        IFS=';' read -r -a kana <<< "$kana"
+        IFS=';' read -r -a kanji <<< "$kanji"
+        IFS='/' read -r -a translation <<< "$translation"
 
         sql "INSERT INTO entries VALUES ($entry_id);"
         [[ ${#kanji[@]} -ne 0 ]] || insert_suffixes "$entry_id" kanji "${kanji[@]}"
         insert_suffixes "$entry_id" kana "${kana[@]}"
         insert_suffixes "$entry_id" translation "${translation[@]}"
 
-        let ++entry_id
+        (( ++entry_id ))
         printf "%6d/%6d (%0.2f%%)\r" "$entry_id" "$total_lines" "$(echo "scale=4;$entry_id/$total_lines*100" | bc)"
     done < "$source_dict"
     echo

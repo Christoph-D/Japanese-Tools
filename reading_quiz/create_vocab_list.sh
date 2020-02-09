@@ -31,11 +31,11 @@ while read -r I; do
     if [[ $FULL_LINE = 'Unknown word.' ]] ||
         echo "$FULL_LINE" | grep -q '^\([^|]*\)|\1'; then
         echo "$I" >> "$SKIP_FILE"
-        let SKIPPED=$SKIPPED+1
+        (( ++SKIPPED ))
     else
         echo "$FULL_LINE"
     fi
-    let C=$C+1
+    (( ++C ))
     echo -ne "$C/$TOTAL\r" >&2
 done < "$INPUT"
 

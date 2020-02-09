@@ -5,6 +5,7 @@
 # This script compares the efficiency of different utf encodings for
 # Japanese Wikipedia articles.
 
+# shellcheck source=gettext/gettext.sh
 . "$(dirname "$0")"/../gettext/gettext.sh
 
 set -u
@@ -46,7 +47,7 @@ printf_no_newline_ "UTF-8 vs. UTF-16: %d vs. %d bytes." "$UTF8" "$UTF16"
 
 compute_relative_difference() {
     # Without bc we cannot compute the relative difference.
-    [[ -x $(which bc) ]] || return
+    command -v bc &>/dev/null || return
     local UTF8="$1" UTF16="$2"
     if [[ $UTF8 -lt $UTF16 ]]; then
         # Workaround for printf not accepting numbers like "1.2" on non-US

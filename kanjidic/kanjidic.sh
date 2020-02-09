@@ -4,6 +4,7 @@
 #
 # Kanji lookup.
 
+# shellcheck source=gettext/gettext.sh
 . "$(dirname "$0")"/../gettext/gettext.sh
 
 DICT=$(dirname "$0")/kanjidic
@@ -66,6 +67,7 @@ find_readings() {
 }
 
 find_stroke_count() {
+    # shellcheck disable=SC2001
     echo "$1" | sed 's/.* S\([0-9]*\) .*/\1/'
 }
 
@@ -83,7 +85,7 @@ for I in $(seq 0 $(( ${#QUERY} - 1 ))); do
     CHAR="${QUERY:$I:1}"
     ENTRY=$(grep -m 1 -e "^$CHAR " "$DICT")
     if [[ $ENTRY ]]; then
-        let ++FOUND
+        (( ++FOUND ))
         format_entry "$ENTRY"
     fi
     [[ $FOUND -eq $MAX_NUMBER_OF_LINES ]] && break

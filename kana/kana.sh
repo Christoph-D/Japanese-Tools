@@ -5,6 +5,7 @@
 # Hiragana and katakana trainer.
 set -eu
 
+# shellcheck source=gettext/gettext.sh
 . "$(dirname "$0")"/../gettext/gettext.sh
 
 if [ -z "$KANA_FILE" ]; then
@@ -114,11 +115,12 @@ read_weighted_lessons() {
     for I in $(seq 0 "$UPTO"); do
         local L
         L=$(read_single_lesson "$I")
+        # shellcheck disable=SC2034
         for J in $(seq 0 $COUNT); do
             echo "$L"
         done
         if (( UPTO - I < 5 )); then
-            let "COUNT = COUNT * 2"
+            (( COUNT = COUNT * 2 ))
         fi
     done
 }
@@ -152,7 +154,7 @@ read_user_statistics() {
     USER=${USER////} # remove slashes
     USER_FILE="$USER_STATS_DIR"/"$USER"
     if [[ -f $USER_FILE ]]; then
-        USER_STATS=( $(cat "$USER_FILE") )
+        read -r -a USER_STATS < "$USER_FILE"
     else
         USER_STATS=( 0 0 )
     fi
@@ -174,7 +176,7 @@ if [[ "$*" = "help" ]]; then
     exit 0
 fi
 
-QUERY=( $@ )
+read -r -a QUERY <<< "$*"
 if [[ ${QUERY[0]:-} = "stats" ]]; then
     if [[ -n ${QUERY[1]:-} ]]; then
         USER=${QUERY[1]}
@@ -214,8 +216,8 @@ if [[ ! -f "$SOLUTION_FILE" ]]; then
     exit 0
 fi
 
-SOLUTION=( $(cut -d ' ' -f 2 "$SOLUTION_FILE") )
-KANA_SOLUTION=( $(cut -d ' ' -f 1 "$SOLUTION_FILE") )
+mapfile -t SOLUTION < <(cut -d ' ' -f 2 "$SOLUTION_FILE")
+mapfile -t KANA_SOLUTION < <(cut -d ' ' -f 1 "$SOLUTION_FILE")
 EXPECTED_NUMBER=${#SOLUTION[*]}
 rm "$SOLUTION_FILE"
 
@@ -225,7 +227,7 @@ for I in $(seq 0 $(( EXPECTED_NUMBER - 1 ))); do
     EXPECTED=${SOLUTION[$I]}
     GOT=${QUERY[$I]:-}
     if [[ $EXPECTED = "$GOT" ]]; then
-        let "++CORRECT"
+        (( ++CORRECT ))
     else
         PRETTY_SOLUTION="$PRETTY_SOLUTION ${KANA_SOLUTION[$I]}=$EXPECTED"
     fi

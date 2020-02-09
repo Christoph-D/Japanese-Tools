@@ -26,6 +26,7 @@ MAX_LINE_LENGTH=200
 
 split_result() {
     local IFS='□'
+    # shellcheck disable=SC2034
     read -r KANJI KANA POS ENGLISH < <(printf '%s' "$1")
 }
 

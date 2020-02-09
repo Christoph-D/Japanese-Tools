@@ -9,7 +9,7 @@ cd "$(dirname "$0")"
 
 TMP1=.tmp1
 
-if [[ ! -x $(which xsltproc) ]]; then
+if ! command -v xsltproc &>/dev/null; then
     echo "Error, could not find xsltproc."
     echo "Please install xmlstarlet."
     exit 1

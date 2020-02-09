@@ -8,6 +8,7 @@
 # 
 # The command line arguments must be utf-8 encoded.
 
+# shellcheck source=gettext/gettext.sh
 . "$(dirname "$0")"/../gettext/gettext.sh
 
 readonly DICT=$(dirname "$0")/rtk.txt

@@ -5,6 +5,7 @@
 # This script finds audio files for Japanese words.
 #
 
+# shellcheck source=gettext/gettext.sh
 . "$(dirname "$0")"/../gettext/gettext.sh
 
 set -u

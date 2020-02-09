@@ -4,6 +4,7 @@
 #
 # This script translates the command line parameters using Bablefish.
 
+# shellcheck source=gettext/gettext.sh
 . "$(dirname "$0")"/../gettext/gettext.sh
 
 TRANSLATE_SERVICE_URL='http://babelfish.yahoo.com/translate_txt'

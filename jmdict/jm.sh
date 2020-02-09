@@ -4,6 +4,7 @@
 #
 # Dictionary lookup for Japanese words with jmdict.
 
+# shellcheck source=gettext/gettext.sh
 . "$(dirname "$0")"/../gettext/gettext.sh
 
 set -u

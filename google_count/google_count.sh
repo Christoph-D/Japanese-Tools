@@ -4,6 +4,7 @@
 #
 # This script prints the number of google results for a given string.
 
+# shellcheck source=gettext/gettext.sh
 . "$(dirname "$0")"/../gettext/gettext.sh
 
 set -u
