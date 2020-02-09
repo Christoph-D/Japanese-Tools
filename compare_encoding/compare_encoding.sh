@@ -30,6 +30,7 @@ URL="http://ja.wikipedia.org/wiki/$LEMMA"
 
 TMP_FILE8=$(mktemp)
 TMP_FILE16=$(mktemp)
+# shellcheck disable=SC2064
 trap "rm -f '$TMP_FILE8' '$TMP_FILE16'" EXIT
 
 if ! wget -q "$URL" -O "$TMP_FILE8"; then
@@ -38,7 +39,7 @@ if ! wget -q "$URL" -O "$TMP_FILE8"; then
 fi
 
 UTF8="$(du -sb "$TMP_FILE8" | cut -f 1)"
-iconv -f utf8 -t utf16 $TMP_FILE8 > $TMP_FILE16
+iconv -f utf8 -t utf16 "$TMP_FILE8" > "$TMP_FILE16"
 UTF16="$(du -sb "$TMP_FILE16" | cut -f 1)"
 
 printf_no_newline_ "UTF-8 vs. UTF-16: %d vs. %d bytes." "$UTF8" "$UTF16"
@@ -52,10 +53,12 @@ compute_relative_difference() {
         # locale.
         OUTPUT=$(printf_ "UTF-8 wins by %s." '%.1f%%')
         export LC_ALL=en_US.UTF8
+        # shellcheck disable=SC2059
         printf "$OUTPUT" "$(echo "scale=3;($UTF16-$UTF8)/$UTF16*100" | bc)"
     elif [[ $UTF8 -gt $UTF16 ]]; then
         OUTPUT=$(printf_ "UTF-16 wins by %s." '%.1f%%')
         export LC_ALL=en_US.UTF8
+        # shellcheck disable=SC2059
         printf "$OUTPUT" "$(echo "scale=3;($UTF8-$UTF16)/$UTF8*100" | bc)"
     else
         echo_ "It's a tie."

@@ -39,13 +39,13 @@ execute_sql() {
 init_database() {
     statement_buffer=$(mktemp)
     echo "$statement_buffer"
-    local source_dict="$1" entry_id=0 line kanji kana translation
+    local source_dict="$1" entry_id=0 line kanji kana translation total_lines
     sql 'CREATE TABLE entries(id INTEGER PRIMARY KEY ASC);
         CREATE TABLE kanji(entry INTEGER, kanji, is_suffix INTEGER);
         CREATE TABLE kana(entry INTEGER, kana, is_suffix INTEGER);
         CREATE TABLE translation(entry INTEGER, translation, is_suffix INTEGER);'
-    local total_lines=$(wc -l "$source_dict" | cut -f 1 -d ' ')
-    while read line; do
+    total_lines=$(wc -l "$source_dict" | cut -f 1 -d ' ')
+    while read -r line; do
         kanji=${line%% *}
         if [[ $line =~ \[.*\] ]]; then
             kana=${line#*[}
@@ -63,7 +63,7 @@ init_database() {
         IFS='/' translation=( $translation )
 
         sql "INSERT INTO entries VALUES ($entry_id);"
-        [[ ! ${!kanji[@]} ]] || insert_suffixes "$entry_id" kanji "${kanji[@]}"
+        [[ ${#kanji[@]} -ne 0 ]] || insert_suffixes "$entry_id" kanji "${kanji[@]}"
         insert_suffixes "$entry_id" kana "${kana[@]}"
         insert_suffixes "$entry_id" translation "${translation[@]}"
 
@@ -80,9 +80,9 @@ sql_escape() {
 
 insert_suffixes() {
     [[ $# -ge 3 ]] || return
-    local entry_id="$1" insert_statement="INSERT INTO $2 (entry,$2,is_suffix) VALUES " statement=
+    local entry_id="$1" insert_statement="INSERT INTO $2 (entry,$2,is_suffix) VALUES " statement
     shift 2
-    for t in $@; do
+    for t in "$@"; do
         for ((i=0;i<${#t};++i)) do
             statement+="$insert_statement ($entry_id,'$(sql_escape "${t:$i}")',$i);"
         done

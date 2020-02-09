@@ -44,16 +44,17 @@ to_hiragana() {
 # appropriately.
 figure_out_reading() {
     READING=$(to_hiragana "$KANJI")
-    local KATAKANA_READING=$(to_katakana "$KANJI")
-    if [[ $READING = ${KANJI// /} ]]; then
+    local KATAKANA_READING
+    KATAKANA_READING=$(to_katakana "$KANJI")
+    if [[ $READING = "${KANJI// /}" ]]; then
         # Try to find a Kanji variant for this word.
         KANJI=$("$(dirname "$0")"/../jmdict/ja.sh "$KANJI" | head -n 1 | sed 's/^\([^ ,]*\).*$/\1/')
         # If it didn't work, go with the kana variant.
-        if [[ $KANJI = 'Unknown' || $(to_hiragana "$KANJI") = $KANJI ]]; then
+        if [[ $KANJI = 'Unknown' || $(to_hiragana "$KANJI") = "$KANJI" ]]; then
             KANJI="$READING"
             WORD="$READING"
         fi
-    elif [[ $KATAKANA_READING = ${KANJI// /} ]]; then
+    elif [[ $KATAKANA_READING = "${KANJI// /}" ]]; then
         READING="$KATAKANA_READING"
         WORD="$KATAKANA_READING"
     fi
@@ -95,7 +96,7 @@ READING="$(encode_query "$READING")"
 URL="http://assets.languagepod101.com/dictionary/japanese/audiomp3.php?kana=$READING&kanji=$KANJI"
 
 # Only print the URL if the audio file exists.
-if [[ $(wget -q "$URL" --timeout=10 -O - | md5sum | cut -f 1 -d ' ') = $NOT_FOUND ]]; then
+if [[ $(wget -q "$URL" --timeout=10 -O - | md5sum | cut -f 1 -d ' ') = "$NOT_FOUND" ]]; then
     if [[ $WORD ]]; then
         printf_ 'No audio file available for %s.' "$WORD"
     else

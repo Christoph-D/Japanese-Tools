@@ -30,7 +30,8 @@ fi
 ocr() {
     convert lhc1.png "$@" tmp.tif &> /dev/null
     tesseract tmp.tif tmp &> /dev/null
-    local result=$(cat tmp.txt 2>/dev/null)
+    local result
+    result=$(cat tmp.txt 2>/dev/null)
     # Remove newlines and trim spaces.
     result="${result//,$'\n'/,}"
     result="${result//$'\n'/ }"

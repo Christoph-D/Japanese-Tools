@@ -14,7 +14,7 @@ TARGET_LANG=${LANG:0:2}
 # Fallback target language
 SECOND_TARGET_LANG=ja
 # Allowed target languages
-KNOWN_LANGUAGES=( de en es fi fr it ja sv zh ru )
+KNOWN_LANGUAGES=( de en es 'fi' fr it ja sv zh ru )
 
 # Default source language (empty string is "guess language")
 SOURCE_LANG=
@@ -42,10 +42,9 @@ fi
 
 get_lang_selector() {
     # The first word might be a language selector.
-    local LANG_CANDIDATE=( $1 )
-    LANG_CANDIDATE=${LANG_CANDIDATE[0]}
-    local L
-    for L in ${KNOWN_LANGUAGES[@]}; do
+    local LANG_CANDIDATE_LIST=( $1 ) LANG_CANDIDATE L
+    LANG_CANDIDATE=${LANG_CANDIDATE_LIST[0]}
+    for L in "${KNOWN_LANGUAGES[@]}"; do
         if [ "$LANG_CANDIDATE" = "$L" ]; then
             echo "$L"
             return 0
@@ -64,12 +63,11 @@ LANG_PATH_PRETTY=
 LAST_LANG_SELECTOR=
 I=0
 while true; do
-    LANG_SELECTOR=$(get_lang_selector "$QUERY")
-    [[ $? -ne 0 ]] && break
+    LANG_SELECTOR=$(get_lang_selector "$QUERY") || break
     let ++I
     [[ $I -gt $MAX_PATH_LENGTH ]] && break
     QUERY=$(remove_lang_selector "$QUERY")
-    if [[ $LANG_SELECTOR != $LAST_LANG_SELECTOR ]]; then
+    if [[ $LANG_SELECTOR != "$LAST_LANG_SELECTOR" ]]; then
         LANG_PATH+="$LANG_SELECTOR "
         LANG_PATH_PRETTY+="->$LANG_SELECTOR"
     fi

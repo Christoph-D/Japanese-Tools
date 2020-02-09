@@ -1,8 +1,6 @@
 #!/usr/bin/env bash
-
+set -eu
 . "$(dirname "$0")"/../gettext/gettext.sh
-
-set -u -e
 
 data_dir=$(dirname "$0")/data
 questions_dir=$(dirname "$0")/questions
@@ -20,10 +18,12 @@ query="$(printf '%s\n' "$query" | sed 's/\(^[ 　]*\|[ 　]*$\)//g')"
 [[ -d $questions_dir ]] || mkdir -p "$questions_dir"
 
 if [[ ! $user ]]; then
+    # shellcheck disable=SC2016
     printf_ 'Could not determine nick name. Please fix %s.' '$user'
     exit 1
 fi
 if [[ ! $channel_name ]]; then
+    # shellcheck disable=SC2016
     printf_ 'Could not determine channel name or query sender. Please fix %s.' '$channel_name'
     exit 1
 fi
@@ -41,7 +41,7 @@ check_level() {
 # Starts a timer. Delay in seconds is $1.
 set_timer() {
     local timer_key=$RANDOM$RANDOM$RANDOM$RANDOM
-    echo "$timer_key" > $timer_file
+    echo "$timer_key" > "$timer_file"
     echo "/timer $1 $timer_key"
 }
 
@@ -68,7 +68,8 @@ split_lines() {
 }
 
 ask_question() {
-    local source=$(load_shuffle_line)
+    local source
+    source=$(load_shuffle_line)
     split_lines "${source//|/$'\n'}"
     printf '%s\n%s\n%s\n%s\n' "$question" "$choices" "$answer" "$1" > "$question_file"
     printf_ 'Please choose [1-4]: %s (1: %s 2: %s 3: %s 4: %s).' \
@@ -104,12 +105,13 @@ record_answer() {
 
 get_user_stats() {
     initialize_database
-    local stats=$(sql "SELECT correct,COUNT(*) FROM user_stats WHERE user = '$1'
+    local stats wrong correct skipped
+    stats=$(sql "SELECT correct,COUNT(*) FROM user_stats WHERE user = '$1'
 AND julianday(timestamp) > julianday('now', '-2 month')
 GROUP BY correct ORDER BY correct ASC;")
-    local wrong=$(echo "$stats" | grep -m 1 '^wrong|' | sed 's/^wrong|//')
-    local correct=$(echo "$stats" | grep -m 1 '^correct|' | sed 's/^correct|//')
-    local skipped=$(echo "$stats" | grep -m 1 '^skipped|' | sed 's/^skipped|//')
+    wrong=$(echo "$stats" | grep -m 1 '^wrong|' | sed 's/^wrong|//')
+    correct=$(echo "$stats" | grep -m 1 '^correct|' | sed 's/^correct|//')
+    skipped=$(echo "$stats" | grep -m 1 '^skipped|' | sed 's/^skipped|//')
     if [[ ! $wrong && ! $correct && ! $skipped ]]; then
         printf_ 'Unknown user: %s' "$1"
         return 1
@@ -117,9 +119,10 @@ GROUP BY correct ORDER BY correct ASC;")
     wrong=${wrong:-0}
     correct=${correct:-0}
     skipped=${skipped:-0}
-    local total=$(( $wrong + $correct + $skipped ))
-    local correct_percentage=$(echo "scale=2; $correct * 100 / ($total)" | bc)
-    local skipped_percentage=$(echo "scale=2; $skipped * 100 / ($total)" | bc)
+    local total correct_percentage skipped_percentage
+    total=$(( wrong + correct + skipped ))
+    correct_percentage=$(echo "scale=2; $correct * 100 / ($total)" | bc)
+    skipped_percentage=$(echo "scale=2; $skipped * 100 / ($total)" | bc)
     printf_ 'In the last 2 months, %s answered %s/%s (%s%%) questions correctly and skipped %s/%s (%s%%).' \
         "$1" "$correct" "$total" "$correct_percentage" "$skipped" "$total" "$skipped_percentage"
 }
@@ -130,9 +133,8 @@ check_if_answer() {
         echo_ 'Please specify a level.'
         return
     fi
-    local proposed="${1// /}"
     split_lines "$(cat "$question_file")"
-    if [[ $1 = $answer ]]; then
+    if [[ $1 = "$answer" ]]; then
         printf_ '%s: Correct! (%s: %s)' "$user" "$answer" "${choices_arr[answer-1]}"
         record_answer 'correct'
         # Ignore additional answers for a few seconds.
@@ -166,7 +168,7 @@ if [[ -s $timer_file ]]; then
         rm "$timer_file"
     else
         # The timer is running, so ignore answers.
-        if [[ $(cat "$timer_file") = $query ]]; then
+        if [[ $(cat "$timer_file") = "$query" ]]; then
             rm "$timer_file"
             # The timer expired. Ask next question.
             ask_question "$(tail -n 1 "$question_file")"

@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
-
+set -eu
 cd "$(dirname "$0")"
 
 echo 'This script will download and preprocess the kanjidic file for use with the kanjidic script.
 The file will be placed in the following directory:'
 echo "$(readlink -f .)/"
-read -p "Proceed? [y]" OK
+read -rp "Proceed? [y]" OK
 
 [[ $OK && $OK != 'y' && $OK != 'Y' ]] && exit 1
 

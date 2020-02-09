@@ -3,6 +3,7 @@
 # License: GNU GPL, version 3 or later; http://www.gnu.org/copyleft/gpl.html
 #
 # Prepares wadoku for use with the lookup script "wa.sh".
+set -eu
 
 cd "$(dirname "$0")"
 
@@ -52,11 +53,11 @@ remove_redundant_information() {
     )
 }
 merge_alternative_readings() {
-    local LINE PREFIX LAST_PREFIX= KANA KANA_BUFFER
+    local LINE PREFIX KANA LAST_PREFIX='' KANA_BUFFER=''
     while read -r LINE; do
         PREFIX="${LINE%□*}"
         KANA="${LINE##*□}"
-        if [[ $PREFIX = $LAST_PREFIX ]]; then
+        if [[ $PREFIX = "$LAST_PREFIX" ]]; then
             KANA_BUFFER+=",$KANA"
         else
             if [[ $LAST_PREFIX ]]; then

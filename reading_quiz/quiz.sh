@@ -1,8 +1,6 @@
 #!/usr/bin/env bash
-
+set -eu
 . "$(dirname "$0")"/../gettext/gettext.sh
-
-set -u -e
 
 data_dir=$(dirname "$0")/data
 vocab_dir=$(dirname "$0")/vocabulary
@@ -20,10 +18,12 @@ query="$(printf '%s\n' "$query" | sed 's/\(^[ 　]*\|[ 　]*$\)//g')"
 [[ -d $vocab_dir ]] || mkdir -p "$vocab_dir"
 
 if [[ ! $user ]]; then
+    # shellcheck disable=SC2016
     printf_ 'Could not determine nick name. Please fix %s.' '$user'
     exit 1
 fi
 if [[ ! $channel_name ]]; then
+    # shellcheck disable=SC2016
     printf_ 'Could not determine channel name or query sender. Please fix %s.' '$channel_name'
     exit 1
 fi
@@ -40,7 +40,7 @@ check_level() {
 # Starts a timer. Delay in seconds is $1.
 set_timer() {
     local timer_key=$RANDOM$RANDOM$RANDOM$RANDOM
-    echo "$timer_key" > $timer_file
+    echo "$timer_key" > "$timer_file"
     echo "/timer $1 $timer_key"
 }
 
@@ -58,7 +58,8 @@ split_lines() {
 # $1 is the level. Returns non-zero on invalid levels.
 ask_question() {
     check_level "$1" || return 1
-    local source=$(load_source_line "$1")
+    local source
+    source=$(load_source_line "$1")
     split_lines "${source//|/$'\n'}"
     printf '%s\n%s\n%s\n%s\n' "$kanji" "$readings" "$meaning" "$1" > "$question_file"
     printf_ 'Please read: %s' "$kanji"
@@ -87,12 +88,13 @@ record_answer() {
 
 get_user_stats() {
     initialize_database
-    local stats=$(sql "SELECT correct,COUNT(*) FROM user_stats WHERE user = '$1'
+    local stats wrong correct skipped
+    stats=$(sql "SELECT correct,COUNT(*) FROM user_stats WHERE user = '$1'
 AND julianday(timestamp) > julianday('now', '-2 month')
 GROUP BY correct ORDER BY correct ASC;")
-    local wrong=$(echo "$stats" | grep -m 1 '^wrong|' | sed 's/^wrong|//')
-    local correct=$(echo "$stats" | grep -m 1 '^correct|' | sed 's/^correct|//')
-    local skipped=$(echo "$stats" | grep -m 1 '^skipped|' | sed 's/^skipped|//')
+    wrong=$(echo "$stats" | grep -m 1 '^wrong|' | sed 's/^wrong|//')
+    correct=$(echo "$stats" | grep -m 1 '^correct|' | sed 's/^correct|//')
+    skipped=$(echo "$stats" | grep -m 1 '^skipped|' | sed 's/^skipped|//')
     if [[ ! $wrong && ! $correct && ! $skipped ]]; then
         printf_ 'Unknown user: %s' "$1"
         return 1
@@ -100,12 +102,14 @@ GROUP BY correct ORDER BY correct ASC;")
     wrong=${wrong:-0}
     correct=${correct:-0}
     skipped=${skipped:-0}
-    local total=$(( $wrong + $correct + $skipped ))
-    local correct_percentage=$(echo "scale=2; $correct * 100 / ($total)" | bc)
-    local skipped_percentage=$(echo "scale=2; $skipped * 100 / ($total)" | bc)
+    local total correct_percentage skipped_percentage
+    total=$(( wrong + correct + skipped ))
+    correct_percentage=$(echo "scale=2; $correct * 100 / ($total)" | bc)
+    skipped_percentage=$(echo "scale=2; $skipped * 100 / ($total)" | bc)
     printf_ 'In the last 2 months, %s answered %s/%s (%s%%) questions correctly and skipped %s/%s (%s%%).' \
         "$1" "$correct" "$total" "$correct_percentage" "$skipped" "$total" "$skipped_percentage"
-    local hard_words=$(sql "
+    local hard_words
+    hard_words=$(sql "
         SELECT u.word,ifnull(wrong,0) AS wrong0, ifnull(skipped,0) AS skipped0
         FROM user_stats AS u
             LEFT JOIN
@@ -137,7 +141,7 @@ check_if_answer() {
     split_lines "$(cat "$question_file")"
     local IFS=','
     for r in $readings; do
-        if [[ $r = $proposed ]]; then
+        if [[ $r = "$proposed" ]]; then
             ### The argument order is $user $readings $meaning
             printf_ '%s: Correct! (%s: %s)' "$user" "$readings" "$meaning"
             record_answer 'correct'
@@ -173,7 +177,7 @@ if [[ -s $timer_file ]]; then
         rm "$timer_file"
     else
         # The timer is running, so ignore answers.
-        if [[ $(cat "$timer_file") = $query ]]; then
+        if [[ $(cat "$timer_file") = "$query" ]]; then
             rm "$timer_file"
             # The timer expired. Ask next question.
             ask_question "$(tail -n 1 "$question_file")"

@@ -85,7 +85,7 @@ else
     # contains something with "UTF-8". Otherwise substring access to
     # $QUERY would not work as expected.
     QUERY=${QUERY:0:15}
-    for I in $(seq 0 $(expr ${#QUERY} - 1)); do
+    for I in $(seq 0 $(( ${#QUERY} - 1 ))); do
         CHAR="${QUERY:$I:1}"
         ENTRY=$(grep -m 1 -e "$CHAR	[^	]*	" "$DICT")
         R=$CHAR

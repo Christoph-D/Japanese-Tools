@@ -8,7 +8,8 @@
 
 set -u
 
-export DICT=$(dirname "$0")/wadoku_prepared
+DICT=$(dirname "$0")/wadoku_prepared
+export DICT
 
 if [[ ! -e $DICT ]]; then
    printf_ 'Please run: %s' './prepare_wadoku.sh'

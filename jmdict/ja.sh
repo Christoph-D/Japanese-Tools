@@ -3,6 +3,7 @@
 # License: GNU GPL, version 3 or later; http://www.gnu.org/copyleft/gpl.html
 #
 # Dictionary lookup for Japanese words.
+set -eu
 
 . "$(dirname "$0")"/../gettext/gettext.sh
 
@@ -26,11 +27,9 @@ if [[ ! -e $DICT ]]; then
    exit 1
 fi
 
-set -u
-
 # Get query and remove the character we use internally as a field
 # separator.
-QUERY=${@//□/}
+QUERY=${*//□/}
 # Escape special characters.
 QUERY=$(printf '%s' "$QUERY" | sed 's/\([][().*+^$\]\)/\\\1/g')
 
@@ -41,7 +40,7 @@ fi
 
 clean_up_kanji() {
     # $1 is a ◊-delimited string containing the kanji elements.
-    local IFS='◊' KANJI= KANJI_BUFFER= REST="$1"
+    local IFS='◊' KANJI='' KANJI_BUFFER='' REST="$1"
     while [[ $REST ]]; do
         read -r KANJI REST < <(printf '%s' "$REST")
         # Always print the first kanji element and after that only
@@ -54,7 +53,7 @@ clean_up_kanji() {
 }
 
 get_current_item() {
-    local IFS='□' KANJI= KANA= POS= ENGLISH=
+    local IFS='□' KANJI KANA POS ENGLISH
     read -r KANJI KANA POS ENGLISH < <(printf '%s' "$1")
     if [[ -n "$POS" ]]; then
         POS=" ($POS)"
@@ -66,11 +65,11 @@ get_current_item() {
         local L="$KANA$POS"
     fi
     if [[ ${#ENGLISH} -gt $MAX_LENGTH_PER_ENGLISH ]]; then
-        ENGLISH="${ENGLISH:0:$(expr $MAX_LENGTH_PER_ENGLISH - 3)}..."
+        ENGLISH="${ENGLISH:0:$(( MAX_LENGTH_PER_ENGLISH - 3))}..."
     fi
     local RESULT="$L, $ENGLISH"
     if [[ ${#RESULT} -gt $MAX_LINE_LENGTH ]]; then
-        ENGLISH="${ENGLISH:0:$(expr $MAX_LINE_LENGTH - 5 - ${#L})}..."
+        ENGLISH="${ENGLISH:0:$(( MAX_LINE_LENGTH - 5 - ${#L} ))}..."
         RESULT="$L, $ENGLISH"
     fi
     printf '%s' "$RESULT"
@@ -78,16 +77,14 @@ get_current_item() {
 
 print_result() {
     # Change $IFS to loop over lines instead of words.
-    local IFS=$'\n'
-    local SEEN=
-    local LINE_COUNT=0
-    local LINE_BUFFER=
+    local IFS=$'\n' SEEN='' LINE_COUNT=0 LINE_BUFFER=''
     for R in $RESULT; do
         # Skip duplicate lines.
         [[ $SEEN != *$R* ]] || continue
         SEEN+="$R"
 
-        local CURRENT_ITEM=$(get_current_item "$R")
+        local CURRENT_ITEM
+        CURRENT_ITEM=$(get_current_item "$R")
         if [[ ${IRC_PLUGIN:-} ]]; then
             NEXT="${LINE_BUFFER:+$LINE_BUFFER / }$CURRENT_ITEM"
         else
@@ -139,14 +136,15 @@ PATTERNS=(
 
 # Preselect some lines.
 TMP_DICT=$(mktemp)
+# shellcheck disable=SC2064
 trap "rm '$TMP_DICT'" EXIT
 grep -F "$QUERY" "$DICT" | head -n 10000 > "$TMP_DICT"
 
 # Accumulate results over all patterns.
 RESULT=
-for I in $(seq 0 1 $(expr ${#PATTERNS[@]} - 1)); do
+for I in $(seq 0 1 $(( ${#PATTERNS[@]} - 1 ))); do
     P="${PATTERNS[$I]}"
-    RESULT=$(echo "$RESULT" ; grep -m $MAX_RESULTS_PER_PATTERN -e "$P" "$TMP_DICT")
+    RESULT=$(echo "$RESULT" ; grep -m $MAX_RESULTS_PER_PATTERN -e "$P" "$TMP_DICT") || true
 done
 
 if [[ $RESULT ]]; then

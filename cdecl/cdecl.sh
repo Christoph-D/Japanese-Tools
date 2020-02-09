@@ -26,8 +26,8 @@ RESULT=$(printf '%s\n' "$QUERY" | $PROGRAM)
 RESULT=${RESULT//$'\n'/, }
 
 # Restrict length if necessary.
-if [[ ${#RESULT} -ge $(( $MAX_LINE_LENGTH - 3 )) ]]; then
-    RESULT="${RESULT:0:$(( $MAX_LINE_LENGTH - 3 ))}"
+if [[ ${#RESULT} -ge $(( MAX_LINE_LENGTH - 3 )) ]]; then
+    RESULT="${RESULT:0:$(( MAX_LINE_LENGTH - 3 ))}"
     RESULT=$(printf '%s\n' "$RESULT")...
 fi
 

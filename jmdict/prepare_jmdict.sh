@@ -4,6 +4,7 @@
 #
 # Fetches and prepares JMdict.gz for use with the lookup script known
 # as "ja.sh".
+set -eu
 
 cd "$(dirname "$0")"
 
@@ -27,13 +28,14 @@ fi
 echo 'This script will download and preprocess the jmdic file for use with the kanjidic script.
 The file will be placed in the following directory:'
 echo "$(readlink -f .)/"
-read -p "Proceed? [y]" OK
+read -rp "Proceed? [y]" OK
 
 [[ $OK && $OK != 'y' && $OK != 'Y' ]] && exit 1
 
 SOURCE=JMdict_e.gz
 
 echo "Fetching $SOURCE..."
+DONT_DELETE=
 if [[ -s "$SOURCE" ]]; then
     echo "Not necessary, found $SOURCE in current directory..."
     DONT_DELETE=1
@@ -47,12 +49,12 @@ gunzip --to-stdout "$SOURCE" > "$TMP1"
 
 # abbreviate entities
 ENTITIES=$(grep -n ENTITY "$TMP1") 
-FIRST_LINE=$(expr $(echo "$ENTITIES" | head -n 1 | cut -d ':' -f 1) - 1)
-LAST_LINE=$(expr $(echo "$ENTITIES" | tail -n 1 | cut -d ':' -f 1) + 1)
+FIRST_LINE=$(( $(echo "$ENTITIES" | head -n 1 | cut -d ':' -f 1) - 1 ))
+LAST_LINE=$(( $(echo "$ENTITIES" | tail -n 1 | cut -d ':' -f 1) + 1 ))
 ABBRV=$(echo "$ENTITIES" | cut -d ' ' -f 2 | xargs -n 1 -I '{}' echo \<\!ENTITY '{}' \"'{}'\"\>)
 
 (head -n "$FIRST_LINE" "$TMP1" ; \
-    echo $ABBRV ; \
+    echo "$ABBRV" ; \
     tail -n +"$LAST_LINE" "$TMP1") \
     > "$TMP2"
 

@@ -1,18 +1,17 @@
 #!/usr/bin/env bash
+set -eu
 
 THIS_DIR=$(basename "$(readlink -f "$(dirname "$0")")")
 cd "$(dirname "$0")"/../
-xgettext -d japanese_tools -p "./$THIS_DIR" --from-code=UTF-8 \
-    --keyword=_ --keyword=echo_ \
-    --keyword=printf_ --keyword=printf_no_newline_ \
-    --keyword=nprintf_:1,2 --keyword=nprintf_no_newline_:1,2 \
-    --sort-by-file  \
-    $(\
-    find . \
-    -path "./$THIS_DIR" -prune \
-    -or -path "./.git" -prune \
-    -or \( -type f -executable -print \)
-)
+find . \
+     -path "./$THIS_DIR" -prune \
+     -or -path "./.git" -prune \
+     -or \( -type f -executable \
+     -exec xgettext -d japanese_tools -p "./$THIS_DIR" --from-code=UTF-8 \
+     --keyword=_ --keyword=echo_ \
+     --keyword=printf_ --keyword=printf_no_newline_ \
+     --keyword=nprintf_:1,2 --keyword=nprintf_no_newline_:1,2 \
+     --sort-by-file '{}' + \)
 cd "$THIS_DIR"
 
 POT_FILE=japanese_tools.pot
@@ -32,10 +31,10 @@ merge_messages() {
     msgmerge --quiet --backup=none --update "po/$1.po" "$POT_FILE"
 }
 
-for LANG_CODE in $(find ./po -maxdepth 1 -type f -name '*.po' -printf '%f\n'); do
+while IFS= read -r -d '' LANG_CODE; do
     LANG_CODE="${LANG_CODE%.po}"
     echo -n "Updating po file for language \"$LANG_CODE\"..."
     merge_messages "$LANG_CODE" && echo 'OK.' || echo 'failed.'
-done
+done < <(find ./po -maxdepth 1 -type f -name '*.po' -printf '%f\0')
 
 exit 0

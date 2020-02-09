@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
+# shellcheck disable=SC2059
 
-THIS_DIR=$(readlink -f "$(dirname "$BASH_SOURCE")")
+THIS_DIR=$(readlink -f "$(dirname "${BASH_SOURCE[0]}")")
 export TEXTDOMAINDIR="$THIS_DIR/locale"
 export TEXTDOMAIN=japanese_tools
 

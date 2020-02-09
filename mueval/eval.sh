@@ -30,7 +30,7 @@ if [[ $QUERY = 'help' ]]; then
 fi
 
 RESULT="$(mueval \
-    $([[ $MODE = 'type' ]] && echo '--inferred-type') \
+    "$([[ $MODE = 'type' ]] && echo '--inferred-type')" \
     --time-limit="$TIME_LIMIT_SECONDS" \
     --expression "$QUERY" 2>&1)"
 MUEVAL_EXIT_CODE=$?
@@ -66,7 +66,7 @@ fi
 # In any case prepend a space to prevent accidently calling other irc
 # bots.
 if [[ ${#RESULT} -ge $MAX_LINE_LENGTH ]]; then
-    RESULT="${RESULT:0:$(( $MAX_LINE_LENGTH-4 ))}..."
+    RESULT="${RESULT:0:$(( MAX_LINE_LENGTH - 4 ))}..."
 fi
 printf '%s\n' " $RESULT" | iconv -f utf8 -t latin1
 

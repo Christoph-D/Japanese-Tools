@@ -26,7 +26,7 @@ TOTAL=$(wc -l "$INPUT")
 
 C=0
 SKIPPED=0
-while read I; do
+while read -r I; do
     FULL_LINE="$("$JA" "$I" | head -n 1)"
     if [[ $FULL_LINE = 'Unknown word.' ]] ||
         echo "$FULL_LINE" | grep -q '^\([^|]*\)|\1'; then

@@ -3,6 +3,7 @@
 # License: GNU GPL, version 3 or later; http://www.gnu.org/copyleft/gpl.html
 #
 # Hiragana and katakana trainer.
+set -eu
 
 . "$(dirname "$0")"/../gettext/gettext.sh
 
@@ -26,6 +27,7 @@ LESSON_MAP=( 5 10 15 20 25 30 35 38 43 45 46 ) # line numbers in $KANA_FILE
 
 # Preliminary checks
 if [[ ! -e $KANA_FILE ]]; then
+   # shellcheck disable=SC2016
    printf_ 'Please fix %s.' '$KANA_FILE'
    exit 1
 fi
@@ -35,24 +37,28 @@ KANA_SRC=$(cat "$KANA_FILE")
 # Try to create data directories.
 [[ -d $USER_STATS_DIR ]] || mkdir -p "$USER_STATS_DIR"
 if [[ ! -d $USER_STATS_DIR ]]; then
+   # shellcheck disable=SC2016
    printf_ 'Could not create directory %s. Please fix %s.' \
        "$USER_STATS_DIR" '$USER_STATS_DIR'
    exit 2
 fi
 [[ -d $TEMP_PATH ]] || mkdir -p "$TEMP_PATH"
 if [[ ! -d $TEMP_PATH ]]; then
+   # shellcheck disable=SC2016
    printf_ 'Could not create directory %s. Please fix %s.' \
        "$TEMP_PATH" '$TEMP_PATH'
    exit 2
 fi
 if [[ -z $USER ]]; then
-    printf_ 'Could not determine nick name. Please fix %s.' '$USER'
-    exit 1
+   # shellcheck disable=SC2016
+   printf_ 'Could not determine nick name. Please fix %s.' '$USER'
+   exit 1
 fi
 if [[ -z $CHANNEL_NAME ]]; then
-    printf_ 'Could not determine channel name or query sender. Please fix %s.' \
-        '$CHANNEL_NAME'
-    exit 1
+   # shellcheck disable=SC2016
+   printf_ 'Could not determine channel name or query sender. Please fix %s.' \
+       '$CHANNEL_NAME'
+   exit 1
 fi
 
 # Prune old temporary files
@@ -87,13 +93,14 @@ read_single_lesson() {
     if (( "$1" > 0 )); then
         LESSON_LINES_START=${LESSON_MAP[$(( $1 - 1 ))]}
     fi
-    echo "$KANA_SRC" | head -n ${LESSON_MAP[$1]} | tail -n +$(( $LESSON_LINES_START + 1))
+    echo "$KANA_SRC" | head -n "${LESSON_MAP[$1]}" | tail -n +$(( LESSON_LINES_START + 1))
 }
 # Parameters: Lesson number
 # Result:     The lessons 0 to $1 on stdout.
 read_lesson() {
-    local UPTO=$(min "$1" "${#LESSON_MAP[*]}")
-    for I in $(seq 0 $UPTO); do
+    local UPTO
+    UPTO=$(min "$1" "${#LESSON_MAP[*]}")
+    for I in $(seq 0 "$UPTO"); do
         read_single_lesson "$I"
     done
 }
@@ -102,14 +109,15 @@ read_lesson() {
 #             appear multiple times in a row. See the
 #             implementation for the general formula.
 read_weighted_lessons() {
-    local UPTO=$(min "$1" "${#LESSON_MAP[*]}")
-    local COUNT=1
-    for I in $(seq 0 $UPTO); do
-        local L=$(read_single_lesson "$I")
+    local UPTO COUNT=1
+    UPTO=$(min "$1" "${#LESSON_MAP[*]}")
+    for I in $(seq 0 "$UPTO"); do
+        local L
+        L=$(read_single_lesson "$I")
         for J in $(seq 0 $COUNT); do
             echo "$L"
         done
-        if (( $UPTO - $I < 5 )); then
+        if (( UPTO - I < 5 )); then
             let "COUNT = COUNT * 2"
         fi
     done
@@ -121,9 +129,9 @@ start_lesson() {
     # Sanitize $RESULT_LINES
     if echo "$RESULT_LINES" | grep -q -v -E '^[0-9]+$'; then
         RESULT_LINES=$DEFAULT_RESULT_ITEMS
-    elif (( $RESULT_LINES < 1 )); then
+    elif (( RESULT_LINES < 1 )); then
         RESULT_LINES=1
-    elif (( $RESULT_LINES > $MAX_RESULT_ITEMS )); then
+    elif (( RESULT_LINES > MAX_RESULT_ITEMS )); then
         RESULT_LINES=$MAX_RESULT_ITEMS
     fi
     # Generate the lesson, i.e. shuffle it and restrict it to
@@ -151,8 +159,9 @@ read_user_statistics() {
 }
 # Paramaters: $USER_STATS
 print_user_statistics() {
-    if (( ${USER_STATS[1]} > 0 )); then
-        local PERCENT=$(echo "scale=2; ${USER_STATS[0]} * 100 / ${USER_STATS[1]}" | bc)
+    if (( USER_STATS[1] > 0 )); then
+        local PERCENT
+        PERCENT=$(echo "scale=2; ${USER_STATS[0]} * 100 / ${USER_STATS[1]}" | bc)
         printf_ 'Statistics for %s: %s%% of %s characters correct.' \
             "$USER" "$PERCENT" "${USER_STATS[1]}"
     else
@@ -160,14 +169,14 @@ print_user_statistics() {
     fi
 }
 
-if [[ $* = "help" ]]; then
+if [[ "$*" = "help" ]]; then
     show_help
     exit 0
 fi
 
 QUERY=( $@ )
-if [[ ${QUERY[0]} = "stats" ]]; then
-    if [[ -n ${QUERY[1]} ]]; then
+if [[ ${QUERY[0]:-} = "stats" ]]; then
+    if [[ -n ${QUERY[1]:-} ]]; then
         USER=${QUERY[1]}
     fi
     read_user_statistics
@@ -175,16 +184,16 @@ if [[ ${QUERY[0]} = "stats" ]]; then
     exit 0
 fi
 
-QUERY_BEGIN="${QUERY[0]} ${QUERY[1]}"
+QUERY_BEGIN="${QUERY[0]:-} ${QUERY[1]:-}"
 if echo "$QUERY_BEGIN" | grep -q -E '^help [0-9]+$'; then
     # Lesson help
-    LESSON=$(read_lesson "${QUERY[1]}")
+    LESSON=$(read_lesson "${QUERY[1]:-}")
     LESSON=${LESSON// /=}
     echo "${LESSON//$'\n'/ }"
     exit 0
 elif echo "$QUERY_BEGIN" | grep -q -E '^helpdiff [0-9]+$'; then
     # Lesson helpdiff
-    LESSON_DIFF=$(read_single_lesson "${QUERY[1]}")
+    LESSON_DIFF=$(read_single_lesson "${QUERY[1]:-}")
     LESSON_DIFF=${LESSON_DIFF// /=}
     LESSON_DIFF=${LESSON_DIFF//$'\n'/ }
     if [ -n "$LESSON_DIFF" ]; then
@@ -196,7 +205,7 @@ elif echo "$QUERY_BEGIN" | grep -q -E '^helpdiff [0-9]+$'; then
 fi
 
 if echo "$QUERY_BEGIN" | grep -q -E '^[0-9]+ [0-9]*$'; then
-    start_lesson "${QUERY[0]}" "${QUERY[1]}"
+    start_lesson "${QUERY[0]:-}" "${QUERY[1]:-}"
     exit 0
 fi
 
@@ -212,19 +221,19 @@ rm "$SOLUTION_FILE"
 
 CORRECT=0
 PRETTY_SOLUTION=
-for I in $(seq 0 $(( $EXPECTED_NUMBER - 1 ))); do
+for I in $(seq 0 $(( EXPECTED_NUMBER - 1 ))); do
     EXPECTED=${SOLUTION[$I]}
-    GOT=${QUERY[$I]}
-    if [[ $EXPECTED = $GOT ]]; then
+    GOT=${QUERY[$I]:-}
+    if [[ $EXPECTED = "$GOT" ]]; then
         let "++CORRECT"
     else
         PRETTY_SOLUTION="$PRETTY_SOLUTION ${KANA_SOLUTION[$I]}=$EXPECTED"
     fi
 done
-if (( $CORRECT == 0 )); then
+if (( CORRECT == 0 )); then
     printf_no_newline_ 'Unfortunately, no character was right. Solution:%s.' \
         "$PRETTY_SOLUTION"
-elif (( $CORRECT == $EXPECTED_NUMBER )); then
+elif (( CORRECT == EXPECTED_NUMBER )); then
     printf_no_newline_ 'Perfect! %s of %s.' \
         "$CORRECT" "$EXPECTED_NUMBER"
 else
@@ -235,14 +244,15 @@ echo -n ' '
 
 # update user statistics
 read_user_statistics
-USER_STATS[0]=$(( ${USER_STATS[0]} + $CORRECT ))
-USER_STATS[1]=$(( ${USER_STATS[1]} + $EXPECTED_NUMBER ))
+USER_STATS[0]=$(( USER_STATS[0] + CORRECT ))
+USER_STATS[1]=$(( USER_STATS[1] + EXPECTED_NUMBER ))
 print_user_statistics
 echo "${USER_STATS[*]}" > "$USER_FILE"
 
 # Start new lesson.
 if [[ -f $LESSON_STATUS_FILE ]]; then
     # Note: No quoting here because start_lesson expects 2 parameters.
+    # shellcheck disable=SC2046
     start_lesson $(cat "$LESSON_STATUS_FILE")
 fi
 

@@ -8,14 +8,14 @@ set -u
 
 DICT=$(dirname "$0")/../jmdict/JMdict_e_prepared
 MAX_RESULTS_PER_PATTERN=10
-NOT_FOUND_MSG="Unknown word."
+NOT_FOUND_MSG='Unknown word.'
 
 if [ ! -e "$DICT" ]; then
    echo "Please run: wget http://ftp.monash.edu.au/pub/nihongo/JMdict_e.gz && ./prepare_jmdict.sh JMdict_e.gz > JMdict_e_prepared"
    exit 1
 fi
 
-QUERY=$@
+QUERY="$*"
 
 if [ -z "$QUERY" ]; then
     echo "epsilon."
@@ -31,8 +31,7 @@ split_result() {
 
 print_result() {
     # Change $IFS to loop over lines instead of words.
-    local IFS=$'\n'
-    local KANA_BUFFER= ENGLISH_BUFFER=
+    local IFS=$'\n' KANA_BUFFER ENGLISH_BUFFER R FINAL
     for R in $RESULT; do
         split_result "$R"
         KANA_BUFFER="${KANA_BUFFER:+$KANA_BUFFER,}$KANA"
@@ -40,7 +39,7 @@ print_result() {
     done
     FINAL="$QUERY|$KANA_BUFFER|$ENGLISH_BUFFER"
     if [[ ${#FINAL} -gt $MAX_LINE_LENGTH ]]; then
-        FINAL="${FINAL:0:$(expr $MAX_LINE_LENGTH - 3)}..."
+        FINAL="${FINAL:0:$(( MAX_LINE_LENGTH - 3 ))}..."
     fi
     echo -e "$FINAL"
 }
