@@ -67,7 +67,7 @@
       <xsl:if test="last()>1">
         <xsl:number value="position()" format="1. "/>
       </xsl:if>
-      <xsl:for-each select="trans/tr">
+      <xsl:for-each select="descendant::trans/tr">
         <xsl:call-template name="translation"/>
         <xsl:if test="position()!=last()">
           <xsl:value-of select="', '"/>
