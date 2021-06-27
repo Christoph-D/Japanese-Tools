@@ -97,14 +97,6 @@ class SimpleBot(SingleServerIRCBot):
         # Print magic key again.
         self.print_magic_key()
 
-    def _decode(self, text):
-        if not isinstance(text, str):
-            return lines
-        try:
-            return str(text, 'utf-8')
-        except ValueError:
-            return str(text, 'iso-8859-15')
-
     def say(self, lines, to=None):
         if to is None:
             to = self.say_target
@@ -166,7 +158,7 @@ class SimpleBot(SingleServerIRCBot):
             if len(cmd) == 1:
                 self.die('さようなら')
             else:
-                self.die(self._decode(cmd[1]))
+                self.die(cmd[1])
         elif cmd[0] == 'join':
             self.connection.join(cmd[1])
         elif cmd[0] == 'part':
