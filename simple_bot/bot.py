@@ -1,4 +1,4 @@
-#!/usr/bin/python2
+#!/usr/bin/python3
 # -*- coding: utf-8 -*-
 # Copyright: Christoph Dittmann <github@christoph-d.de>
 # License: GNU GPL, version 3 or later; http://www.gnu.org/copyleft/gpl.html
@@ -14,7 +14,7 @@ import string
 import random
 import os, subprocess, sys
 import time
-import StringIO
+import io
 import traceback
 import locale
 _ = gettext.gettext
@@ -44,20 +44,21 @@ scripts = [('cdecl', '../cdecl/c.sh'),
 def run_script(path, argument, irc_source_target, ignore_errors=False):
     try:
         env = os.environ
-        lang = env['LANG'] if 'LANG' in env else 'en_US.utf8'
-        env.update({ 'DMB_SENDER'   : irc_source_target[0].encode('utf-8'),
-                     'DMB_RECEIVER' : irc_source_target[1].encode('utf-8'),
+        lang = env.get('LANG', 'en_US.utf8')
+        env.update({ 'DMB_SENDER'   : irc_source_target[0],
+                     'DMB_RECEIVER' : irc_source_target[1],
                      'LANGUAGE'     : lang,
                      'LANG'         : lang,
                      'LC_ALL'       : lang,
                      'IRC_PLUGIN'   : '1' })
-        return subprocess.Popen(
+        output = subprocess.Popen(
             [path, argument],
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             cwd=os.path.dirname(os.path.abspath(path)),
             env=env
             ).communicate()[0]
+        return output.decode('utf-8')
     except:
         if ignore_errors:
             return ''
@@ -70,7 +71,7 @@ def limit_length(s, max_bytes):
     for limit in range(max_bytes, 0, -1):
         if len(s[:limit].encode('utf-8')) <= max_bytes:
             return s[:limit]
-    return u''
+    return ''
 
 class SimpleBot(SingleServerIRCBot):
     def __init__(self, channels, nickname, nickpass, server, port=6667):
@@ -87,12 +88,12 @@ class SimpleBot(SingleServerIRCBot):
         self._connect()
 
     def print_magic_key(self):
-        print _('Today\'s magic key for admin commands: %s') % self.magic_key,
+        print(_('Today\'s magic key for admin commands: %s') % self.magic_key, end=' ')
         sys.stdout.flush()
 
     def debug_out(self, line):
         # Overwrite magic key.
-        print '\r' + (60 * ' ') + '\r' + line
+        print('\r' + (60 * ' ') + '\r' + line)
         # Print magic key again.
         self.print_magic_key()
 
@@ -100,14 +101,13 @@ class SimpleBot(SingleServerIRCBot):
         if not isinstance(text, str):
             return lines
         try:
-            return unicode(text, 'utf-8')
+            return str(text, 'utf-8')
         except ValueError:
-            return unicode(text, 'iso-8859-15')
+            return str(text, 'iso-8859-15')
 
     def say(self, lines, to=None):
         if to is None:
             to = self.say_target
-        lines = self._decode(lines)
         # Limit maximum number of lines and line length.
         for line in lines.splitlines()[:4]:
             self.connection.privmsg(to, limit_length(line, 410))
@@ -145,8 +145,8 @@ class SimpleBot(SingleServerIRCBot):
         Exception base class."""
         try:
             self.do_command_unsafe(cmd)
-        except Exception, e:
-            output = StringIO.StringIO()
+        except Exception as e:
+            output = io.StringIO()
             output.write(_('Caught exception: %s\n') % str(e))
             traceback.print_exc(file = output)
             self.debug_out(output.getvalue())
@@ -164,7 +164,7 @@ class SimpleBot(SingleServerIRCBot):
         cmd = cmd.split(' ', 1)
         if cmd[0] == 'die':
             if len(cmd) == 1:
-                self.die(u'さようなら')
+                self.die('さようなら')
             else:
                 self.die(self._decode(cmd[1]))
         elif cmd[0] == 'join':
@@ -191,11 +191,11 @@ class SimpleBot(SingleServerIRCBot):
     def do_user_command(self, cmd):
         """Commands normal users may use."""
         if cmd == 'version':
-            return self.say(_(u'A very simple bot with 日本語 support.'))
+            return self.say(_('A very simple bot with 日本語 support.'))
         elif cmd == 'help':
             return self.show_help()
         split_pos = cmd.find(' ')
-        split_pos2 = cmd.find(u'　')
+        split_pos2 = cmd.find('　')
         split_pos_len = len(' ')
         if split_pos == -1 or (split_pos2 != -1 and split_pos2 < split_pos):
             split_pos = split_pos2
@@ -273,16 +273,16 @@ class SimpleBot(SingleServerIRCBot):
         if self.current_topic.find(marker) != -1:
             prefix, old_word = self.current_topic.split(marker, 1)
             if old_word.find(' ') != -1:
-                print 'old_word: ' + old_word
+                print('old_word: ' + old_word)
                 old_word, suffix = old_word.split(' ', 1)
                 suffix = ' ' + suffix
-                print 'suffix: ' + suffix
+                print('suffix: ' + suffix)
             else:
                 suffix = ''
             new_word = self.next_word_of_the_day(old_word)
             if new_word:
                 new_topic = '%s%s%s%s' % (prefix, marker, new_word, suffix)
-                print 'new topic: [%s]' % new_topic
+                print('new topic: [%s]' % new_topic)
                 self.connection.topic(self.initial_channels[0], new_topic)
 
     def polling_jobs(self):
@@ -332,7 +332,7 @@ def main():
     setup_gettext()
 
     if len(sys.argv) != 4 and len(sys.argv) != 5:
-        print _('Usage: bot.py <server[:port]> <channel[,channel...]> <nickname> [NickServ password]')
+        print(_('Usage: bot.py <server[:port]> <channel[,channel...]> <nickname> [NickServ password]'))
         sys.exit(1)
 
     s = sys.argv[1].split(':', 1)
@@ -341,11 +341,11 @@ def main():
         try:
             port = int(s[1])
         except ValueError:
-            print _('Error: Invalid port.')
+            print(_('Error: Invalid port.'))
             sys.exit(1)
     else:
         port = 6667
-    channels = [ c.decode('utf-8') for c in sys.argv[2].split(",") ]
+    channels = sys.argv[2].split(",")
     nickname = sys.argv[3]
     nickpass = None
     if len(sys.argv) == 5:
@@ -355,7 +355,7 @@ def main():
     try:
         bot.run_forever()
     except KeyboardInterrupt:
-        print _('Caught KeyboardInterrupt, exiting...')
+        print(_('Caught KeyboardInterrupt, exiting...'))
         bot.do_special_command('die')
         bot.start()
 
