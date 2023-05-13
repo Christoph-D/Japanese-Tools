@@ -32,10 +32,10 @@ dict=$(dirname "$0")/dict.db
 sql() {
     printf '%s\n' "$1" >> "$statement_buffer"
 }
-execute_sql() {
-    sqlite3 "$dict" < "$statement_buffer"
-    rm "$statement_buffer"
-}
+# execute_sql() {
+#     sqlite3 "$dict" < "$statement_buffer"
+#     rm "$statement_buffer"
+# }
 
 init_database() {
     statement_buffer=$(mktemp)
