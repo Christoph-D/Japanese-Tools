@@ -1,0 +1,11 @@
+version: 2.1
+orbs:
+  shellcheck: circleci/shellcheck@3.1.2
+jobs:
+  build:
+    docker:
+      - image: cimg/base:stable
+    steps:
+      - checkout
+      - shellcheck/install
+      - run: shellcheck **/*.sh
