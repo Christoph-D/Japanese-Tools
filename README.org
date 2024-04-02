@@ -10,7 +10,6 @@ on a shell.  I find the following aliases quite useful:
 alias ja="$JAPANESE_TOOLS/jmdict/jm.sh"
 alias wa="$JAPANESE_TOOLS/jmdict/wa.sh"
 alias rtk="$JAPANESE_TOOLS/rtk/rtk.sh"
-alias gd="$JAPANESE_TOOLS/google_dictionary/gd.sh"
 #+END_EXAMPLE
 
 I do most of my dictionary lookups with these aliases.
@@ -43,18 +42,6 @@ UTF-8 vs. UTF-16: 91213 vs. 156876 bytes. UTF-8 wins by 41.8%.
 
   Be sure to run gettext/regenerate_mo_files.sh if you would like to
   use a translation.
-* google_count
-  Counts the number of Google results.  Uses google.co.jp for queries
-  containing Japanese characters and google.com otherwise.
-* google_dictionary/
-  gd.sh looks up English words in the Google dictionary.
-#+BEGIN_EXAMPLE
-$ ./gd.sh diligent
-/ˈdiləjənt/ having or showing care and conscientiousness in one's work or duties
-#+END_EXAMPLE
-
-  Currently broken because it appears like Google shut down their
-  dictionary JSON API.
 * jmdict/
   jm.sh provides jmdict lookups and wa.sh wadoku lookups.  Works best
   for Japanese->English (or Japanese->German), not so well for the
