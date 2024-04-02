@@ -11,8 +11,7 @@
 # shellcheck source=gettext/gettext.sh
 . "$(dirname "$0")"/../gettext/gettext.sh
 
-readonly DICT
-DICT=$(dirname "$0")/rtk.txt
+readonly DICT=$(dirname "$0")/rtk.txt
 readonly MAX_KEYWORDS=10
 # Hardcoded limit on line length for IRC
 readonly MAX_LINE_LENGTH=300
