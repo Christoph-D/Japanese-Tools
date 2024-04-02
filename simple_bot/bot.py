@@ -29,14 +29,12 @@ scripts = [('cdecl', '../cdecl/c.sh'),
            ('kata', '../kana/kata.sh'),
            (['ja','jp'], '../jmdict/jm.sh'),
            (['wa','wadoku'], '../jmdict/wa.sh'),
-           ('define', '../google_dictionary/gd.py'),
            ('audio', '../audio/find_audio.sh'),
            ('quiz', '../reading_quiz/quiz.sh'),
            ('kuiz', '../kumitate_quiz/kuiz.sh'),
            ('calc', '../mueval/run.sh'),
            ('type', '../mueval/type.sh'),
            ('utf', '../compare_encoding/compare_encoding.sh'),
-           ('count', '../google_count/google_count.sh'),
            ('lhc', '../lhc/lhc_info.sh')
            ]
 
