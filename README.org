@@ -1,6 +1,9 @@
 # -*- coding: utf-8; mode: org; -*-
 #+OPTIONS: ^:{}
 
+*WARNING:* This repository is abandoned and has not been significantly
+updated in years. Expect many parts to be broken.
+
 These are some scripts that help me learn Japanese.
 
 Most scripts are supposed to be used as plugins for an IRC bot or run
