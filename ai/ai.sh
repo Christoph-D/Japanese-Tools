@@ -31,7 +31,7 @@ api_key=${DEEPSEEK_API_KEY}
 model=deepseek-chat
 
 # Prevent usage in private messages
-if [[ ${DMB_RECEIVER:0:1} != '#' ]]; then
+if [[ $IRC_PLUGIN = 1 && ${DMB_RECEIVER:0:1} != '#' ]]; then
     echo_ '!ai is only available in channels.'
     exit 1
 fi
