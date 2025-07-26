@@ -10,8 +10,8 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=3;     plural=n==1 ? 0 :            n%10>=2 && n"
-"%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2;\n"
+"Plural-Forms: nplurals=3;     plural=n==1 ? 0 :            n%10>=2 && "
+"n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2;\n"
 
 #: audio/find_audio.sh
 msgid "Usage: %s word [reading]"
@@ -33,13 +33,21 @@ msgstr "Brak plików audio."
 msgid "Audio for %s: %s"
 msgstr "Audio dla %s: %s"
 
-#: bablefish/bf.sh google_translate/gt.sh
+#: bablefish/bf.sh
 msgid "No input."
 msgstr "Brak tekstu."
 
 #: bablefish/bf.sh mueval/eval.sh
 msgid "Time limit exceeded."
 msgstr "Przekroczono limit czasu."
+
+#: bablefish/bf.sh
+msgid "This is untranslatable. :/"
+msgstr "Nie można tego przetłumaczyć. :/"
+
+#: bablefish/bf.sh
+msgid "No result. :-("
+msgstr "Nic nie znaleziono. :-("
 
 #: cdecl/cdecl.sh
 msgid "Usage: !%s [explain|declare] <something>"
@@ -68,22 +76,6 @@ msgstr "UTF-16 wygrywa o %s."
 #: compare_encoding/compare_encoding.sh
 msgid "It's a tie."
 msgstr "Remis."
-
-#: google_count/google_count.sh
-msgid "Usage: %s some_string "
-msgstr "Sposób użycia: %s jakiś_tekst "
-
-#: google_count/google_count.sh simple_bot/bot.py
-msgid "An error occured."
-msgstr "Wystąpił błąd"
-
-#: google_translate/gt.sh
-msgid "This is untranslatable. :/"
-msgstr "Nie można tego przetłumaczyć. :/"
-
-#: google_translate/gt.sh
-msgid "No result. :-("
-msgstr "Nic nie znaleziono. :-("
 
 #: jmdict/ja.sh
 msgid "Please call jm.sh or wa.sh instead."
@@ -300,6 +292,10 @@ msgstr "Nieznane słowo"
 #: rtk/rtk.sh
 msgid "Unknown kanji number."
 msgstr "Nieznany numer kanji"
+
+#: simple_bot/bot.py
+msgid "An error occured."
+msgstr "Wystąpił błąd"
 
 #: simple_bot/bot.py
 #, python-format

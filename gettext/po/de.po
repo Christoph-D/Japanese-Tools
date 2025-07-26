@@ -14,6 +14,32 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
 
+#: ai/ai.sh
+msgid ""
+"You are a helpful AI in an IRC chatroom. You communicate with experienced "
+"software developers.\n"
+"Write in English unless the user asks for something else. Respond to the "
+"user's question with a single sentence.\n"
+"Your answers are suitable for all age groups."
+msgstr ""
+"Du bist eine hilfreiche KI in einem IRC-Chatraum. Du redest mit "
+"erfahrenen Software-Entwicklern.\n"
+"Schreib auf Deutsch, außer wenn der User dich um etwas anderes bittet. "
+"Antworte auf user's Frage mit einem einzigen Satz.\n"
+"Deine Antworten sind für alle Altersstufen geeignet."
+
+#: ai/ai.sh
+msgid "!ai is only available in channels."
+msgstr "!ai gibt es nur in Channels."
+
+#: ai/ai.sh
+msgid "No API keys available."
+msgstr "Keine API keys gefunden."
+
+#: ai/ai.sh
+msgid "No models available."
+msgstr "Keine Modelle gefunden."
+
 #: audio/find_audio.sh
 msgid "Usage: %s word [reading]"
 msgstr "Aufruf: %s Kanji [Hiragana]"
@@ -34,13 +60,21 @@ msgstr "Keine Audio-Datei gefunden."
 msgid "Audio for %s: %s"
 msgstr "Audio für %s: %s"
 
-#: bablefish/bf.sh google_translate/gt.sh
+#: bablefish/bf.sh
 msgid "No input."
 msgstr "Keine Eingabe."
 
 #: bablefish/bf.sh mueval/eval.sh
 msgid "Time limit exceeded."
 msgstr "Zeitlimit überschritten."
+
+#: bablefish/bf.sh
+msgid "This is untranslatable. :/"
+msgstr "Das kann ich nicht übersetzen. :/"
+
+#: bablefish/bf.sh
+msgid "No result. :-("
+msgstr "Kein Ergebnis. :-("
 
 #: cdecl/cdecl.sh
 msgid "Usage: !%s [explain|declare] <something>"
@@ -69,22 +103,6 @@ msgstr "UTF-16 gewinnt mit %s Vorsprung."
 #: compare_encoding/compare_encoding.sh
 msgid "It's a tie."
 msgstr "Unentschieden."
-
-#: google_count/google_count.sh
-msgid "Usage: %s some_string "
-msgstr "Aufruf: %s Suchtext"
-
-#: google_count/google_count.sh simple_bot/bot.py
-msgid "An error occured."
-msgstr "Ein Fehler ist aufgetreten."
-
-#: google_translate/gt.sh
-msgid "This is untranslatable. :/"
-msgstr "Das kann ich nicht übersetzen. :/"
-
-#: google_translate/gt.sh
-msgid "No result. :-("
-msgstr "Kein Ergebnis. :-("
 
 #: jmdict/ja.sh
 msgid "Please call jm.sh or wa.sh instead."
@@ -145,8 +163,8 @@ msgid ""
 msgstr ""
 "Beginnen mit \"%s <Stufe> [Anzahl]\". Bekannte Stufen sind 0 bis %s. Für "
 "Erklärung einer Stufe bitte %s help <Stufe>\" eingeben.\n"
-"Um nur die neuen Zeichen einer Stufe anzuzeigen bitte \"%s helpdiff <Stufe>"
-"\" verwenden."
+"Um nur die neuen Zeichen einer Stufe anzuzeigen bitte \"%s helpdiff "
+"<Stufe>\" verwenden."
 
 #: kana/kana.sh
 msgid "Please write in romaji: %s"
@@ -301,6 +319,10 @@ msgstr "Unbekanntes Keyword."
 #: rtk/rtk.sh
 msgid "Unknown kanji number."
 msgstr "Unbekannte Kanji-Nummer."
+
+#: simple_bot/bot.py
+msgid "An error occured."
+msgstr "Ein Fehler ist aufgetreten."
 
 #: simple_bot/bot.py
 #, python-format

@@ -15,6 +15,27 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=INTEGER; plural=EXPRESSION;\n"
 
+#: ai/ai.sh
+msgid ""
+"You are a helpful AI in an IRC chatroom. You communicate with experienced "
+"software developers.\n"
+"Write in English unless the user asks for something else. Respond to the "
+"user's question with a single sentence.\n"
+"Your answers are suitable for all age groups."
+msgstr ""
+
+#: ai/ai.sh
+msgid "!ai is only available in channels."
+msgstr ""
+
+#: ai/ai.sh
+msgid "No API keys available."
+msgstr ""
+
+#: ai/ai.sh
+msgid "No models available."
+msgstr ""
+
 #: audio/find_audio.sh
 msgid "Usage: %s word [reading]"
 msgstr ""
@@ -35,12 +56,20 @@ msgstr ""
 msgid "Audio for %s: %s"
 msgstr ""
 
-#: bablefish/bf.sh google_translate/gt.sh
+#: bablefish/bf.sh
 msgid "No input."
 msgstr ""
 
 #: bablefish/bf.sh mueval/eval.sh
 msgid "Time limit exceeded."
+msgstr ""
+
+#: bablefish/bf.sh
+msgid "This is untranslatable. :/"
+msgstr ""
+
+#: bablefish/bf.sh
+msgid "No result. :-("
 msgstr ""
 
 #: cdecl/cdecl.sh
@@ -69,22 +98,6 @@ msgstr ""
 
 #: compare_encoding/compare_encoding.sh
 msgid "It's a tie."
-msgstr ""
-
-#: google_count/google_count.sh
-msgid "Usage: %s some_string "
-msgstr ""
-
-#: google_count/google_count.sh simple_bot/bot.py
-msgid "An error occured."
-msgstr ""
-
-#: google_translate/gt.sh
-msgid "This is untranslatable. :/"
-msgstr ""
-
-#: google_translate/gt.sh
-msgid "No result. :-("
 msgstr ""
 
 #: jmdict/ja.sh
@@ -293,6 +306,10 @@ msgstr ""
 
 #: rtk/rtk.sh
 msgid "Unknown kanji number."
+msgstr ""
+
+#: simple_bot/bot.py
+msgid "An error occured."
 msgstr ""
 
 #: simple_bot/bot.py
