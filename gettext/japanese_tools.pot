@@ -16,15 +16,6 @@ msgstr ""
 "Plural-Forms: nplurals=INTEGER; plural=EXPRESSION;\n"
 
 #: ai/ai.sh
-msgid ""
-"You are a helpful AI in an IRC chatroom. You communicate with experienced "
-"software developers.\n"
-"Write in English unless the user asks for something else. Respond to the "
-"user's question with a single sentence.\n"
-"Your answers are suitable for all age groups."
-msgstr ""
-
-#: ai/ai.sh
 msgid "!ai is only available in channels."
 msgstr ""
 

@@ -15,20 +15,6 @@ msgstr ""
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
 
 #: ai/ai.sh
-msgid ""
-"You are a helpful AI in an IRC chatroom. You communicate with experienced "
-"software developers.\n"
-"Write in English unless the user asks for something else. Respond to the "
-"user's question with a single sentence.\n"
-"Your answers are suitable for all age groups."
-msgstr ""
-"Du bist eine hilfreiche KI in einem IRC-Chatraum. Du redest mit "
-"erfahrenen Software-Entwicklern.\n"
-"Schreib auf Deutsch, außer wenn der User dich um etwas anderes bittet. "
-"Antworte auf user's Frage mit einem einzigen Satz.\n"
-"Deine Antworten sind für alle Altersstufen geeignet."
-
-#: ai/ai.sh
 msgid "!ai is only available in channels."
 msgstr "!ai gibt es nur in Channels."
 

@@ -15,9 +15,15 @@ readonly OPENROUTER_API_ENDPOINT=https://openrouter.ai/api/v1/chat/completions
 # Hardcoded limit on line length for IRC
 readonly MAX_LINE_LENGTH=300
 
-readonly SYSTEM_PROMPT=$(_ 'You are a helpful AI in an IRC chatroom. You communicate with experienced software developers.
+SYSTEM_PROMPT='You are a helpful AI in an IRC chatroom. You communicate with experienced software developers.
 Write in English unless the user asks for something else. Respond to the user'\''s question with a single sentence.
-Your answers are suitable for all age groups.')
+Your answers are suitable for all age groups.'
+
+if [[ $LANG = de_DE.UTF-8 ]]; then
+  SYSTEM_PROMPT='Du bist eine hilfreiche KI in einem IRC-Chatraum. Du redest mit erfahrenen Software-Entwicklern.
+Schreib auf Deutsch, außer wenn der User dich um etwas anderes bittet. Antworte auf user'\''s Frage mit einem einzigen Satz
+Deine Antworten sind für alle Altersstufen geeignet.'
+fi
 
 # Default model
 api_endpoint=${DEEPSEEK_API_ENDPOINT}
