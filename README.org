@@ -23,6 +23,16 @@ can install them with
 #+BEGIN_EXAMPLE
 $ sudo apt install mecab-jumandic-utf8 mecab kakasi xmlstarlet xsltproc python-irclib sqlite3 bc liburi-perl tesseract-ocr imagemagick
 #+END_EXAMPLE
+* ai/
+  Query an LLM.
+#+BEGIN_EXAMPLE
+$ ./ai.sh
+Usage: !ai [-model] <query>. Known models: deepseek-chat google/gemini-2.5-flash openai/gpt-4o-mini openai/gpt-4.1
+$ ./ai.sh "What's 夜空?"
+"夜空" means "night sky" in English.
+$ ./ai.sh "-google/gemini-2.5-flash What's 夜空? Also give me a Japanese example sentence."
+夜空 (yozora) means "night sky," as in "夜空が綺麗ですね" (Yozora ga kirei desu ne), which means "The night sky is beautiful, isn't it?"
+#+END_EXAMPLE
 * audio/
   find_audio.sh finds an audio version of a given Japanese
   word on languagepod101.
