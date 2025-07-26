@@ -143,4 +143,8 @@ query=$(json_escape "${query_after_model_selection}")
 result=$(query "${query}")
 result=$(sanitize_output "${result}")
 
-printf ' %s\n' "${result}"
+# Prevent triggering other bots that might be present in the same channel.
+if [[ ${result:0:1} = '!' ]]; then
+    printf ' '
+fi
+printf '%s\n' "${result}"
