@@ -16,12 +16,13 @@ readonly OPENROUTER_API_ENDPOINT=https://openrouter.ai/api/v1/chat/completions
 # Hardcoded limit on line length for IRC
 readonly MAX_LINE_LENGTH=300
 
-SYSTEM_PROMPT='You are a helpful AI in an IRC chatroom. You communicate with experienced software developers.
+# Default system prompt. See system_prompt() for per-channel prompts.
+DEFAULT_SYSTEM_PROMPT='You are a helpful AI in an IRC chatroom. You communicate with experienced software developers.
 Write in English unless the user asks for something else. Keep your response under '"${MAX_LINE_LENGTH}"' characters.
 Write only a single line. Your answers are suitable for all age groups.'
 
 if [[ $LANG = de_DE.UTF-8 ]]; then
-  SYSTEM_PROMPT='Du bist eine hilfreiche KI in einem IRC-Chatraum. Du redest mit erfahrenen Software-Entwicklern.
+  DEFAULT_SYSTEM_PROMPT='Du bist eine hilfreiche KI in einem IRC-Chatraum. Du redest mit erfahrenen Software-Entwicklern.
 Schreib auf Deutsch, außer wenn der User dich um etwas anderes bittet. Antworte mit maximal '"${MAX_LINE_LENGTH}"' Zeichen.
 Schreib nur eine einzige Zeile. Deine Antworten sind für alle Altersstufen geeignet.'
 fi
@@ -52,6 +53,17 @@ query=$*
 
 list_models() {
     printf_ 'Usage: !ai [-model] <query>. Known models: %s %s. Default: %s\n' "${DEEPSEEK_MODELS}" "${OPENROUTER_MODELS}" "${DEFAULT_MODEL}"
+}
+
+# Load a per-channel system prompt if one exists.
+# To use this feature, put a file with the same name as the IRC channel
+# into channel_prompts, e.g.: channel_prompts/#mychannel
+select_system_prompt() {
+    system_prompt=${DEFAULT_SYSTEM_PROMPT}
+    [[ -v DMB_RECEIVER && ${DMB_RECEIVER} =~ ^#[^./]*$ ]] || return
+    prompt_file="$(dirname "$0")/channel_prompts/${DMB_RECEIVER}"
+    [[ -f $prompt_file ]] || return
+    system_prompt=$(cat "${prompt_file}")
 }
 
 select_model() {
@@ -102,7 +114,7 @@ query() {
     "messages": [
         {
             "role": "system",
-            "content": "'"$(json_escape "${SYSTEM_PROMPT}")"'"
+            "content": "'"$(json_escape "${system_prompt}")"'"
         },
         {
             "role": "user",
@@ -141,6 +153,8 @@ fi
 if ! select_model "${query}"; then
     exit
 fi
+
+select_system_prompt
 
 query=$(json_escape "${query_after_model_selection}")
 result=$(query "${query}")
