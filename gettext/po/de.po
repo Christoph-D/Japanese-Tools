@@ -26,6 +26,22 @@ msgstr "Keine API keys gefunden."
 msgid "No models available."
 msgstr "Keine Modelle gefunden."
 
+#: ai/ai.sh
+msgid "Usage: !ai [-model] <query>. Known models: %s %s. Default: %s\\n"
+msgstr "Aufruf: !ai [-Modell] <Anfrage>. Modelle: %s %s. Standardmodell: %s\\n"
+
+#: ai/ai.sh
+msgid "Unknown model. %s\\n"
+msgstr "Unbekanntes Modell. %s\\n"
+
+#: ai/ai.sh
+msgid "API error: %s"
+msgstr "API-Fehler: %s"
+
+#: ai/ai.sh
+msgid "Invalid response: %s"
+msgstr "Ungültige Antwort: %s"
+
 #: audio/find_audio.sh
 msgid "Usage: %s word [reading]"
 msgstr "Aufruf: %s Kanji [Hiragana]"

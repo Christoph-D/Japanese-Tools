@@ -50,7 +50,7 @@ fi
 query=$*
 
 list_models() {
-    printf 'Usage: !ai [-model] <query>. Known models: %s %s. Default: %s\n' "${DEEPSEEK_MODELS}" "${OPENROUTER_MODELS}" "${DEFAULT_MODEL}"
+    printf_ 'Usage: !ai [-model] <query>. Known models: %s %s. Default: %s\n' "${DEEPSEEK_MODELS}" "${OPENROUTER_MODELS}" "${DEFAULT_MODEL}"
 }
 
 select_model() {
@@ -79,7 +79,7 @@ select_model() {
             return
         fi
     done
-    printf 'Unknown model. %s\n' "$(list_models)"
+    printf_ 'Unknown model. %s\n' "$(list_models)"
     return 1
 }
 
@@ -113,12 +113,12 @@ query() {
     "max_tokens": 300
     }' 2>&1)
     if [[ $? -ne 0 ]]; then
-        printf 'API error: %s' "${result}"
+        printf_ 'API error: %s' "${result}"
         return 1
     fi
     result=$(printf '%s' "${result}" | python3 -c "import sys, json; sys.tracebacklimit = 0; print(json.load(sys.stdin)['choices'][0]['message']['content'])" 2>&1)
     if [[ $? -ne 0 ]]; then
-        printf 'Invalid response: %s' "${result}"
+        printf_ 'Invalid response: %s' "${result}"
         return 1
     fi
     printf '%s' "${result}"

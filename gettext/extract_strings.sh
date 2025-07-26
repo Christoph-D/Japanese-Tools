@@ -6,6 +6,7 @@ cd "$(dirname "$0")"/../
 find . \
      -path "./$THIS_DIR" -prune \
      -or -path "./.git" -prune \
+     -or -path "./venv" -prune \
      -or \( -type f -executable \
      -exec xgettext -d japanese_tools -p "./$THIS_DIR" --from-code=UTF-8 \
      --keyword=_ --keyword=echo_ \

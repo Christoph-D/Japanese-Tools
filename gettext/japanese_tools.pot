@@ -27,6 +27,22 @@ msgstr ""
 msgid "No models available."
 msgstr ""
 
+#: ai/ai.sh
+msgid "Usage: !ai [-model] <query>. Known models: %s %s. Default: %s\\n"
+msgstr ""
+
+#: ai/ai.sh
+msgid "Unknown model. %s\\n"
+msgstr ""
+
+#: ai/ai.sh
+msgid "API error: %s"
+msgstr ""
+
+#: ai/ai.sh
+msgid "Invalid response: %s"
+msgstr ""
+
 #: audio/find_audio.sh
 msgid "Usage: %s word [reading]"
 msgstr ""
