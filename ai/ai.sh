@@ -21,7 +21,7 @@ Your answers are suitable for all age groups.'
 
 if [[ $LANG = de_DE.UTF-8 ]]; then
   SYSTEM_PROMPT='Du bist eine hilfreiche KI in einem IRC-Chatraum. Du redest mit erfahrenen Software-Entwicklern.
-Schreib auf Deutsch, außer wenn der User dich um etwas anderes bittet. Antworte auf user'\''s Frage mit einem einzigen Satz
+Schreib auf Deutsch, außer wenn der User dich um etwas anderes bittet. Antworte auf user'\''s Frage mit einem einzigen Satz.
 Deine Antworten sind für alle Altersstufen geeignet.'
 fi
 
