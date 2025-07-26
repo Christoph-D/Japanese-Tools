@@ -7,6 +7,7 @@
 # shellcheck source=gettext/gettext.sh
 . "$(dirname "$0")"/../gettext/gettext.sh
 
+# shellcheck disable=SC1091
 . "$(dirname "$0")"/api-keys
 
 readonly DEEPSEEK_API_ENDPOINT=https://api.deepseek.com/v1/chat/completions
@@ -55,16 +56,14 @@ list_models() {
 
 select_model() {
     query_after_model_selection=${1}
-    model_selected=
     if [[ ${1:0:1} != - ]]; then
         return
     fi
     first_word=${1%% *}
     first_word=${first_word#-}
     query_after_model_selection=${1#* }
-    model_selected=1
-    for m in ${DEEKSEEK_MODELS}; do
-        if [[ $m = $first_word ]]; then
+    for m in ${DEEPSEEK_MODELS}; do
+        if [[ $m = "$first_word" ]]; then
             api_endpoint=${DEEPSEEK_API_ENDPOINT}
             api_key=${DEEPSEEK_API_KEY}
             model=$m
@@ -72,7 +71,7 @@ select_model() {
         fi
     done
     for m in ${OPENROUTER_MODELS}; do
-        if [[ $m = $first_word ]]; then
+        if [[ $m = "$first_word" ]]; then
             api_endpoint=${OPENROUTER_API_ENDPOINT}
             api_key=${OPENROUTER_API_KEY}
             model=$m
@@ -112,12 +111,12 @@ query() {
     ],
     "max_tokens": 300
     }' 2>&1)
+    # shellcheck disable=SC2181
     if [[ $? -ne 0 ]]; then
         printf_ 'API error: %s' "${result}"
         return 1
     fi
-    result=$(printf '%s' "${result}" | python3 -c "import sys, json; sys.tracebacklimit = 0; print(json.load(sys.stdin)['choices'][0]['message']['content'])" 2>&1)
-    if [[ $? -ne 0 ]]; then
+    if ! result=$(printf '%s' "${result}" | python3 -c "import sys, json; sys.tracebacklimit = 0; print(json.load(sys.stdin)['choices'][0]['message']['content'])" 2>&1); then
         printf_ 'Invalid response: %s' "${result}"
         return 1
     fi
@@ -127,7 +126,7 @@ query() {
 sanitize_output() {
     local s=${1//$'\n'/}
     t=${s:0:$MAX_LINE_LENGTH}
-    if [[ $s != $t ]]; then
+    if [[ $s != "$t" ]]; then
         t="$t..."
     fi
     printf '%s' "$t"
@@ -138,8 +137,8 @@ if [[ -z $query ]]; then
     exit
 fi
 
-select_model "${query}"
-if [[ $? -ne 0 ]]; then
+
+if ! select_model "${query}"; then
     exit
 fi
 
