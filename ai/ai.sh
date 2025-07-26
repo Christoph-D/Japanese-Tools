@@ -28,7 +28,8 @@ fi
 # Default model
 api_endpoint=${DEEPSEEK_API_ENDPOINT}
 api_key=${DEEPSEEK_API_KEY}
-model=deepseek-chat
+DEFAULT_MODEL=deepseek-chat
+model=${DEFAULT_MODEL}
 
 # Prevent usage in private messages
 if [[ $IRC_PLUGIN = 1 && ${DMB_RECEIVER:0:1} != '#' ]]; then
@@ -49,7 +50,7 @@ fi
 query=$*
 
 list_models() {
-    printf 'Usage: !ai [-model] <query>. Known models: %s %s\n' "${DEEPSEEK_MODELS}" "${OPENROUTER_MODELS}"
+    printf 'Usage: !ai [-model] <query>. Known models: %s %s. Default: %s\n' "${DEEPSEEK_MODELS}" "${OPENROUTER_MODELS}" "${DEFAULT_MODEL}"
 }
 
 select_model() {
