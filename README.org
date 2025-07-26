@@ -24,7 +24,7 @@ can install them with
 $ sudo apt install mecab-jumandic-utf8 mecab kakasi xmlstarlet xsltproc python-irclib sqlite3 bc liburi-perl tesseract-ocr imagemagick
 #+END_EXAMPLE
 * ai/
-  Query an LLM.
+  Query an LLM. To set it up, go into the =ai= directory, copy =api-keys.example= to =api-keys= and add your API keys.
 #+BEGIN_EXAMPLE
 $ ./ai.sh
 Usage: !ai [-model] <query>. Known models: deepseek-chat google/gemini-2.5-flash openai/gpt-4o-mini openai/gpt-4.1
