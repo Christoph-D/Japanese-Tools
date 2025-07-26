@@ -1,0 +1,140 @@
+#!/usr/bin/env bash
+# Copyright: Christoph Dittmann <github@christoph-d.de>
+# License: GNU GPL, version 3 or later; http://www.gnu.org/copyleft/gpl.html
+#
+# LLM query.
+
+# shellcheck source=gettext/gettext.sh
+. "$(dirname "$0")"/../gettext/gettext.sh
+
+. "$(dirname "$0")"/api-keys
+
+readonly DEEPSEEK_API_ENDPOINT=https://api.deepseek.com/v1/chat/completions
+readonly OPENROUTER_API_ENDPOINT=https://openrouter.ai/api/v1/chat/completions
+
+# Hardcoded limit on line length for IRC
+readonly MAX_LINE_LENGTH=300
+
+readonly SYSTEM_PROMPT='Du bist eine hilfreiche KI in einem IRC-Chatraum. Du redest mit erfahrenen Software-Entwicklern.
+Schreib auf Deutsch, außer wenn der User dich um etwas anderes bittet. Antworte auf user'\''s Frage mit einem einzigen Satz.
+Deine Antworten sind für alle Altersstufen geeignet.'
+
+# Default model
+api_endpoint=${DEEPSEEK_API_ENDPOINT}
+api_key=${DEEPSEEK_API_KEY}
+model=deepseek-chat
+
+# Prevent usage in private messages
+if [[ ${DMB_RECEIVER:0:1} != '#' ]]; then
+    echo_ '!ai is only available in channels.'
+    exit 1
+fi
+
+if [[ ! -v DEEPSEEK_API_KEY || ! -v OPENROUTER_API_KEY ]]; then
+   echo_ 'No API keys available.'
+   exit 1
+fi
+
+if [[ ! -v DEEPSEEK_MODELS || ! -v OPENROUTER_MODELS ]]; then
+   echo_ 'No models available.'
+   exit 1
+fi
+
+query=$*
+
+list_models() {
+    printf 'Usage: !ai [-model] <query>. Known models: %s %s\n' "${DEEPSEEK_MODELS}" "${OPENROUTER_MODELS}"
+}
+
+select_model() {
+    query_after_model_selection=${1}
+    model_selected=
+    if [[ ${1:0:1} != - ]]; then
+        return
+    fi
+    first_word=${1%% *}
+    first_word=${first_word#-}
+    query_after_model_selection=${1#* }
+    model_selected=1
+    for m in ${DEEKSEEK_MODELS}; do
+        if [[ $m = $first_word ]]; then
+            api_endpoint=${DEEPSEEK_API_ENDPOINT}
+            api_key=${DEEPSEEK_API_KEY}
+            model=$m
+            return
+        fi
+    done
+    for m in ${OPENROUTER_MODELS}; do
+        if [[ $m = $first_word ]]; then
+            api_endpoint=${OPENROUTER_API_ENDPOINT}
+            api_key=${OPENROUTER_API_KEY}
+            model=$m
+            return
+        fi
+    done
+    printf 'Unknown model. %s\n' "$(list_models)"
+    return 1
+}
+
+json_escape() {
+    # \ -> \\
+    local s=${1//\\/\\\\}
+    # " -> \"
+    local s=${s//\"/\\\"}
+    # \n -> \\n
+    local s=${s//$'\n'/\\n}
+    printf '%s' "$s"
+}
+
+query() {
+    result=$(curl "${api_endpoint}" \
+    --silent \
+    -H "Authorization: Bearer $api_key" \
+    -H "Content-Type: application/json" \
+    -d '{
+    "model": "'"${model}"'",
+    "messages": [
+        {
+            "role": "system",
+            "content": "'"$(json_escape "${SYSTEM_PROMPT}")"'"
+        },
+        {
+            "role": "user",
+            "content": "'"$1"'"
+        }
+    ],
+    "max_tokens": 300
+    }' 2>&1)
+    if [[ $? -ne 0 ]]; then
+        printf 'API error: %s' "${result}"
+        return 1
+    fi
+    result=$(printf '%s' "${result}" | python3 -c "import sys, json; sys.tracebacklimit = 0; print(json.load(sys.stdin)['choices'][0]['message']['content'])" 2>&1)
+    if [[ $? -ne 0 ]]; then
+        printf 'Invalid response: %s' "${result}"
+        return 1
+    fi
+    printf '%s' "${result}"
+}
+
+sanitize_output() {
+    local s=${1//$'\n'/}
+    s=${s:0:$MAX_LINE_LENGTH}
+    printf '%s' "$s"
+}
+
+if [[ -z $query ]]; then
+    list_models
+    exit
+fi
+
+select_model "${query}"
+if [[ $? -ne 0 ]]; then
+    exit
+fi
+
+query=$(json_escape "${query_after_model_selection}")
+result=$(query "${query}")
+result=$(sanitize_output "${result}")
+
+printf ' %s\n' "${result}"
