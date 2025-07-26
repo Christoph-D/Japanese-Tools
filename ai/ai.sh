@@ -125,8 +125,11 @@ query() {
 
 sanitize_output() {
     local s=${1//$'\n'/}
-    s=${s:0:$MAX_LINE_LENGTH}
-    printf '%s' "$s"
+    t=${s:0:$MAX_LINE_LENGTH}
+    if [[ $s != $t ]]; then
+        t="$t..."
+    fi
+    printf '%s' "$t"
 }
 
 if [[ -z $query ]]; then
