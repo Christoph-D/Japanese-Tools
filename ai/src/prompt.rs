@@ -21,6 +21,11 @@ fn load_prompt_file(path: &Path, receiver: &str) -> Option<String> {
 // Loads a per-channel system prompt if one exists.
 // If receiver matches a channel name, tries to load a prompt from channel_prompts/<channel>.
 pub fn select_system_prompt(receiver: &str) -> String {
+    let prompt = per_channel_prompt(receiver);
+    format_prompt(&prompt)
+}
+
+fn per_channel_prompt(receiver: &str) -> String {
     // Only allow channel names starting with '#' and without '.' or '/'
     if !receiver.starts_with('#') || receiver.contains('.') || receiver.contains('/') {
         return default_prompt().to_string();
@@ -33,8 +38,8 @@ pub fn select_system_prompt(receiver: &str) -> String {
     ];
     for path in paths.iter().flatten() {
         if let Some(prompt) = load_prompt_file(path, receiver) {
-            return format_prompt(&prompt);
+            return prompt;
         }
     }
-    format_prompt(default_prompt())
+    default_prompt().to_string()
 }
