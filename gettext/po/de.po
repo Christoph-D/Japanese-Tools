@@ -3,7 +3,6 @@
 # This file is distributed under the same license as the PACKAGE package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
 #
-#, fuzzy
 msgid ""
 msgstr ""
 "Report-Msgid-Bugs-To: \n"
@@ -13,34 +12,6 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
-
-#: ai/ai.sh
-msgid "!ai is only available in channels."
-msgstr "!ai gibt es nur in Channels."
-
-#: ai/ai.sh
-msgid "No API keys available."
-msgstr "Keine API keys gefunden."
-
-#: ai/ai.sh
-msgid "No models available."
-msgstr "Keine Modelle gefunden."
-
-#: ai/ai.sh
-msgid "Usage: !ai [-model] <query>. Known models: %s %s. Default: %s\\n"
-msgstr "Aufruf: !ai [-Modell] <Anfrage>. Modelle: %s %s. Standardmodell: %s\\n"
-
-#: ai/ai.sh
-msgid "Unknown model. %s\\n"
-msgstr "Unbekanntes Modell. %s\\n"
-
-#: ai/ai.sh
-msgid "API error: %s"
-msgstr "API-Fehler: %s"
-
-#: ai/ai.sh
-msgid "Invalid response: %s"
-msgstr "Ungültige Antwort: %s"
 
 #: audio/find_audio.sh
 msgid "Usage: %s word [reading]"
@@ -363,3 +334,35 @@ msgstr "Fehler: Ungültiger Port."
 #: simple_bot/bot.py
 msgid "Caught KeyboardInterrupt, exiting..."
 msgstr "Ein KeyboardInterrupt ist aufgetreten, Ende..."
+
+#: ../ai/src/model.rs
+msgid "Missing API keys or model configuration"
+msgstr "Fehlende API keys oder Modellkonfiguration"
+
+#: ../ai/src/model.rs
+msgid "Unknown model. Available models: {}"
+msgstr "Unbekanntes Modell. Verfügbare Modelle: {}"
+
+#: ../ai/src/main.rs
+msgid "HTTP client error: {}"
+msgstr "HTTP-Client-Fehler: {}"
+
+#: ../ai/src/main.rs
+msgid "API error: {}"
+msgstr "API-Fehler: {}"
+
+#: ../ai/src/main.rs
+msgid "Failed to read response: {}"
+msgstr "Konnte Antwort nicht lesen: {}"
+
+#: ../ai/src/main.rs
+msgid "Invalid response: {}"
+msgstr "Ungültige Antwort: {}"
+
+#: ../ai/src/main.rs
+msgid "Usage: !ai [-model] <query>. Known models: {}. Default: {}"
+msgstr "Aufruf: !ai [-Modell] <Anfrage>. Modelle: {}. Standardmodell: {}"
+
+#: ../ai/src/main.rs
+msgid "!ai is only available in channels."
+msgstr "!ai gibt es nur in Channels."

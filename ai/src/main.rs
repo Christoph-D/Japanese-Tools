@@ -1,17 +1,20 @@
 mod constants;
+mod gettext;
 mod model;
 mod prompt;
 
 use crate::constants::MAX_LINE_LENGTH;
 use crate::model::{Config, Model, ModelList};
 use crate::prompt::select_system_prompt;
+
+use gettextrs::{TextDomain, gettext};
 use std::io::Read;
 use std::path::Path;
 
 fn call_api(model: &Model, system_prompt: &str, user_query: &str) -> Result<String, String> {
     let client = match reqwest::blocking::Client::builder().build() {
         Ok(c) => c,
-        Err(e) => return Err(format!("HTTP client error: {}", e)),
+        Err(e) => return Err(formatget!("HTTP client error: {}", e)),
     };
 
     let payload = serde_json::json!({
@@ -32,17 +35,17 @@ fn call_api(model: &Model, system_prompt: &str, user_query: &str) -> Result<Stri
 
     let mut resp = match response {
         Ok(r) => r,
-        Err(e) => return Err(format!("API error: {}", e)),
+        Err(e) => return Err(formatget!("API error: {}", e)),
     };
 
     let mut body = String::new();
     if let Err(e) = resp.read_to_string(&mut body) {
-        return Err(format!("Failed to read response: {}", e));
+        return Err(formatget!("Failed to read response: {}", e));
     }
 
     let json: serde_json::Value = match serde_json::from_str(&body) {
         Ok(j) => j,
-        Err(e) => return Err(format!("Invalid response: {}", e)),
+        Err(e) => return Err(formatget!("Invalid response: {}", e)),
     };
 
     let content = json["choices"]
@@ -52,7 +55,7 @@ fn call_api(model: &Model, system_prompt: &str, user_query: &str) -> Result<Stri
 
     match content {
         Some(text) => Ok(text),
-        None => Err(format!("Invalid response: {}", body)),
+        None => Err(formatget!("Invalid response: {}", body)),
     }
 }
 
@@ -68,10 +71,13 @@ fn sanitize_output(s: &str, api_key: &str) -> String {
 
 fn usage(models: &ModelList) {
     println!(
-        "Usage: !ai [-model] <query>. Known models: {}. Default: {}",
-        models.list_models(),
-        models.default_model_name()
-    )
+        "{}",
+        formatget!(
+            "Usage: !ai [-model] <query>. Known models: {}. Default: {}",
+            models.list_models(),
+            models.default_model_name()
+        )
+    );
 }
 
 fn load_env(path: &Option<&Path>) {
@@ -80,7 +86,33 @@ fn load_env(path: &Option<&Path>) {
     }
 }
 
+fn textdomain_dir() -> Option<String> {
+    // start in the executable directory, walk up to find the "gettext" directory
+    let mut dir = std::env::current_exe()
+        .ok()
+        .and_then(|p| p.parent().map(|d| d.to_path_buf()))
+        .unwrap_or_else(|| std::env::current_dir().unwrap());
+    loop {
+        let gettext_dir = dir.join("gettext");
+        if gettext_dir.is_dir() {
+            return Some(gettext_dir.to_string_lossy().into_owned());
+        }
+        if !dir.pop() {
+            break;
+        }
+    }
+    None
+}
+
 fn main() {
+    if let Some(dir) = textdomain_dir() {
+        // Ignore errors and use untranslated strings if it fails.
+        let _ = TextDomain::new("japanese_tools")
+            .skip_system_data_paths()
+            .push(&dir)
+            .init();
+    }
+
     let exe_path = std::env::current_exe().ok();
     let exe_parent_dir = exe_path.as_ref().and_then(|p| p.parent());
     load_env(&exe_parent_dir);
@@ -89,13 +121,13 @@ fn main() {
     let receiver = std::env::var("DMB_RECEIVER").unwrap_or_default();
     // Prevent usage in private messages
     if std::env::var("IRC_PLUGIN").ok().as_deref() == Some("1") && !receiver.starts_with('#') {
-        println!("!ai is only available in channels.");
+        println!("{}", gettext("!ai is only available in channels."));
         std::process::exit(1);
     }
 
     let cfg = Config::from_env();
     let models = ModelList::new(&cfg).unwrap_or_else(|err| {
-        println!("Error loading models: {}", err);
+        println!("{}", err);
         std::process::exit(1);
     });
 

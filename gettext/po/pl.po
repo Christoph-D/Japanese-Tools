@@ -190,7 +190,7 @@ msgstr "Nie znaleziono kanji"
 
 #: kumitate_quiz/kuiz.sh
 msgid "Please choose [1-4]: %s (1: %s 2: %s 3: %s 4: %s)."
-msgstr ""
+msgstr "Proszę wybrać [1-4]: %s (1: %s 2: %s 3: %s 4: %s)."
 
 #: kumitate_quiz/kuiz.sh reading_quiz/quiz.sh
 msgid "Unknown user: %s"
@@ -334,3 +334,35 @@ msgstr "Błąd: Nieprawidłowy port."
 #: simple_bot/bot.py
 msgid "Caught KeyboardInterrupt, exiting..."
 msgstr "Przechwycono KeyboardInterrupt, wyłączanie..."
+
+#: ../ai/src/model.rs
+msgid "Missing API keys or model configuration"
+msgstr "Brak kluczy API lub konfiguracji modelu"
+
+#: ../ai/src/model.rs
+msgid "Unknown model. Available models: {}"
+msgstr "Nieznany model. Dostępne modele: {}"
+
+#: ../ai/src/main.rs
+msgid "HTTP client error: {}"
+msgstr "Błąd klienta HTTP: {}"
+
+#: ../ai/src/main.rs
+msgid "API error: {}"
+msgstr "Błąd API: {}"
+
+#: ../ai/src/main.rs
+msgid "Failed to read response: {}"
+msgstr "Nie udało się odczytać odpowiedzi: {}"
+
+#: ../ai/src/main.rs
+msgid "Invalid response: {}"
+msgstr "Nieprawidłowa odpowiedź: {}"
+
+#: ../ai/src/main.rs
+msgid "Usage: !ai [-model] <query>. Known models: {}. Default: {}"
+msgstr "Sposób użycia: !ai [-model] <zapytanie>. Znane modele: {}. Domyślny: {}"
+
+#: ../ai/src/main.rs
+msgid "!ai is only available in channels."
+msgstr "!ai jest dostępne tylko na kanałach."

@@ -15,34 +15,6 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=INTEGER; plural=EXPRESSION;\n"
 
-#: ai/ai.sh
-msgid "!ai is only available in channels."
-msgstr ""
-
-#: ai/ai.sh
-msgid "No API keys available."
-msgstr ""
-
-#: ai/ai.sh
-msgid "No models available."
-msgstr ""
-
-#: ai/ai.sh
-msgid "Usage: !ai [-model] <query>. Known models: %s %s. Default: %s\\n"
-msgstr ""
-
-#: ai/ai.sh
-msgid "Unknown model. %s\\n"
-msgstr ""
-
-#: ai/ai.sh
-msgid "API error: %s"
-msgstr ""
-
-#: ai/ai.sh
-msgid "Invalid response: %s"
-msgstr ""
-
 #: audio/find_audio.sh
 msgid "Usage: %s word [reading]"
 msgstr ""
@@ -353,4 +325,36 @@ msgstr ""
 
 #: simple_bot/bot.py
 msgid "Caught KeyboardInterrupt, exiting..."
+msgstr ""
+
+#: ../ai/src/model.rs
+msgid "Missing API keys or model configuration"
+msgstr ""
+
+#: ../ai/src/model.rs
+msgid "Unknown model. Available models: {}"
+msgstr ""
+
+#: ../ai/src/main.rs
+msgid "HTTP client error: {}"
+msgstr ""
+
+#: ../ai/src/main.rs
+msgid "API error: {}"
+msgstr ""
+
+#: ../ai/src/main.rs
+msgid "Failed to read response: {}"
+msgstr ""
+
+#: ../ai/src/main.rs ../ai/src/main.rs
+msgid "Invalid response: {}"
+msgstr ""
+
+#: ../ai/src/main.rs
+msgid "Usage: !ai [-model] <query>. Known models: {}. Default: {}"
+msgstr ""
+
+#: ../ai/src/main.rs
+msgid "!ai is only available in channels."
 msgstr ""

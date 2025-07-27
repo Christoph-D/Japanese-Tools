@@ -7,6 +7,7 @@ find . \
      -path "./$THIS_DIR" -prune \
      -or -path "./.git" -prune \
      -or -path "./venv" -prune \
+     -or -path "./ai" -prune \
      -or \( -type f -executable \
      -exec xgettext -d japanese_tools -p "./$THIS_DIR" --from-code=UTF-8 \
      --keyword=_ --keyword=echo_ \
@@ -18,6 +19,9 @@ cd "$THIS_DIR"
 POT_FILE=japanese_tools.pot
 
 mv japanese_tools.po "$POT_FILE"
+xtr ../ai/src/main.rs --keywords formatget --keywords gettext --omit-header -o ai.po
+cat ai.po >> "${POT_FILE}"
+rm ai.po
 
 sed -i '1,+15s/charset=CHARSET\\n"$/charset=UTF-8\\n"/' "$POT_FILE"
 sed -i '1,+15s/^"POT-Creation-Date: .*\\n"$//;T;d' "$POT_FILE"

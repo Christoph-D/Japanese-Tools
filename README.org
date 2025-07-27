@@ -22,6 +22,7 @@ are a few dependencies not present on a default Ubuntu system.  You
 can install them with
 #+BEGIN_EXAMPLE
 $ sudo apt install mecab-jumandic-utf8 mecab kakasi xmlstarlet xsltproc python-irclib sqlite3 bc liburi-perl tesseract-ocr imagemagick
+$ cargo install xtr  # development dependency
 #+END_EXAMPLE
 * ai/
   Query an LLM. To set it up, go into the =ai= directory and run the following commands:

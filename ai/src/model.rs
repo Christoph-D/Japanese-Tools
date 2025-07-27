@@ -1,3 +1,7 @@
+use gettextrs::gettext;
+
+use crate::formatget;
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Config {
     deepseek_models: Option<String>,
@@ -34,7 +38,7 @@ impl Config {
 }
 
 impl ModelList {
-    pub fn new(cfg: &Config) -> Result<Self, &'static str> {
+    pub fn new(cfg: &Config) -> Result<Self, String> {
         let mut models = Vec::new();
         if let (Some(models_var), Some(api_key_var)) = (&cfg.deepseek_models, &cfg.deepseek_api_key)
         {
@@ -54,7 +58,7 @@ impl ModelList {
             ));
         }
         if models.is_empty() {
-            return Err("No models available");
+            return Err(gettext("Missing API keys or model configuration"));
         }
         Ok(ModelList {
             models,
@@ -87,7 +91,7 @@ impl ModelList {
             .models
             .iter()
             .find(|model| model.name == first_word)
-            .ok_or_else(|| format!("Unknown model. Available models: {}", self.list_models()))?;
+            .ok_or_else(|| formatget!("Unknown model. Available models: {}", self.list_models()))?;
         Ok((rest_query, model_result))
     }
 
@@ -149,7 +153,10 @@ mod tests {
         };
         let result = ModelList::new(&cfg);
         assert!(result.is_err());
-        assert_eq!(result.unwrap_err(), "No models available");
+        assert_eq!(
+            result.unwrap_err(),
+            "Missing API keys or model configuration"
+        );
     }
 
     #[test]
