@@ -26,7 +26,7 @@ $ sudo apt install mecab-jumandic-utf8 mecab kakasi xmlstarlet xsltproc python-i
 * ai/
   Query an LLM. To set it up, go into the =ai= directory and run the following commands:
 #+BEGIN_SRC bash
-cargo build && cp target/release/ai .
+cargo build --release && cp target/release/ai .
 cp api-keys.example api-keys
 # Edit api-keys and add your keys
 #+END_SRC
