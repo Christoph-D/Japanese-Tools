@@ -339,10 +339,6 @@ msgstr "Ein KeyboardInterrupt ist aufgetreten, Ende..."
 msgid "Missing API keys or model configuration"
 msgstr "Fehlende API keys oder Modellkonfiguration"
 
-#: ../ai/src/model.rs
-msgid "Unknown model. Available models: {}"
-msgstr "Unbekanntes Modell. Verfügbare Modelle: {}"
-
 #: ../ai/src/main.rs
 msgid "HTTP client error: {}"
 msgstr "HTTP-Client-Fehler: {}"
@@ -360,9 +356,14 @@ msgid "Invalid response: {}"
 msgstr "Ungültige Antwort: {}"
 
 #: ../ai/src/main.rs
-msgid "Usage: !ai [-model] <query>. Known models: {}. Default: {}"
-msgstr "Aufruf: !ai [-Modell] <Anfrage>. Modelle: {}. Standardmodell: {}"
+msgid ""
+"Usage: !ai [-model] [-clear_history] <query>. Known models: {}. Default: {}"
+msgstr "Aufruf: !ai [-Modellname] [-clear_history] <Anfrage>. Modelle: {}. Standardmodell: {}"
 
 #: ../ai/src/main.rs
 msgid "!ai is only available in channels."
 msgstr "!ai gibt es nur in Channels."
+
+#: ../ai/src/main.rs
+msgid "[history cleared] "
+msgstr "[History gelöscht] "

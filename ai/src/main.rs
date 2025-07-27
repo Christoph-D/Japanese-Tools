@@ -1,18 +1,20 @@
 mod constants;
 mod gettext;
+mod memory;
 mod model;
 mod prompt;
 
 use crate::constants::MAX_LINE_LENGTH;
+use crate::memory::{Memory, Sender};
 use crate::model::{Config, Model, ModelList};
-use crate::prompt::select_system_prompt;
+use crate::prompt::{Message, build_prompt};
 
 use gettextrs::{TextDomain, gettext};
 use std::io::Read;
 use std::path::Path;
 use std::time::Duration;
 
-fn call_api(model: &Model, system_prompt: &str, user_query: &str) -> Result<String, String> {
+fn call_api(model: &Model, prompt: &Vec<Message>) -> Result<String, String> {
     let client = match reqwest::blocking::Client::builder()
         .timeout(Duration::from_secs(20))
         .build()
@@ -23,10 +25,7 @@ fn call_api(model: &Model, system_prompt: &str, user_query: &str) -> Result<Stri
 
     let payload = serde_json::json!({
         "model": model.name,
-        "messages": [
-            { "role": "system", "content": system_prompt },
-            { "role": "user", "content": user_query }
-        ],
+        "messages": prompt,
         "max_tokens": 300
     });
 
@@ -77,7 +76,7 @@ fn usage(models: &ModelList) {
     println!(
         "{}",
         formatget!(
-            "Usage: !ai [-model] <query>. Known models: {}. Default: {}",
+            "Usage: !ai [-model] [-clear_history] <query>. Known models: {}. Default: {}",
             models.list_models(),
             models.default_model_name()
         )
@@ -108,6 +107,25 @@ fn textdomain_dir() -> Option<String> {
     None
 }
 
+// Extracts command line flags from the query. Returns the flags and the remaining query.
+// Example: "-foo -bar   rest -of    the   query" -> (["foo", "bar"], "rest -of    the   query")
+fn extract_flags(query: &str) -> (Vec<String>, String) {
+    let mut flags = Vec::new();
+    let mut rest = query;
+    loop {
+        rest = rest.trim_start();
+        let stripped = match rest.strip_prefix('-') {
+            Some(s) => s,
+            None => break,
+        };
+        let flag_end = stripped.find(char::is_whitespace).unwrap_or(stripped.len());
+        let flag = &stripped[..flag_end];
+        flags.push(flag.to_string());
+        rest = &stripped[flag_end..];
+    }
+    (flags, rest.to_string())
+}
+
 fn main() {
     if let Some(dir) = textdomain_dir() {
         // Ignore errors and use untranslated strings if it fails.
@@ -122,6 +140,7 @@ fn main() {
     load_env(&exe_parent_dir);
     load_env(&std::env::current_dir().ok().as_deref());
 
+    let sender = std::env::var("DMB_SENDER").unwrap_or_default();
     let receiver = std::env::var("DMB_RECEIVER").unwrap_or_default();
     // Prevent usage in private messages
     if std::env::var("IRC_PLUGIN").ok().as_deref() == Some("1") && !receiver.starts_with('#') {
@@ -137,8 +156,10 @@ fn main() {
 
     let query = std::env::args().skip(1).collect::<Vec<_>>().join(" ");
 
-    let (query, model) = match models.select_model(&query) {
-        Ok((q, m)) => (q, m),
+    let (flags, query) = extract_flags(&query);
+
+    let model = match models.select_model(&flags) {
+        Ok(m) => m,
         Err(err) => {
             println!("{}", err);
             std::process::exit(1);
@@ -150,14 +171,36 @@ fn main() {
         std::process::exit(0);
     }
 
-    let prompt = select_system_prompt(&receiver);
+    let mut memory = Memory::new_from_disk().unwrap_or_else(|err| {
+        println!("{}", err);
+        std::process::exit(1);
+    });
 
-    let result = match call_api(model, &prompt, &query) {
+    let history_cleared = if flags.iter().any(|f| f == "clear_history") {
+        memory.clear_history(&sender, &receiver);
+        true
+    } else {
+        false
+    };
+    let prompt = build_prompt(&query, &sender, &receiver, &memory);
+    memory.add_to_history(&sender, Sender::User, &receiver, &query);
+
+    let _ = memory.save();
+
+    let result = match call_api(model, &prompt) {
         Ok(res) => sanitize_output(&res, &model.api_key),
         Err(err) => {
             println!("{}", err);
             std::process::exit(1);
         }
+    };
+    memory.add_to_history(&sender, Sender::Assistant, &receiver, &result);
+    let _ = memory.save();
+
+    let result = if history_cleared {
+        gettext("[history cleared] ") + &result
+    } else {
+        result
     };
 
     // Prevent triggering other bots that might be present in the same channel.
@@ -167,4 +210,16 @@ fn main() {
         }
     }
     println!("{}", result);
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_extract_flags() {
+        let (flags, query) = extract_flags("-foo -bar   rest -of    the   query");
+        assert_eq!(flags, vec!["foo", "bar"]);
+        assert_eq!(query, "rest -of    the   query");
+    }
 }

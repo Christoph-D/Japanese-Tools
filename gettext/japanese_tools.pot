@@ -331,10 +331,6 @@ msgstr ""
 msgid "Missing API keys or model configuration"
 msgstr ""
 
-#: ../ai/src/model.rs
-msgid "Unknown model. Available models: {}"
-msgstr ""
-
 #: ../ai/src/main.rs
 msgid "HTTP client error: {}"
 msgstr ""
@@ -352,9 +348,13 @@ msgid "Invalid response: {}"
 msgstr ""
 
 #: ../ai/src/main.rs
-msgid "Usage: !ai [-model] <query>. Known models: {}. Default: {}"
+msgid "Usage: !ai [-model] [-clear_history] <query>. Known models: {}. Default: {}"
 msgstr ""
 
 #: ../ai/src/main.rs
 msgid "!ai is only available in channels."
+msgstr ""
+
+#: ../ai/src/main.rs
+msgid "[history cleared] "
 msgstr ""

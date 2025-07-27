@@ -10,3 +10,6 @@ pub const DEFAULT_SYSTEM_PROMPT: &str = r#"You are a helpful AI in an IRC chatro
 pub const DEFAULT_SYSTEM_PROMPT_DE: &str = r#"Du bist eine hilfreiche KI in einem IRC-Chatraum. Du redest mit erfahrenen Software-Entwicklern.
     Schreib auf Deutsch, außer wenn der User dich um etwas anderes bittet. Antworte mit maximal {MAX_LINE_LENGTH} Zeichen.
     Schreib nur eine einzige Zeile ohne Markdown. Deine Antworten sind für alle Altersstufen geeignet."#;
+
+pub const MEMORY_MAX_MESSAGES: usize = 20;
+pub const MEMORY_RETENTION: time::Duration = time::Duration::hours(1);

@@ -1,7 +1,5 @@
 use gettextrs::gettext;
 
-use crate::formatget;
-
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Config {
     deepseek_models: Option<String>,
@@ -75,24 +73,20 @@ impl ModelList {
     }
 
     // Selects a model based on the query.
-    // If the query starts with '-model', it selects the specified model.
+    // If the flags contains a model name, it selects the last specified model.
     // Otherwise, it returns the default model.
-    // Returns the query without the model prefix and the selected model.
-    pub fn select_model(&self, query: &str) -> Result<(String, &Model), String> {
-        let trimmed = query.trim_start();
-        if !trimmed.starts_with('-') {
-            // No model specified, use default
-            return Ok((query.to_string(), self.default_model()));
+    pub fn select_model(&self, flags: &[String]) -> Result<&Model, String> {
+        // Find the last flag that matches a model name
+        let mut selected: Option<&Model> = None;
+        for f in flags.iter() {
+            if let Some(model) = self.models.iter().find(|m| m.name == *f) {
+                selected = Some(model);
+            }
         }
-        let mut parts = trimmed.splitn(2, ' ');
-        let first_word = parts.next().unwrap_or("").trim_start_matches('-');
-        let rest_query = parts.next().unwrap_or("").trim_start().to_string();
-        let model_result = self
-            .models
-            .iter()
-            .find(|model| model.name == first_word)
-            .ok_or_else(|| formatget!("Unknown model. Available models: {}", self.list_models()))?;
-        Ok((rest_query, model_result))
+        if let Some(model) = selected {
+            return Ok(model);
+        }
+        Ok(self.default_model())
     }
 
     pub fn list_models(&self) -> String {
@@ -202,72 +196,92 @@ mod tests {
     #[test]
     fn test_select_model_with_empty_query() {
         let model_list = setup_model_list();
-        let result = model_list.select_model("");
+        let result = model_list.select_model(&vec![]);
         assert!(result.is_ok());
-        let (query, model) = result.unwrap();
-        assert_eq!(query, "");
+        let model = result.unwrap();
         assert_eq!(model.name, "deepseek-1");
     }
 
     #[test]
     fn test_select_model_default() {
         let model_list = setup_model_list();
-        let result = model_list.select_model("hello world");
+        let result = model_list.select_model(&vec!["deepseek-1".to_string()]);
         assert!(result.is_ok());
-        let (query, model) = result.unwrap();
-        assert_eq!(query, "hello world");
+        let model = result.unwrap();
         assert_eq!(model.name, "deepseek-1");
     }
 
     #[test]
     fn test_select_model_with_model_prefix() {
         let model_list = setup_model_list();
-        let result = model_list.select_model("-openrouter-2 test prompt");
+        let result = model_list.select_model(&vec!["openrouter-2".to_string()]);
         assert!(result.is_ok());
-        let (query, model) = result.unwrap();
-        assert_eq!(query, "test prompt");
+        let model = result.unwrap();
         assert_eq!(model.name, "openrouter-2");
     }
 
     #[test]
     fn test_select_model_with_unknown_model() {
         let model_list = setup_model_list();
-        let result = model_list.select_model("-unknownmodel some query");
-        assert!(result.is_err());
-        let err = result.unwrap_err();
-        assert!(err.contains("Unknown model"));
-        assert!(err.contains("deepseek-1"));
-        assert!(err.contains("openrouter-2"));
+        let result = model_list.select_model(&vec!["unknownmodel".to_string()]);
+        assert!(result.is_ok());
+        let model = result.unwrap();
+        assert_eq!(model.name, "deepseek-1");
     }
 
     #[test]
     fn test_select_model_with_only_model_prefix() {
         let model_list = setup_model_list();
-        let result = model_list.select_model("-openrouter-2");
+        let result = model_list.select_model(&vec!["openrouter-2".to_string()]);
         assert!(result.is_ok());
-        let (query, model) = result.unwrap();
-        assert_eq!(query, "");
+        let model = result.unwrap();
         assert_eq!(model.name, "openrouter-2");
     }
 
     #[test]
     fn test_select_model_with_leading_and_trailing_spaces() {
         let model_list = setup_model_list();
-        let result = model_list.select_model("   -openrouter-2   prompt   ");
+        let result = model_list.select_model(&vec!["openrouter-2".to_string()]);
         assert!(result.is_ok());
-        let (query, model) = result.unwrap();
-        assert_eq!(query, "prompt   ");
+        let model = result.unwrap();
         assert_eq!(model.name, "openrouter-2");
     }
 
     #[test]
     fn test_select_model_with_no_query_after_model() {
         let model_list = setup_model_list();
-        let result = model_list.select_model("   -deepseek-1   ");
+        let result = model_list.select_model(&vec!["deepseek-1".to_string()]);
         assert!(result.is_ok());
-        let (query, model) = result.unwrap();
-        assert_eq!(query, "");
+        let model = result.unwrap();
         assert_eq!(model.name, "deepseek-1");
+    }
+
+    #[test]
+    fn test_select_model_with_flags_containing_empty_and_valid_model_names() {
+        let model_list = setup_model_list();
+        let flags = vec![
+            "".to_string(),
+            "clear_history".to_string(),
+            "openrouter-2".to_string(),
+        ];
+        let result = model_list.select_model(&flags);
+        assert!(result.is_ok());
+        let model = result.unwrap();
+        assert_eq!(model.name, "openrouter-2");
+    }
+
+    #[test]
+    fn test_select_model_with_flags_containing_multiple_model_names() {
+        let model_list = setup_model_list();
+        let flags = vec![
+            "".to_string(),
+            "deepseek-1".to_string(),
+            "openrouter-2".to_string(),
+        ];
+        let result = model_list.select_model(&flags);
+        assert!(result.is_ok());
+        let model = result.unwrap();
+        assert_eq!(model.name, "openrouter-2");
     }
 
     #[test]

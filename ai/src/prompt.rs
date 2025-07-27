@@ -1,5 +1,15 @@
-use crate::constants::{DEFAULT_SYSTEM_PROMPT, DEFAULT_SYSTEM_PROMPT_DE, MAX_LINE_LENGTH};
+use crate::{
+    constants::{DEFAULT_SYSTEM_PROMPT, DEFAULT_SYSTEM_PROMPT_DE, MAX_LINE_LENGTH},
+    memory::Memory,
+};
+use serde::{Deserialize, Serialize};
 use std::path::Path;
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct Message {
+    role: String,
+    content: String,
+}
 
 fn default_prompt() -> &'static str {
     if std::env::var("LANG").unwrap_or_default().starts_with("de") {
@@ -18,13 +28,29 @@ fn load_prompt_file(path: &Path, receiver: &str) -> Option<String> {
     std::fs::read_to_string(prompt_path).ok()
 }
 
-// Loads a per-channel system prompt if one exists.
-// If receiver matches a channel name, tries to load a prompt from channel_prompts/<channel>.
-pub fn select_system_prompt(receiver: &str) -> String {
-    let prompt = per_channel_prompt(receiver);
-    format_prompt(&prompt)
+// Builds the system prompt from an optional per-channel prompt and the user's history.
+pub fn build_prompt(query: &str, sender: &str, receiver: &str, memory: &Memory) -> Vec<Message> {
+    let mut v = vec![Message {
+        role: "system".to_string(),
+        content: format_prompt(&per_channel_prompt(receiver)),
+    }];
+    memory
+        .user_history(sender, receiver)
+        .into_iter()
+        .map(|(role, content)| Message {
+            role: role.to_string(),
+            content,
+        })
+        .for_each(|message| v.push(message));
+    v.push(Message {
+        role: "user".to_string(),
+        content: query.to_string(),
+    });
+    v
 }
 
+// Loads a per-channel system prompt if one exists.
+// If receiver matches a channel name, tries to load a prompt from channel_prompts/<channel>.
 fn per_channel_prompt(receiver: &str) -> String {
     // Only allow channel names starting with '#' and without '.' or '/'
     if !receiver.starts_with('#') || receiver.contains('.') || receiver.contains('/') {
