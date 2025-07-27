@@ -359,12 +359,13 @@ msgstr "Nieprawidłowa odpowiedź: {}"
 msgid ""
 "Usage: !ai [-model] [-clear_history] <query>. Known models: {}. Default: {}"
 msgstr ""
-"Sposób użycia: !ai [-model] [-clear_history] <zapytanie>. Znane modele: {}. Domyślny: {}"
+"Sposób użycia: !ai [-model] [-clear_history] <zapytanie>. Znane modele: {}. "
+"Domyślny: {}"
 
 #: ../ai/src/main.rs
 msgid "!ai is only available in channels."
 msgstr "!ai jest dostępne tylko na kanałach."
 
 #: ../ai/src/main.rs
-msgid "[history cleared] "
-msgstr "[historia wyczyszczona] "
+msgid "[history cleared]"
+msgstr "[historia wyczyszczona]"

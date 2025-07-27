@@ -358,12 +358,14 @@ msgstr "Ungültige Antwort: {}"
 #: ../ai/src/main.rs
 msgid ""
 "Usage: !ai [-model] [-clear_history] <query>. Known models: {}. Default: {}"
-msgstr "Aufruf: !ai [-Modellname] [-clear_history] <Anfrage>. Modelle: {}. Standardmodell: {}"
+msgstr ""
+"Aufruf: !ai [-Modellname] [-clear_history] <Anfrage>. Modelle: {}. "
+"Standardmodell: {}"
 
 #: ../ai/src/main.rs
 msgid "!ai is only available in channels."
 msgstr "!ai gibt es nur in Channels."
 
 #: ../ai/src/main.rs
-msgid "[history cleared] "
-msgstr "[History gelöscht] "
+msgid "[history cleared]"
+msgstr "[History gelöscht]"

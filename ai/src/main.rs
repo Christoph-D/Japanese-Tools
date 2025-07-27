@@ -166,11 +166,6 @@ fn main() {
         }
     };
 
-    if query.trim().is_empty() {
-        usage(&models);
-        std::process::exit(0);
-    }
-
     let mut memory = Memory::new_from_disk().unwrap_or_else(|err| {
         println!("{}", err);
         std::process::exit(1);
@@ -182,6 +177,16 @@ fn main() {
     } else {
         false
     };
+
+    if query.trim().is_empty() {
+        if history_cleared {
+            println!("{}", gettext("[history cleared]"));
+        } else {
+            usage(&models);
+        }
+        std::process::exit(0);
+    }
+
     let prompt = build_prompt(&query, &sender, &receiver, &memory);
     memory.add_to_history(&sender, Sender::User, &receiver, &query);
 
@@ -198,7 +203,7 @@ fn main() {
     let _ = memory.save();
 
     let result = if history_cleared {
-        gettext("[history cleared] ") + &result
+        gettext("[history cleared]") + " " + &result
     } else {
         result
     };
