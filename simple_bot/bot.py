@@ -19,7 +19,7 @@ import traceback
 import locale
 _ = gettext.gettext
 
-scripts = [('ai', '../ai/ai.sh'),
+scripts = [('ai', '../ai/ai'),
            ('cdecl', '../cdecl/c.sh'),
            ('c++decl', '../cdecl/c++.sh'),
            ('rtk', '../rtk/rtk.sh'),

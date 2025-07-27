@@ -2,10 +2,27 @@ version: 2.1
 orbs:
   shellcheck: circleci/shellcheck@3.4.0
 jobs:
-  build:
+  shellcheck:
     docker:
       - image: cimg/base:stable
     steps:
       - checkout
       - shellcheck/install
       - run: shellcheck **/*.sh
+  ai:
+    docker:
+      - image: cimg/rust:1.88.0
+    steps:
+      - checkout
+      - run:
+          command: |
+            cargo clippy
+            cargo test
+            cargo build --release
+          working_directory: ai
+
+workflows:
+  test_all:
+    jobs:
+      - shellcheck
+      - ai

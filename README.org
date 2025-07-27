@@ -24,13 +24,21 @@ can install them with
 $ sudo apt install mecab-jumandic-utf8 mecab kakasi xmlstarlet xsltproc python-irclib sqlite3 bc liburi-perl tesseract-ocr imagemagick
 #+END_EXAMPLE
 * ai/
-  Query an LLM. To set it up, go into the =ai= directory, copy =api-keys.example= to =api-keys= and add your API keys.
+  Query an LLM. To set it up, go into the =ai= directory and run the following commands:
+#+BEGIN_SRC bash
+cargo build && cp target/release/ai .
+cp api-keys.example api-keys
+# Edit api-keys and add your keys
+#+END_SRC
+
+Examples:
+
 #+BEGIN_EXAMPLE
-$ ./ai.sh
-Usage: !ai [-model] <query>. Known models: deepseek-chat google/gemini-2.5-flash openai/gpt-4o-mini openai/gpt-4.1
-$ ./ai.sh "What's 夜空?"
+$ ./ai
+Usage: !ai [-model] <query>. Known models: deepseek-chat google/gemini-2.5-flash openai/gpt-4o-mini openai/gpt-4.1. Default: deepseek-chat
+$ ./ai "What's 夜空?"
 "夜空" means "night sky" in English.
-$ ./ai.sh "-google/gemini-2.5-flash What's 夜空? Also give me a Japanese example sentence."
+$ ./ai "-google/gemini-2.5-flash What's 夜空? Also give me a Japanese example sentence."
 夜空 (yozora) means "night sky," as in "夜空が綺麗ですね" (Yozora ga kirei desu ne), which means "The night sky is beautiful, isn't it?"
 #+END_EXAMPLE
 * audio/
