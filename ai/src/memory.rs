@@ -254,8 +254,8 @@ mod tests {
         connection.execute(create_db, ()).unwrap();
 
         let now = OffsetDateTime::now_utc();
-        let old_time = now - time::Duration::hours(2);
-        let recent_time = now - time::Duration::minutes(10);
+        let old_time = now - (MEMORY_RETENTION + time::Duration::seconds(1));
+        let recent_time = now - (MEMORY_RETENTION - time::Duration::seconds(1));
 
         connection
             .execute(

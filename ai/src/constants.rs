@@ -12,6 +12,7 @@ pub const DEFAULT_SYSTEM_PROMPT_DE: &str = r#"Du bist eine hilfreiche KI in eine
     Schreib nur eine einzige Zeile ohne Markdown. Deine Antworten sind für alle Altersstufen geeignet."#;
 
 // MEMORY_MAX_MESSAGES divided by half is the number of remembered user queries.
-// Each invocation creates two messages, one from the user, one from the assistant.
+// Each invocation creates two messages, a user query and a response from the assistant.
 pub const MEMORY_MAX_MESSAGES: usize = 20;
-pub const MEMORY_RETENTION: time::Duration = time::Duration::hours(1);
+// Memories older than MEMORY_RETENTION will be dropped.
+pub const MEMORY_RETENTION: time::Duration = time::Duration::minutes(10);
