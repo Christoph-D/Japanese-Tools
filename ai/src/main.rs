@@ -10,9 +10,13 @@ use crate::prompt::select_system_prompt;
 use gettextrs::{TextDomain, gettext};
 use std::io::Read;
 use std::path::Path;
+use std::time::Duration;
 
 fn call_api(model: &Model, system_prompt: &str, user_query: &str) -> Result<String, String> {
-    let client = match reqwest::blocking::Client::builder().build() {
+    let client = match reqwest::blocking::Client::builder()
+        .timeout(Duration::from_secs(20))
+        .build()
+    {
         Ok(c) => c,
         Err(e) => return Err(formatget!("HTTP client error: {}", e)),
     };
