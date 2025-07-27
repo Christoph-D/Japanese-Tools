@@ -306,6 +306,9 @@ mod tests {
 
         // The oldest messages should have been dropped, so the first message should be msg5
         assert_eq!(history[0].1, "msg5");
-        assert_eq!(history[MEMORY_MAX_MESSAGES - 1].1, format!("msg{}", MEMORY_MAX_MESSAGES + 4));
+        assert_eq!(
+            history[MEMORY_MAX_MESSAGES - 1].1,
+            format!("msg{}", MEMORY_MAX_MESSAGES + 4)
+        );
     }
 }
