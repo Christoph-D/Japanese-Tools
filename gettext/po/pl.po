@@ -365,7 +365,3 @@ msgstr ""
 #: ../ai/src/main.rs
 msgid "!ai is only available in channels."
 msgstr "!ai jest dostępne tylko na kanałach."
-
-#: ../ai/src/main.rs
-msgid "[history cleared]"
-msgstr "[historia wyczyszczona]"

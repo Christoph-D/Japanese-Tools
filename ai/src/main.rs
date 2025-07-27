@@ -180,7 +180,7 @@ fn main() {
 
     if query.trim().is_empty() {
         if history_cleared {
-            println!("{}", gettext("[history cleared]"));
+            println!("[📜→🔥]");
         } else {
             usage(&models);
         }
@@ -203,7 +203,7 @@ fn main() {
     let _ = memory.save();
 
     let result = if history_cleared {
-        gettext("[history cleared]") + " " + &result
+        "[📜→🔥] ".to_string() + &result
     } else {
         result
     };

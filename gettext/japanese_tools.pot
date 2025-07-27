@@ -354,7 +354,3 @@ msgstr ""
 #: ../ai/src/main.rs
 msgid "!ai is only available in channels."
 msgstr ""
-
-#: ../ai/src/main.rs ../ai/src/main.rs
-msgid "[history cleared]"
-msgstr ""
