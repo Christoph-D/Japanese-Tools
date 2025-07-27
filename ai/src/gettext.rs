@@ -1,3 +1,4 @@
+// Same as formatx! but returns the original string if gettext fails.
 #[macro_export]
 macro_rules! formatget {
     ($fmt:expr $(, $args:expr)* $(,)?) => {{
