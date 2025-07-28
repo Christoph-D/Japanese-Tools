@@ -348,9 +348,19 @@ msgid "Invalid response: {}"
 msgstr ""
 
 #: ../ai/src/main.rs
-msgid "Usage: !ai [-model] [-clear_history] <query>. Known models: {}. Default: {}"
+msgid "Usage: !ai [-model] [-{}|-c] <query>.  Model options: {}.  Default model: {}"
 msgstr ""
 
 #: ../ai/src/main.rs
+msgid "Unknown flag: {}"
+msgid_plural "Unknown flags: {}"
+msgstr[0] ""
+msgstr[1] ""
+
+#: ../ai/src/main.rs
 msgid "!ai is only available in channels."
+msgstr ""
+
+#: ../ai/src/main.rs
+msgid "Internal error: duplicate configured flags detected, check your model config"
 msgstr ""

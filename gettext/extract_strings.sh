@@ -19,7 +19,7 @@ cd "$THIS_DIR"
 POT_FILE=japanese_tools.pot
 
 mv japanese_tools.po "$POT_FILE"
-xtr ../ai/src/main.rs --keywords formatget --keywords gettext --omit-header -o ai.po
+xtr ../ai/src/main.rs --keywords formatget --keywords gettext --keywords ngettext:1,2 --omit-header -o ai.po
 cat ai.po >> "${POT_FILE}"
 rm ai.po
 

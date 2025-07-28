@@ -33,6 +33,7 @@ dependencies = [
  "dotenv",
  "formatx",
  "gettext-rs",
+ "regex",
  "reqwest",
  "rusqlite",
  "serde",

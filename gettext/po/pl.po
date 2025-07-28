@@ -357,11 +357,24 @@ msgstr "Nieprawidłowa odpowiedź: {}"
 
 #: ../ai/src/main.rs
 msgid ""
-"Usage: !ai [-model] [-clear_history] <query>. Known models: {}. Default: {}"
+"Usage: !ai [-model] [-{}|-c] <query>.  Model options: {}.  Default model: {}"
 msgstr ""
-"Sposób użycia: !ai [-model] [-clear_history] <zapytanie>. Znane modele: {}. "
-"Domyślny: {}"
+"Sposób użycia: !ai [-model] [-{}|-c] <zapytanie>.  Znane modele: {}.  Domyślny: {}"
+
+#: ../ai/src/main.rs
+msgid "Unknown flag: {}"
+msgid_plural "Unknown flags: {}"
+msgstr[0] "Nieznana flaga: {}"
+msgstr[1] "Nieznane flagi: {}"
+msgstr[2] "Nieznane flagi: {}"
 
 #: ../ai/src/main.rs
 msgid "!ai is only available in channels."
 msgstr "!ai jest dostępne tylko na kanałach."
+
+#: ../ai/src/main.rs
+msgid ""
+"Internal error: duplicate configured flags detected, check your model config"
+msgstr ""
+"Błąd wewnętrzny: wykryto zduplikowane skonfigurowane flagi, sprawdź "
+"konfigurację modelu"

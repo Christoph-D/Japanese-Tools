@@ -74,18 +74,11 @@ fn sanitize_output(s: &str, api_key: &str) -> String {
 }
 
 fn usage(models: &ModelList) -> String {
-    let default_model = models.default_model_name();
-    let models_str: Vec<String> = models
-        .list_models()
-        .into_iter()
-        .filter(|m| *m != default_model)
-        .map(|m| "-".to_string() + m)
-        .collect();
     formatget!(
-        "Usage: !ai [-model] [-{}|-c] <query>. Model options: {}. Default model: {}",
+        "Usage: !ai [-model] [-{}|-c] <query>.  Model options: {}.  Default model: {}",
         CLEAR_MEMORY_FLAG,
-        models_str.join(" "),
-        default_model
+        models.list_model_flags_human_readable().join(" "),
+        models.default_model_name()
     )
 }
 
@@ -115,7 +108,7 @@ fn textdomain_dir() -> Option<String> {
 
 // Extracts known flags from the query. Returns the flags and the remaining query.
 // Example: ["foo", "bar"], "-foo -bar   rest -of    the   query" -> ["foo", "bar"], "rest -of    the   query"
-fn extract_flags(known_flags: &[&str], query: &str) -> Result<(Vec<String>, String), String> {
+fn extract_flags(known_flags: &[String], query: &str) -> Result<(Vec<String>, String), String> {
     // Extract all -flags from query from the beginning until query no longer starts with - or we hit the end of string. Use string splitting or something, don't iterate over individual characters.
     // Collect all extracted flags which are not in known_flags. If non-empty, return all of them in the error.
     // Otherwise, return the extracted flags and the remaining query.
@@ -188,9 +181,9 @@ fn main() {
     let query = std::env::args().skip(1).collect::<Vec<_>>().join(" ");
 
     let known_flags = {
-        let mut known_flags = models.list_models();
-        known_flags.push(CLEAR_MEMORY_FLAG);
-        known_flags.push("c"); // Short for CLEAR_MEMORY_FLAG
+        let mut known_flags = models.list_model_flags();
+        known_flags.push(CLEAR_MEMORY_FLAG.to_string());
+        known_flags.push("c".to_string()); // Short for CLEAR_MEMORY_FLAG
         known_flags
     };
     if known_flags.len()
@@ -209,7 +202,7 @@ fn main() {
     let (flags, query) = match extract_flags(&known_flags, &query) {
         Ok(res) => res,
         Err(err) => {
-            println!("{}. {}", err, usage(&models));
+            println!("{}.  {}", err, usage(&models));
             std::process::exit(1);
         }
     };
@@ -258,6 +251,16 @@ fn main() {
     memory.add_to_history(&sender, Sender::Assistant, &receiver, &result);
     let _ = memory.save();
 
+    let result = if model.name != models.default_model_name() {
+        format!(
+            "[{}] {}",
+            model.short_name.as_ref().unwrap_or(&model.name),
+            result
+        )
+    } else {
+        result
+    };
+
     let result = if history_cleared {
         "[📜→🔥] ".to_string() + &result
     } else {
@@ -279,8 +282,11 @@ mod tests {
 
     #[test]
     fn test_extract_flags() {
-        let (flags, query) =
-            extract_flags(&vec!["foo", "bar"], "-foo -bar   rest -of    the   query").unwrap();
+        let (flags, query) = extract_flags(
+            &vec!["foo".to_string(), "bar".to_string()],
+            "-foo -bar   rest -of    the   query",
+        )
+        .unwrap();
         assert_eq!(flags, vec!["foo", "bar"]);
         assert_eq!(query, "rest -of    the   query");
     }

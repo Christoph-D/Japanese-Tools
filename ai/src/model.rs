@@ -11,6 +11,7 @@ pub struct Config {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Model {
     pub name: String,
+    pub short_name: Option<String>,
     pub api_key: String,
     pub endpoint: String,
 }
@@ -79,7 +80,11 @@ impl ModelList {
         // Find the last flag that matches a model name
         let mut selected: Option<&Model> = None;
         for f in flags.iter() {
-            if let Some(model) = self.models.iter().find(|m| m.name == *f) {
+            if let Some(model) = self
+                .models
+                .iter()
+                .find(|m| m.name == *f || m.short_name.as_deref() == Some(f))
+            {
                 selected = Some(model);
             }
         }
@@ -89,24 +94,56 @@ impl ModelList {
         Ok(self.default_model())
     }
 
-    pub fn list_models(&self) -> Vec<&str> {
+    pub fn list_model_flags_human_readable(&self) -> Vec<String> {
+        let default_name = &self.default_model().name;
         self.models
             .iter()
-            .map(|m| m.name.as_str())
-            .collect::<Vec<&str>>()
+            .filter(|m| &m.name != default_name)
+            .map(|m| {
+                if let Some(short_name) = &m.short_name {
+                    format!("-{}|-{}", m.name, short_name)
+                } else {
+                    format!("-{}", m.name)
+                }
+            })
+            .collect::<Vec<String>>()
+    }
+
+    pub fn list_model_flags(&self) -> Vec<String> {
+        self.models
+            .iter()
+            .flat_map(|m| [Some(m.name.clone()), m.short_name.clone()])
+            .flatten()
+            .map(|s| s.to_string())
+            .collect::<Vec<String>>()
     }
 }
 
 fn parse_model_config(models_list: &str, api_key: &str, endpoint: &str) -> Vec<Model> {
+    let model_re = regex::Regex::new(r"([^(]*)\(([^)]*)\)").unwrap();
     let models = models_list
         .split(' ')
-        .map(|s| s.trim().to_string())
+        .map(|s| s.trim())
         .filter(|s| !s.is_empty())
+        .map(|s| match model_re.captures(s) {
+            Some(cap) => {
+                if cap.len() == 2 {
+                    (cap[1].to_string(), "".to_string())
+                } else if cap.len() == 3 {
+                    (cap[1].to_string(), cap[2].to_string())
+                } else {
+                    (s.to_string(), "".to_string())
+                }
+            }
+            None => (s.to_string(), "".to_string()),
+        })
+        .map(|(name, short)| (name, if short.is_empty() { None } else { Some(short) }))
         .collect::<Vec<_>>();
     models
         .into_iter()
-        .map(|name| Model {
+        .map(|(name, short_name)| Model {
             name,
+            short_name,
             api_key: api_key.to_string(),
             endpoint: endpoint.to_string(),
         })
@@ -121,11 +158,13 @@ mod tests {
         let models = vec![
             Model {
                 name: "deepseek-1".to_string(),
+                short_name: Some("d".to_string()),
                 api_key: "key1".to_string(),
                 endpoint: DEEPSEEK_API_ENDPOINT.to_string(),
             },
             Model {
                 name: "openrouter-2".to_string(),
+                short_name: Some("o".to_string()),
                 api_key: "key2".to_string(),
                 endpoint: OPENROUTER_API_ENDPOINT.to_string(),
             },
@@ -155,7 +194,7 @@ mod tests {
     #[test]
     fn test_new_parses_deepseek_env_vars() {
         let cfg = Config {
-            deepseek_models: Some("deepseek-1 deepseek-2".to_string()),
+            deepseek_models: Some("deepseek-1(d) deepseek-2(e)".to_string()),
             deepseek_api_key: Some("key1".to_string()),
             openrouter_models: None,
             openrouter_api_key: None,
@@ -165,9 +204,11 @@ mod tests {
         let model_list = result.unwrap();
         assert_eq!(model_list.models.len(), 2);
         assert_eq!(model_list.models[0].name, "deepseek-1");
+        assert_eq!(model_list.models[0].short_name, Some("d".to_string()));
         assert_eq!(model_list.models[0].api_key, "key1");
         assert_eq!(model_list.models[0].endpoint, DEEPSEEK_API_ENDPOINT);
         assert_eq!(model_list.models[1].name, "deepseek-2");
+        assert_eq!(model_list.models[1].short_name, Some("e".to_string()));
         assert_eq!(model_list.models[1].api_key, "key1");
         assert_eq!(model_list.models[1].endpoint, DEEPSEEK_API_ENDPOINT);
     }
@@ -177,7 +218,7 @@ mod tests {
         let cfg = Config {
             deepseek_models: None,
             deepseek_api_key: None,
-            openrouter_models: Some("openrouter-1 openrouter-2".to_string()),
+            openrouter_models: Some("openrouter-1(o) openrouter-2(p)".to_string()),
             openrouter_api_key: Some("key2".to_string()),
         };
         let result = ModelList::new(&cfg);
@@ -185,11 +226,25 @@ mod tests {
         let model_list = result.unwrap();
         assert_eq!(model_list.models.len(), 2);
         assert_eq!(model_list.models[0].name, "openrouter-1");
-        assert_eq!(model_list.models[0].api_key, "key2");
-        assert_eq!(model_list.models[0].endpoint, OPENROUTER_API_ENDPOINT);
+        assert_eq!(model_list.models[0].short_name, Some("o".to_string()));
+    }
+
+    #[test]
+    fn test_new_parses_missing_short_name() {
+        let cfg = Config {
+            deepseek_models: None,
+            deepseek_api_key: None,
+            openrouter_models: Some("openrouter-1(o) openrouter-2".to_string()),
+            openrouter_api_key: Some("key2".to_string()),
+        };
+        let result = ModelList::new(&cfg);
+        assert!(result.is_ok());
+        let model_list = result.unwrap();
+        assert_eq!(model_list.models.len(), 2);
+        assert_eq!(model_list.models[0].name, "openrouter-1");
+        assert_eq!(model_list.models[0].short_name, Some("o".to_string()));
         assert_eq!(model_list.models[1].name, "openrouter-2");
-        assert_eq!(model_list.models[1].api_key, "key2");
-        assert_eq!(model_list.models[1].endpoint, OPENROUTER_API_ENDPOINT);
+        assert_eq!(model_list.models[1].short_name, None);
     }
 
     #[test]
@@ -208,15 +263,7 @@ mod tests {
         assert!(result.is_ok());
         let model = result.unwrap();
         assert_eq!(model.name, "deepseek-1");
-    }
-
-    #[test]
-    fn test_select_model_with_model_prefix() {
-        let model_list = setup_model_list();
-        let result = model_list.select_model(&vec!["openrouter-2".to_string()]);
-        assert!(result.is_ok());
-        let model = result.unwrap();
-        assert_eq!(model.name, "openrouter-2");
+        assert_eq!(model.short_name, Some("d".to_string()));
     }
 
     #[test]
@@ -226,33 +273,27 @@ mod tests {
         assert!(result.is_ok());
         let model = result.unwrap();
         assert_eq!(model.name, "deepseek-1");
+        assert_eq!(model.short_name, Some("d".to_string()));
     }
 
     #[test]
-    fn test_select_model_with_only_model_prefix() {
+    fn test_select_model() {
         let model_list = setup_model_list();
         let result = model_list.select_model(&vec!["openrouter-2".to_string()]);
         assert!(result.is_ok());
         let model = result.unwrap();
         assert_eq!(model.name, "openrouter-2");
+        assert_eq!(model.short_name, Some("o".to_string()));
     }
 
     #[test]
-    fn test_select_model_with_leading_and_trailing_spaces() {
+    fn test_select_model_short_name() {
         let model_list = setup_model_list();
-        let result = model_list.select_model(&vec!["openrouter-2".to_string()]);
+        let result = model_list.select_model(&vec!["o".to_string()]);
         assert!(result.is_ok());
         let model = result.unwrap();
         assert_eq!(model.name, "openrouter-2");
-    }
-
-    #[test]
-    fn test_select_model_with_no_query_after_model() {
-        let model_list = setup_model_list();
-        let result = model_list.select_model(&vec!["deepseek-1".to_string()]);
-        assert!(result.is_ok());
-        let model = result.unwrap();
-        assert_eq!(model.name, "deepseek-1");
+        assert_eq!(model.short_name, Some("o".to_string()));
     }
 
     #[test]
@@ -272,11 +313,7 @@ mod tests {
     #[test]
     fn test_select_model_with_flags_containing_multiple_model_names() {
         let model_list = setup_model_list();
-        let flags = vec![
-            "".to_string(),
-            "deepseek-1".to_string(),
-            "openrouter-2".to_string(),
-        ];
+        let flags = vec!["deepseek-1".to_string(), "openrouter-2".to_string()];
         let result = model_list.select_model(&flags);
         assert!(result.is_ok());
         let model = result.unwrap();
@@ -286,13 +323,26 @@ mod tests {
     #[test]
     fn test_list_models_returns_all_model_names() {
         let model_list = setup_model_list();
-        assert_eq!(model_list.list_models(), vec!["deepseek-1", "openrouter-2"]);
+        assert_eq!(
+            model_list.list_model_flags(),
+            vec!["deepseek-1", "d", "openrouter-2", "o"]
+        );
+    }
+
+    #[test]
+    fn test_list_models_human_readable_excludes_default() {
+        let model_list = setup_model_list();
+        assert_eq!(
+            model_list.list_model_flags_human_readable(),
+            vec!["-openrouter-2|-o"]
+        );
     }
 
     #[test]
     fn test_list_models_with_single_model() {
         let models = vec![Model {
             name: "only-model".to_string(),
+            short_name: Some("o".to_string()),
             api_key: "key".to_string(),
             endpoint: DEEPSEEK_API_ENDPOINT.to_string(),
         }];
@@ -300,7 +350,7 @@ mod tests {
             models,
             default_model_index: 0,
         };
-        assert_eq!(model_list.list_models(), vec!["only-model"]);
+        assert_eq!(model_list.list_model_flags(), vec!["only-model", "o"]);
     }
 
     #[test]
@@ -309,7 +359,7 @@ mod tests {
             models: vec![],
             default_model_index: 0,
         };
-        let models = model_list.list_models();
+        let models = model_list.list_model_flags();
         assert_eq!(models, Vec::<&str>::new());
     }
 }

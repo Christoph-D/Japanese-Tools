@@ -357,11 +357,21 @@ msgstr "Ungültige Antwort: {}"
 
 #: ../ai/src/main.rs
 msgid ""
-"Usage: !ai [-model] [-clear_history] <query>. Known models: {}. Default: {}"
+"Usage: !ai [-model] [-{}|-c] <query>.  Model options: {}.  Default model: {}"
 msgstr ""
-"Aufruf: !ai [-Modellname] [-clear_history] <Anfrage>. Modelle: {}. "
-"Standardmodell: {}"
+"Aufruf: !ai [-Modell] [-{}|-c] <Anfrage>.  Modelle: {}.  Standardmodell: {}"
+
+#: ../ai/src/main.rs
+msgid "Unknown flag: {}"
+msgid_plural "Unknown flags: {}"
+msgstr[0] "Unbekannte Option: {}"
+msgstr[1] "Unbekannte Optionen: {}"
 
 #: ../ai/src/main.rs
 msgid "!ai is only available in channels."
 msgstr "!ai gibt es nur in Channels."
+
+#: ../ai/src/main.rs
+msgid ""
+"Internal error: duplicate configured flags detected, check your model config"
+msgstr "Interner Fehler: Doppelte Option, prüf die Modellkonfiguration"
