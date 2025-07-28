@@ -78,6 +78,8 @@ fn call_api(
 }
 
 fn sanitize_output(s: &str, api_key: &str) -> String {
+    // An HTTPS request error might expose the API key by accident, so we redact it to be safe.
+    // This is irrelevant for successful requests because the LLM doesn't know the API key.
     let redacted = s.replace(api_key, "[REDACTED]");
     let s_no_newlines: String = redacted.chars().filter(|&c| c != '\n').collect();
     if s_no_newlines.len() > MAX_LINE_LENGTH {

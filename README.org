@@ -40,7 +40,18 @@ Usage: !ai [-model] <query>. Known models: deepseek-chat google/gemini-2.5-flash
 $ ./ai "What's 夜空?"
 "夜空" means "night sky" in English.
 $ ./ai "-google/gemini-2.5-flash What's 夜空? Also give me a Japanese example sentence."
-夜空 (yozora) means "night sky," as in "夜空が綺麗ですね" (Yozora ga kirei desu ne), which means "The night sky is beautiful, isn't it?"
+[g] 夜空 (yozora) means "night sky," as in "夜空が綺麗ですね" (Yozora ga kirei desu ne), which means "The night sky is beautiful, isn't it?"
+#+END_EXAMPLE
+
+The following example demonstrates the AI's short-term memory.
+
+#+BEGIN_EXAMPLE
+<Christoph>  !ai What is 夜空?
+<nihongobot> 夜空 means "night sky" in Japanese, referring to the sky as seen after sunset.
+<Christoph>  !ai Do you know any other words like this?
+<nihongobot> Yes! 星空 (hoshi-zora) means "starry sky" and 夕空 (yuu-zora) means "evening sky."
+<Christoph>  !ai Something for morning?
+<nihongobot> 朝空 (asa-zora) means "morning sky" in Japanese.
 #+END_EXAMPLE
 * audio/
   find_audio.sh finds an audio version of a given Japanese
