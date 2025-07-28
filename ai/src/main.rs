@@ -268,7 +268,7 @@ fn main() {
     let result = match call_api(model, &prompt, &temperature) {
         Ok(res) => sanitize_output(&res, &model.api_key),
         Err(err) => {
-            println!("{}", err);
+            println!("{}", sanitize_output(&err.to_string(), &model.api_key));
             std::process::exit(1);
         }
     };
