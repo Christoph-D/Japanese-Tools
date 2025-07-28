@@ -9,7 +9,8 @@ use crate::memory::{Memory, Sender};
 use crate::model::{Config, Model, ModelList};
 use crate::prompt::{Message, build_prompt};
 
-use gettextrs::{TextDomain, gettext};
+use formatx::formatx;
+use gettextrs::{TextDomain, gettext, ngettext};
 use std::io::Read;
 use std::path::Path;
 use std::time::Duration;
@@ -72,16 +73,20 @@ fn sanitize_output(s: &str, api_key: &str) -> String {
     }
 }
 
-fn usage(models: &ModelList) {
-    println!(
-        "{}",
-        formatget!(
-            "Usage: !ai [-model] [-{}] <query>. Known models: {}. Default: {}",
-            CLEAR_MEMORY_FLAG,
-            models.list_models().join(" "),
-            models.default_model_name()
-        )
-    );
+fn usage(models: &ModelList) -> String {
+    let default_model = models.default_model_name();
+    let models_str: Vec<String> = models
+        .list_models()
+        .into_iter()
+        .filter(|m| *m != default_model)
+        .map(|m| "-".to_string() + m)
+        .collect();
+    formatget!(
+        "Usage: !ai [-model] [-{}|-c] <query>. Model options: {}. Default model: {}",
+        CLEAR_MEMORY_FLAG,
+        models_str.join(" "),
+        default_model
+    )
 }
 
 fn load_env(path: &Option<&Path>) {
@@ -108,23 +113,48 @@ fn textdomain_dir() -> Option<String> {
     None
 }
 
-// Extracts command line flags from the query. Returns the flags and the remaining query.
-// Example: "-foo -bar   rest -of    the   query" -> (["foo", "bar"], "rest -of    the   query")
-fn extract_flags(query: &str) -> (Vec<String>, String) {
+// Extracts known flags from the query. Returns the flags and the remaining query.
+// Example: ["foo", "bar"], "-foo -bar   rest -of    the   query" -> ["foo", "bar"], "rest -of    the   query"
+fn extract_flags(known_flags: &[&str], query: &str) -> Result<(Vec<String>, String), String> {
+    // Extract all -flags from query from the beginning until query no longer starts with - or we hit the end of string. Use string splitting or something, don't iterate over individual characters.
+    // Collect all extracted flags which are not in known_flags. If non-empty, return all of them in the error.
+    // Otherwise, return the extracted flags and the remaining query.
     let mut flags = Vec::new();
-    let mut rest = query;
-    loop {
-        rest = rest.trim_start();
-        let stripped = match rest.strip_prefix('-') {
-            Some(s) => s,
-            None => break,
-        };
-        let flag_end = stripped.find(char::is_whitespace).unwrap_or(stripped.len());
-        let flag = &stripped[..flag_end];
-        flags.push(flag.to_string());
-        rest = &stripped[flag_end..];
+    let mut unknown_flags = Vec::new();
+    let mut rest = query.trim_start();
+    while let Some(stripped) = rest.strip_prefix('-') {
+        let mut split = stripped.splitn(2, char::is_whitespace);
+        let flag = split.next().unwrap_or("").to_string();
+        rest = split.next().unwrap_or("").trim_start();
+
+        if flag.is_empty() {
+            break;
+        }
+
+        if known_flags.iter().any(|f| f == &flag) {
+            flags.push(flag);
+        } else {
+            unknown_flags.push(flag);
+        }
     }
-    (flags, rest.to_string())
+    if !unknown_flags.is_empty() {
+        let unknown_flags_str = unknown_flags.join(", ");
+        let unknown_flags_str = if unknown_flags_str.len() > 60 {
+            unknown_flags_str[0..60].to_string() + "..."
+        } else {
+            unknown_flags_str
+        };
+        return Err(formatx!(
+            ngettext(
+                "Unknown flag: {}",
+                "Unknown flags: {}",
+                unknown_flags.len() as u32
+            ),
+            &unknown_flags_str
+        )
+        .unwrap_or_else(|_| format!("Unknown flag(s): {}", &unknown_flags_str)));
+    }
+    Ok((flags, rest.to_string()))
 }
 
 fn main() {
@@ -157,7 +187,32 @@ fn main() {
 
     let query = std::env::args().skip(1).collect::<Vec<_>>().join(" ");
 
-    let (flags, query) = extract_flags(&query);
+    let known_flags = {
+        let mut known_flags = models.list_models();
+        known_flags.push(CLEAR_MEMORY_FLAG);
+        known_flags.push("c"); // Short for CLEAR_MEMORY_FLAG
+        known_flags
+    };
+    if known_flags.len()
+        != known_flags
+            .iter()
+            .collect::<std::collections::HashSet<_>>()
+            .len()
+    {
+        println!(
+            "{}",
+            gettext("Internal error: duplicate configured flags detected, check your model config")
+        );
+        std::process::exit(1);
+    }
+
+    let (flags, query) = match extract_flags(&known_flags, &query) {
+        Ok(res) => res,
+        Err(err) => {
+            println!("{}. {}", err, usage(&models));
+            std::process::exit(1);
+        }
+    };
 
     let model = match models.select_model(&flags) {
         Ok(m) => m,
@@ -172,7 +227,7 @@ fn main() {
         std::process::exit(1);
     });
 
-    let history_cleared = if flags.iter().any(|f| f == CLEAR_MEMORY_FLAG) {
+    let history_cleared = if flags.iter().any(|f| f == CLEAR_MEMORY_FLAG || f == "c") {
         memory.clear_history(&sender, &receiver);
         true
     } else {
@@ -183,7 +238,7 @@ fn main() {
         if history_cleared {
             println!("[📜→🔥]");
         } else {
-            usage(&models);
+            println!("{}", usage(&models));
         }
         std::process::exit(0);
     }
@@ -224,7 +279,8 @@ mod tests {
 
     #[test]
     fn test_extract_flags() {
-        let (flags, query) = extract_flags("-foo -bar   rest -of    the   query");
+        let (flags, query) =
+            extract_flags(&vec!["foo", "bar"], "-foo -bar   rest -of    the   query").unwrap();
         assert_eq!(flags, vec!["foo", "bar"]);
         assert_eq!(query, "rest -of    the   query");
     }

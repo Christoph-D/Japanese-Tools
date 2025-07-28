@@ -89,12 +89,11 @@ impl ModelList {
         Ok(self.default_model())
     }
 
-    pub fn list_models(&self) -> String {
+    pub fn list_models(&self) -> Vec<&str> {
         self.models
             .iter()
             .map(|m| m.name.as_str())
             .collect::<Vec<&str>>()
-            .join(" ")
     }
 }
 
@@ -286,8 +285,8 @@ mod tests {
 
     #[test]
     fn test_list_models_returns_all_model_names() {
-        let models_str = setup_model_list().list_models();
-        assert!(models_str.eq("deepseek-1 openrouter-2"));
+        let model_list = setup_model_list();
+        assert_eq!(model_list.list_models(), vec!["deepseek-1", "openrouter-2"]);
     }
 
     #[test]
@@ -301,8 +300,7 @@ mod tests {
             models,
             default_model_index: 0,
         };
-        let models_str = model_list.list_models();
-        assert_eq!(models_str, "only-model");
+        assert_eq!(model_list.list_models(), vec!["only-model"]);
     }
 
     #[test]
@@ -311,7 +309,7 @@ mod tests {
             models: vec![],
             default_model_index: 0,
         };
-        let models_str = model_list.list_models();
-        assert_eq!(models_str, "");
+        let models = model_list.list_models();
+        assert_eq!(models, Vec::<&str>::new());
     }
 }
