@@ -234,7 +234,7 @@ fn main() {
     };
 
     let mut memory = Memory::new_from_disk().unwrap_or_else(|err| {
-        println!("{}", err);
+        println!("{}", sanitize_output(&err.to_string(), &model.api_key));
         std::process::exit(1);
     });
 
