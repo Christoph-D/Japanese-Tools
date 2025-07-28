@@ -4,7 +4,7 @@ mod memory;
 mod model;
 mod prompt;
 
-use crate::constants::MAX_LINE_LENGTH;
+use crate::constants::{CLEAR_MEMORY_FLAG, MAX_LINE_LENGTH};
 use crate::memory::{Memory, Sender};
 use crate::model::{Config, Model, ModelList};
 use crate::prompt::{Message, build_prompt};
@@ -76,8 +76,9 @@ fn usage(models: &ModelList) {
     println!(
         "{}",
         formatget!(
-            "Usage: !ai [-model] [-clear_history] <query>. Known models: {}. Default: {}",
-            models.list_models(),
+            "Usage: !ai [-model] [-{}] <query>. Known models: {}. Default: {}",
+            CLEAR_MEMORY_FLAG,
+            models.list_models().join(" "),
             models.default_model_name()
         )
     );
@@ -171,7 +172,7 @@ fn main() {
         std::process::exit(1);
     });
 
-    let history_cleared = if flags.iter().any(|f| f == "clear_history") {
+    let history_cleared = if flags.iter().any(|f| f == CLEAR_MEMORY_FLAG) {
         memory.clear_history(&sender, &receiver);
         true
     } else {

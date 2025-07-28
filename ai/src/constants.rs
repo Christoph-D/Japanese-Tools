@@ -16,3 +16,5 @@ pub const DEFAULT_SYSTEM_PROMPT_DE: &str = r#"Du bist eine hilfreiche KI in eine
 pub const MEMORY_MAX_MESSAGES: usize = 20;
 // Memories older than MEMORY_RETENTION will be dropped.
 pub const MEMORY_RETENTION: time::Duration = time::Duration::minutes(10);
+
+pub const CLEAR_MEMORY_FLAG: &str = "clear_history";
