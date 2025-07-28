@@ -357,9 +357,10 @@ msgstr "Ungültige Antwort: {}"
 
 #: ../ai/src/main.rs
 msgid ""
-"Usage: !ai [-model] [-{}|-c] <query>.  Model options: {}.  Default model: {}"
+"Usage: !ai [-model] [-{}|-c] [-{}=1.0|-t=1.0] <query>.  Model options: {}.  "
+"Default model: {}"
 msgstr ""
-"Aufruf: !ai [-Modell] [-{}|-c] <Anfrage>.  Modelle: {}.  Standardmodell: {}"
+"Aufruf: !ai [-Modell] [-{}|-c] [-{}=1.0|-t=1.0] <Anfrage>.  Modelle: {}.  Standardmodell: {}"
 
 #: ../ai/src/main.rs
 msgid "Unknown flag: {}"

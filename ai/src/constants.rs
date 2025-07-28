@@ -18,3 +18,5 @@ pub const MEMORY_MAX_MESSAGES: usize = 20;
 pub const MEMORY_RETENTION: time::Duration = time::Duration::minutes(10);
 
 pub const CLEAR_MEMORY_FLAG: &str = "clear_history";
+
+pub const TEMPERATURE_FLAG: &str = "temp";

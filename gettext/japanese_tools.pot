@@ -348,7 +348,7 @@ msgid "Invalid response: {}"
 msgstr ""
 
 #: ../ai/src/main.rs
-msgid "Usage: !ai [-model] [-{}|-c] <query>.  Model options: {}.  Default model: {}"
+msgid "Usage: !ai [-model] [-{}|-c] [-{}=1.0|-t=1.0] <query>.  Model options: {}.  Default model: {}"
 msgstr ""
 
 #: ../ai/src/main.rs
