@@ -1,5 +1,7 @@
 # Leave *_API_KEY empty to disable a provider.
 
+export DEFAULT_MODEL=deepseek-chat
+
 export DEEPSEEK_API_KEY=
 export DEEPSEEK_MODELS='deepseek-chat(d)'
 

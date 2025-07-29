@@ -11,6 +11,7 @@ pub struct Provider {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Config {
     providers: Vec<Provider>,
+    default_model_name: String,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -51,7 +52,10 @@ impl Config {
                 });
             }
         }
-        Config { providers }
+        Config {
+            providers,
+            default_model_name: std::env::var("DEFAULT_MODEL").unwrap_or_default(),
+        }
     }
 }
 
@@ -70,9 +74,13 @@ impl ModelList {
         if models.is_empty() {
             return Err(gettext("Missing API keys or model configuration"));
         }
+        let default_model_index = models
+            .iter()
+            .position(|m| m.name == cfg.default_model_name)
+            .ok_or_else(|| gettext("DEFAULT_MODEL not found"))?;
         Ok(ModelList {
             models,
-            default_model_index: 0,
+            default_model_index,
         })
     }
 
@@ -188,7 +196,10 @@ mod tests {
 
     #[test]
     fn test_new_returns_error_when_no_env_vars() {
-        let cfg = Config { providers: vec![] };
+        let cfg = Config {
+            providers: vec![],
+            default_model_name: "".to_string(),
+        };
         let result = ModelList::new(&cfg);
         assert!(result.is_err());
         assert_eq!(
@@ -206,6 +217,7 @@ mod tests {
                 endpoint: DEEPSEEK_API_ENDPOINT.to_string(),
                 model_string: "deepseek-1(d) deepseek-2(e)".to_string(),
             }],
+            default_model_name: "deepseek-1".to_string(),
         };
         let result = ModelList::new(&cfg);
         assert!(result.is_ok());
@@ -219,6 +231,7 @@ mod tests {
         assert_eq!(model_list.models[1].short_name, Some("e".to_string()));
         assert_eq!(model_list.models[1].api_key, "key1");
         assert_eq!(model_list.models[1].endpoint, DEEPSEEK_API_ENDPOINT);
+        assert_eq!(model_list.default_model_name(), "deepseek-1");
     }
 
     #[test]
@@ -230,6 +243,7 @@ mod tests {
                 endpoint: OPENROUTER_API_ENDPOINT.to_string(),
                 model_string: "openrouter-1(o) openrouter-2(p)".to_string(),
             }],
+            default_model_name: "openrouter-1".to_string(),
         };
         let result = ModelList::new(&cfg);
         assert!(result.is_ok());
@@ -248,6 +262,7 @@ mod tests {
                 endpoint: OPENROUTER_API_ENDPOINT.to_string(),
                 model_string: "openrouter-1(o) openrouter-2".to_string(),
             }],
+            default_model_name: "openrouter-2".to_string(),
         };
         let result = ModelList::new(&cfg);
         assert!(result.is_ok());
@@ -257,6 +272,22 @@ mod tests {
         assert_eq!(model_list.models[0].short_name, Some("o".to_string()));
         assert_eq!(model_list.models[1].name, "openrouter-2");
         assert_eq!(model_list.models[1].short_name, None);
+        assert_eq!(model_list.default_model_name(), "openrouter-2");
+    }
+
+    #[test]
+    fn test_new_unknown_default_model_fails() {
+        let cfg = Config {
+            providers: vec![Provider {
+                name: "OpenRouter".to_string(),
+                api_key: "key2".to_string(),
+                endpoint: OPENROUTER_API_ENDPOINT.to_string(),
+                model_string: "openrouter-1(o) openrouter-2".to_string(),
+            }],
+            default_model_name: "unknown_model".to_string(),
+        };
+        let result = ModelList::new(&cfg);
+        assert!(result.is_err());
     }
 
     #[test]
