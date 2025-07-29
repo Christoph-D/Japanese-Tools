@@ -1,11 +1,16 @@
 use gettextrs::gettext;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Provider {
+    name: String,
+    api_key: String,
+    endpoint: String,
+    model_string: String,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Config {
-    deepseek_models: Option<String>,
-    deepseek_api_key: Option<String>,
-    openrouter_models: Option<String>,
-    openrouter_api_key: Option<String>,
+    providers: Vec<Provider>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -23,38 +28,44 @@ pub struct ModelList {
 }
 
 const DEEPSEEK_API_ENDPOINT: &str = "https://api.deepseek.com/v1/chat/completions";
+const MISTRAL_API_ENDPOINT: &str = "https://api.mistral.ai/v1/chat/completions";
 const OPENROUTER_API_ENDPOINT: &str = "https://openrouter.ai/api/v1/chat/completions";
 
 impl Config {
     pub fn from_env() -> Self {
-        Config {
-            deepseek_models: std::env::var("DEEPSEEK_MODELS").ok(),
-            deepseek_api_key: std::env::var("DEEPSEEK_API_KEY").ok(),
-            openrouter_models: std::env::var("OPENROUTER_MODELS").ok(),
-            openrouter_api_key: std::env::var("OPENROUTER_API_KEY").ok(),
+        let mut providers = Vec::new();
+        let provider_configs = [
+            ("DEEPSEEK", "Deepseek", DEEPSEEK_API_ENDPOINT),
+            ("MISTRAL", "Mistral", MISTRAL_API_ENDPOINT),
+            ("OPENROUTER", "OpenRouter", OPENROUTER_API_ENDPOINT),
+        ];
+        for (env_prefix, name, endpoint) in provider_configs.iter() {
+            if let Ok(api_key) = std::env::var(format!("{}_API_KEY", env_prefix)) {
+                let model_string =
+                    std::env::var(format!("{}_MODELS", env_prefix)).unwrap_or_default();
+                providers.push(Provider {
+                    name: name.to_string(),
+                    api_key,
+                    endpoint: endpoint.to_string(),
+                    model_string,
+                });
+            }
         }
+        Config { providers }
     }
 }
 
 impl ModelList {
     pub fn new(cfg: &Config) -> Result<Self, String> {
         let mut models = Vec::new();
-        if let (Some(models_var), Some(api_key_var)) = (&cfg.deepseek_models, &cfg.deepseek_api_key)
-        {
-            models.extend(parse_model_config(
-                models_var,
-                api_key_var,
-                DEEPSEEK_API_ENDPOINT,
-            ));
-        }
-        if let (Some(models_var), Some(api_key_var)) =
-            (&cfg.openrouter_models, &cfg.openrouter_api_key)
-        {
-            models.extend(parse_model_config(
-                models_var,
-                api_key_var,
-                OPENROUTER_API_ENDPOINT,
-            ));
+        for provider in &cfg.providers {
+            if !provider.model_string.is_empty() {
+                models.extend(parse_model_config(
+                    &provider.model_string,
+                    &provider.api_key,
+                    &provider.endpoint,
+                ));
+            }
         }
         if models.is_empty() {
             return Err(gettext("Missing API keys or model configuration"));
@@ -177,12 +188,7 @@ mod tests {
 
     #[test]
     fn test_new_returns_error_when_no_env_vars() {
-        let cfg = Config {
-            deepseek_models: None,
-            deepseek_api_key: None,
-            openrouter_models: None,
-            openrouter_api_key: None,
-        };
+        let cfg = Config { providers: vec![] };
         let result = ModelList::new(&cfg);
         assert!(result.is_err());
         assert_eq!(
@@ -194,10 +200,12 @@ mod tests {
     #[test]
     fn test_new_parses_deepseek_env_vars() {
         let cfg = Config {
-            deepseek_models: Some("deepseek-1(d) deepseek-2(e)".to_string()),
-            deepseek_api_key: Some("key1".to_string()),
-            openrouter_models: None,
-            openrouter_api_key: None,
+            providers: vec![Provider {
+                name: "Deepseek".to_string(),
+                api_key: "key1".to_string(),
+                endpoint: DEEPSEEK_API_ENDPOINT.to_string(),
+                model_string: "deepseek-1(d) deepseek-2(e)".to_string(),
+            }],
         };
         let result = ModelList::new(&cfg);
         assert!(result.is_ok());
@@ -216,10 +224,12 @@ mod tests {
     #[test]
     fn test_new_parses_openrouter_env_vars() {
         let cfg = Config {
-            deepseek_models: None,
-            deepseek_api_key: None,
-            openrouter_models: Some("openrouter-1(o) openrouter-2(p)".to_string()),
-            openrouter_api_key: Some("key2".to_string()),
+            providers: vec![Provider {
+                name: "OpenRouter".to_string(),
+                api_key: "key2".to_string(),
+                endpoint: OPENROUTER_API_ENDPOINT.to_string(),
+                model_string: "openrouter-1(o) openrouter-2(p)".to_string(),
+            }],
         };
         let result = ModelList::new(&cfg);
         assert!(result.is_ok());
@@ -232,10 +242,12 @@ mod tests {
     #[test]
     fn test_new_parses_missing_short_name() {
         let cfg = Config {
-            deepseek_models: None,
-            deepseek_api_key: None,
-            openrouter_models: Some("openrouter-1(o) openrouter-2".to_string()),
-            openrouter_api_key: Some("key2".to_string()),
+            providers: vec![Provider {
+                name: "OpenRouter".to_string(),
+                api_key: "key2".to_string(),
+                endpoint: OPENROUTER_API_ENDPOINT.to_string(),
+                model_string: "openrouter-1(o) openrouter-2".to_string(),
+            }],
         };
         let result = ModelList::new(&cfg);
         assert!(result.is_ok());
