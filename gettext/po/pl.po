@@ -339,6 +339,10 @@ msgstr "Przechwycono KeyboardInterrupt, wyłączanie..."
 msgid "Missing API keys or model configuration"
 msgstr "Brak kluczy API lub konfiguracji modelu"
 
+#: ../ai/src/model.rs
+msgid "DEFAULT_MODEL not found"
+msgstr "Nie znaleziono DEFAULT_MODEL"
+
 #: ../ai/src/main.rs
 msgid "HTTP client error: {}"
 msgstr "Błąd klienta HTTP: {}"
@@ -360,8 +364,8 @@ msgid ""
 "Usage: !ai [-model] [-{}|-c] [-{}=1.0|-t=1.0] <query>.  Model options: {}.  "
 "Default model: {}"
 msgstr ""
-"Sposób użycia: !ai [-model] [-{}|-c] [-{}=1.0|-t=1.0] <zapytanie>.  Znane modele: {}.  "
-"Domyślny: {}"
+"Sposób użycia: !ai [-model] [-{}|-c] [-{}=1.0|-t=1.0] <zapytanie>.  Znane "
+"modele: {}.  Domyślny: {}"
 
 #: ../ai/src/main.rs
 msgid "Unknown flag: {}"

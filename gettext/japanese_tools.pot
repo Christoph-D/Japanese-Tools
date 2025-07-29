@@ -331,6 +331,10 @@ msgstr ""
 msgid "Missing API keys or model configuration"
 msgstr ""
 
+#: ../ai/src/model.rs
+msgid "DEFAULT_MODEL not found"
+msgstr ""
+
 #: ../ai/src/main.rs
 msgid "HTTP client error: {}"
 msgstr ""

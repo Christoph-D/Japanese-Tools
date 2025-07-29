@@ -339,6 +339,10 @@ msgstr "Ein KeyboardInterrupt ist aufgetreten, Ende..."
 msgid "Missing API keys or model configuration"
 msgstr "Fehlende API keys oder Modellkonfiguration"
 
+#: ../ai/src/model.rs
+msgid "DEFAULT_MODEL not found"
+msgstr "DEFAULT_MODEL nicht gefunden"
+
 #: ../ai/src/main.rs
 msgid "HTTP client error: {}"
 msgstr "HTTP-Client-Fehler: {}"
@@ -360,7 +364,8 @@ msgid ""
 "Usage: !ai [-model] [-{}|-c] [-{}=1.0|-t=1.0] <query>.  Model options: {}.  "
 "Default model: {}"
 msgstr ""
-"Aufruf: !ai [-Modell] [-{}|-c] [-{}=1.0|-t=1.0] <Anfrage>.  Modelle: {}.  Standardmodell: {}"
+"Aufruf: !ai [-Modell] [-{}|-c] [-{}=1.0|-t=1.0] <Anfrage>.  Modelle: {}.  "
+"Standardmodell: {}"
 
 #: ../ai/src/main.rs
 msgid "Unknown flag: {}"
