@@ -109,8 +109,7 @@ fn load(
     // Remove entries from the front so that only up to MEMORY_MAX_MESSAGES remain
     for user_entries in entries.values_mut() {
         if user_entries.len() > MEMORY_MAX_MESSAGES {
-            let excess = user_entries.len() - MEMORY_MAX_MESSAGES;
-            user_entries.drain(0..excess);
+            user_entries.drain(0..user_entries.len() - MEMORY_MAX_MESSAGES);
         }
     }
     Ok(entries)

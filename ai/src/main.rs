@@ -133,23 +133,19 @@ fn extract_flags(known_flags: &[String], query: &str) -> Result<(Vec<String>, St
     let mut unknown_flags = Vec::new();
     let mut rest = query.trim_start();
     while let Some(stripped) = rest.strip_prefix('-') {
-        let mut split = stripped.splitn(2, ' ');
-        let flag_with_value = split.next().unwrap_or("").to_string();
-        rest = split.next().unwrap_or("").trim_start();
-        if flag_with_value.is_empty() {
-            break;
-        }
-        let flag_name = flag_with_value.split('=').next().unwrap_or("");
-        if known_flags.iter().any(|f| f == flag_name) {
-            flags.push(flag_with_value);
+        let (flag_with_value, remaining) = stripped.split_once(' ').unwrap_or((stripped, ""));
+        rest = remaining.trim_start();
+        let flag_name = flag_with_value.split('=').next().unwrap_or(flag_with_value);
+        if known_flags.contains(&flag_name.to_string()) {
+            flags.push(flag_with_value.to_string());
         } else {
-            unknown_flags.push(flag_with_value);
+            unknown_flags.push(flag_with_value.to_string());
         }
     }
     if !unknown_flags.is_empty() {
         let unknown_flags_str = unknown_flags.join(", ");
         let unknown_flags_str = if unknown_flags_str.len() > 60 {
-            unknown_flags_str[0..60].to_string() + "..."
+            unknown_flags_str[..60].to_string() + "..."
         } else {
             unknown_flags_str
         };
@@ -166,42 +162,13 @@ fn extract_flags(known_flags: &[String], query: &str) -> Result<(Vec<String>, St
     Ok((flags, rest.to_string()))
 }
 
-fn main() {
-    if let Some(dir) = textdomain_dir() {
-        // Ignore errors and use untranslated strings if it fails.
-        let _ = TextDomain::new("japanese_tools")
-            .skip_system_data_paths()
-            .push(&dir)
-            .init();
-    }
-
-    let exe_path = std::env::current_exe().ok();
-    let exe_parent_dir = exe_path.as_ref().and_then(|p| p.parent());
-    load_env(&exe_parent_dir);
-    load_env(&std::env::current_dir().ok().as_deref());
-
-    let sender = std::env::var("DMB_SENDER").unwrap_or_default();
-    let receiver = std::env::var("DMB_RECEIVER").unwrap_or_default();
-    // Prevent usage in private messages
-    if std::env::var("IRC_PLUGIN").ok().as_deref() == Some("1") && !receiver.starts_with('#') {
-        println!("{}", gettext("!ai is only available in channels."));
-        std::process::exit(1);
-    }
-
-    let cfg = Config::from_env();
-    let models = ModelList::new(&cfg).unwrap_or_else(|err| {
-        println!("{}", err);
-        std::process::exit(1);
-    });
-
-    let query = std::env::args().skip(1).collect::<Vec<_>>().join(" ");
-
+fn parse_command_line(query: &str, models: &ModelList) -> (Vec<String>, String) {
     let known_flags = {
         let mut known_flags = models.list_model_flags();
         known_flags.push(CLEAR_MEMORY_FLAG.to_string());
         known_flags.push("c".to_string()); // Short for CLEAR_MEMORY_FLAG
-        known_flags.push("temperature".to_string());
-        known_flags.push("t".to_string()); // Short for temperature
+        known_flags.push(TEMPERATURE_FLAG.to_string());
+        known_flags.push("t".to_string()); // Short for TEMPERATURE_FLAG
         known_flags
     };
     if known_flags.len()
@@ -216,14 +183,47 @@ fn main() {
         );
         std::process::exit(1);
     }
-
-    let (flags, query) = match extract_flags(&known_flags, &query) {
+    match extract_flags(&known_flags, query) {
         Ok(res) => res,
         Err(err) => {
-            println!("{}.  {}", err, usage(&models));
+            println!("{}.  {}", err, usage(models));
             std::process::exit(1);
         }
-    };
+    }
+}
+
+fn main() {
+    if let Some(dir) = textdomain_dir() {
+        // Ignore errors and use untranslated strings if it fails.
+        let _ = TextDomain::new("japanese_tools")
+            .skip_system_data_paths()
+            .push(&dir)
+            .init();
+    }
+    {
+        let exe_path = std::env::current_exe().ok();
+        let exe_parent_dir = exe_path.as_ref().and_then(|p| p.parent());
+        load_env(&exe_parent_dir);
+        load_env(&std::env::current_dir().ok().as_deref());
+    }
+
+    let sender = std::env::var("DMB_SENDER").unwrap_or_default();
+    let receiver = std::env::var("DMB_RECEIVER").unwrap_or_default();
+    // Prevent usage in private messages
+    if std::env::var("IRC_PLUGIN").ok().as_deref() == Some("1") && !receiver.starts_with('#') {
+        println!("{}", gettext("!ai is only available in channels."));
+        std::process::exit(1);
+    }
+
+    let models = ModelList::new(&Config::from_env()).unwrap_or_else(|err| {
+        println!("{}", err);
+        std::process::exit(1);
+    });
+
+    let (flags, query) = parse_command_line(
+        &std::env::args().skip(1).collect::<Vec<_>>().join(" "),
+        &models,
+    );
 
     let model = match models.select_model(&flags) {
         Ok(m) => m,
@@ -238,12 +238,11 @@ fn main() {
         std::process::exit(1);
     });
 
-    let history_cleared = if flags.iter().any(|f| f == CLEAR_MEMORY_FLAG || f == "c") {
+    let history_cleared =
+        flags.contains(&CLEAR_MEMORY_FLAG.to_string()) || flags.contains(&"c".to_string());
+    if history_cleared {
         memory.clear_history(&sender, &receiver);
-        true
-    } else {
-        false
-    };
+    }
 
     if query.trim().is_empty() {
         if history_cleared {
