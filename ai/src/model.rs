@@ -434,7 +434,7 @@ mod tests {
         let model_list = setup_model_list();
         assert_eq!(
             model_list.list_model_flags_human_readable(),
-            vec!["OpenRouter: -o"]
+            vec!["[o]OpenRouter"]
         );
     }
 
