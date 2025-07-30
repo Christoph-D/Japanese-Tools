@@ -343,6 +343,10 @@ msgstr "Fehlende API keys oder Modellkonfiguration"
 msgid "DEFAULT_MODEL not found"
 msgstr "DEFAULT_MODEL nicht gefunden"
 
+#: ../ai/src/model.rs
+msgid "Invalid model syntax: {}"
+msgstr "Ungültige Modellkonfiguration: {}"
+
 #: ../ai/src/main.rs
 msgid "HTTP client error: {}"
 msgstr "HTTP-Client-Fehler: {}"
@@ -361,10 +365,9 @@ msgstr "Ungültige Antwort: {}"
 
 #: ../ai/src/main.rs
 msgid ""
-"Usage: !ai [-model] [-{}|-c] [-{}=1.0|-t=1.0] <query>.  Model options: {}.  "
-"Default model: {}"
+"Usage: !ai [{}] [-{}|-c] [-{}=1.0|-t=1.0] <query>.  Models: {}.  Default: {}"
 msgstr ""
-"Aufruf: !ai [-Modell] [-{}|-c] [-{}=1.0|-t=1.0] <Anfrage>.  Modelle: {}.  "
+"Aufruf: !ai [{}] [-{}|-c] [-{}=1.0|-t=1.0] <Anfrage>.  Modelle: {}.  "
 "Standardmodell: {}"
 
 #: ../ai/src/main.rs
@@ -374,10 +377,10 @@ msgstr[0] "Unbekannte Option: {}"
 msgstr[1] "Unbekannte Optionen: {}"
 
 #: ../ai/src/main.rs
-msgid "!ai is only available in channels."
-msgstr "!ai gibt es nur in Channels."
-
-#: ../ai/src/main.rs
 msgid ""
 "Internal error: duplicate configured flags detected, check your model config"
 msgstr "Interner Fehler: Doppelte Option, prüf die Modellkonfiguration"
+
+#: ../ai/src/main.rs
+msgid "!ai is only available in channels."
+msgstr "!ai gibt es nur in Channels."

@@ -343,6 +343,10 @@ msgstr "Brak kluczy API lub konfiguracji modelu"
 msgid "DEFAULT_MODEL not found"
 msgstr "Nie znaleziono DEFAULT_MODEL"
 
+#: ../ai/src/model.rs
+msgid "Invalid model syntax: {}"
+msgstr "Nieprawidłowa składnia modelu: {}"
+
 #: ../ai/src/main.rs
 msgid "HTTP client error: {}"
 msgstr "Błąd klienta HTTP: {}"
@@ -361,10 +365,9 @@ msgstr "Nieprawidłowa odpowiedź: {}"
 
 #: ../ai/src/main.rs
 msgid ""
-"Usage: !ai [-model] [-{}|-c] [-{}=1.0|-t=1.0] <query>.  Model options: {}.  "
-"Default model: {}"
+"Usage: !ai [{}] [-{}|-c] [-{}=1.0|-t=1.0] <query>.  Models: {}.  Default: {}"
 msgstr ""
-"Sposób użycia: !ai [-model] [-{}|-c] [-{}=1.0|-t=1.0] <zapytanie>.  Znane "
+"Sposób użycia: !ai [{}] [-{}|-c] [-{}=1.0|-t=1.0] <zapytanie>.  Znane "
 "modele: {}.  Domyślny: {}"
 
 #: ../ai/src/main.rs
@@ -375,12 +378,12 @@ msgstr[1] "Nieznane flagi: {}"
 msgstr[2] "Nieznane flagi: {}"
 
 #: ../ai/src/main.rs
-msgid "!ai is only available in channels."
-msgstr "!ai jest dostępne tylko na kanałach."
-
-#: ../ai/src/main.rs
 msgid ""
 "Internal error: duplicate configured flags detected, check your model config"
 msgstr ""
 "Błąd wewnętrzny: wykryto zduplikowane skonfigurowane flagi, sprawdź "
 "konfigurację modelu"
+
+#: ../ai/src/main.rs
+msgid "!ai is only available in channels."
+msgstr "!ai jest dostępne tylko na kanałach."

@@ -1,4 +1,14 @@
 use gettextrs::gettext;
+use nom::{
+    IResult, Parser,
+    bytes::complete::{tag, take_while1},
+    character::complete::multispace1,
+    combinator::{all_consuming, map},
+    multi::separated_list0,
+    sequence::delimited,
+};
+
+use crate::formatget;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Provider {
@@ -11,13 +21,14 @@ pub struct Provider {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Config {
     providers: Vec<Provider>,
-    default_model_name: String,
+    default_model_id: String,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Model {
+    pub id: String,
+    pub short_name: String,
     pub name: String,
-    pub short_name: Option<String>,
     pub api_key: String,
     pub endpoint: String,
 }
@@ -54,7 +65,7 @@ impl Config {
         }
         Config {
             providers,
-            default_model_name: std::env::var("DEFAULT_MODEL").unwrap_or_default(),
+            default_model_id: std::env::var("DEFAULT_MODEL").unwrap_or_default(),
         }
     }
 }
@@ -68,7 +79,7 @@ impl ModelList {
                     &provider.model_string,
                     &provider.api_key,
                     &provider.endpoint,
-                ));
+                )?);
             }
         }
         if models.is_empty() {
@@ -76,7 +87,7 @@ impl ModelList {
         }
         let default_model_index = models
             .iter()
-            .position(|m| m.name == cfg.default_model_name)
+            .position(|m| m.id == cfg.default_model_id)
             .ok_or_else(|| gettext("DEFAULT_MODEL not found"))?;
         Ok(ModelList {
             models,
@@ -99,11 +110,7 @@ impl ModelList {
         // Find the last flag that matches a model name
         let mut selected: Option<&Model> = None;
         for f in flags.iter() {
-            if let Some(model) = self
-                .models
-                .iter()
-                .find(|m| m.name == *f || m.short_name.as_deref() == Some(f))
-            {
+            if let Some(model) = self.models.iter().find(|m| m.short_name == *f) {
                 selected = Some(model);
             }
         }
@@ -114,59 +121,137 @@ impl ModelList {
     }
 
     pub fn list_model_flags_human_readable(&self) -> Vec<String> {
-        let default_name = &self.default_model().name;
+        let d = &self.default_model().id;
         self.models
             .iter()
-            .filter(|m| &m.name != default_name)
-            .map(|m| {
-                if let Some(short_name) = &m.short_name {
-                    format!("-{}|-{}", m.name, short_name)
-                } else {
-                    format!("-{}", m.name)
-                }
-            })
+            .filter(|m| &m.id != d)
+            .map(|m| format!("[{}]{}", m.short_name, m.name))
+            .collect::<Vec<String>>()
+    }
+
+    pub fn list_model_flags_without_default(&self) -> Vec<String> {
+        let d = &self.default_model().id;
+        self.models
+            .iter()
+            .filter(|m| &m.id != d)
+            .map(|m| m.short_name.clone())
             .collect::<Vec<String>>()
     }
 
     pub fn list_model_flags(&self) -> Vec<String> {
         self.models
             .iter()
-            .flat_map(|m| [Some(m.name.clone()), m.short_name.clone()])
-            .flatten()
-            .map(|s| s.to_string())
+            .map(|m| m.short_name.clone())
             .collect::<Vec<String>>()
     }
 }
 
-fn parse_model_config(models_list: &str, api_key: &str, endpoint: &str) -> Vec<Model> {
-    let model_re = regex::Regex::new(r"([^(]*)\(([^)]*)\)").unwrap();
-    let models = models_list
-        .split(' ')
-        .map(|s| s.trim())
-        .filter(|s| !s.is_empty())
-        .map(|s| match model_re.captures(s) {
-            Some(cap) => {
-                if cap.len() == 2 {
-                    (cap[1].to_string(), "".to_string())
-                } else if cap.len() == 3 {
-                    (cap[1].to_string(), cap[2].to_string())
-                } else {
-                    (s.to_string(), "".to_string())
-                }
-            }
-            None => (s.to_string(), "".to_string()),
-        })
-        .map(|(name, short)| (name, if short.is_empty() { None } else { Some(short) }))
-        .collect::<Vec<_>>();
-    models
-        .into_iter()
-        .map(|(name, short_name)| Model {
-            name,
-            short_name,
+fn parse_model_id(i: &str) -> IResult<&str, &str> {
+    take_while1(|c: char| c != '[' && !c.is_whitespace())(i)
+}
+fn is_short_name_char(c: char) -> bool {
+    c.is_alphanumeric() || c == '_' || c == '-'
+}
+fn is_human_name_char(c: char) -> bool {
+    c != ')'
+}
+// Parses a single model from this syntax: <model ID>[<short name>](<human-readable name>)
+fn parse_model<'a>(i: &'a str, api_key: &str, endpoint: &str) -> IResult<&'a str, Model> {
+    map(
+        (
+            parse_model_id,
+            delimited(tag("["), take_while1(is_short_name_char), tag("]")),
+            delimited(tag("("), take_while1(is_human_name_char), tag(")")),
+        ),
+        |(id, short_name, name)| Model {
+            id: id.to_string(),
+            short_name: short_name.to_string(),
+            name: name.to_string(),
             api_key: api_key.to_string(),
             endpoint: endpoint.to_string(),
-        })
-        .collect()
+        },
+    )
+    .parse(i)
+}
+
+// Parses a white-space separated list of models.
+fn parse_models<'a>(i: &'a str, api_key: &str, endpoint: &str) -> IResult<&'a str, Vec<Model>> {
+    all_consuming(separated_list0(multispace1, |i| {
+        parse_model(i, api_key, endpoint)
+    }))
+    .parse(i)
+}
+
+#[cfg(test)]
+mod parser_tests {
+    use super::*;
+
+    #[test]
+    fn test_parse_model_nom() {
+        let input = "deepseek-1[short1](Deepseek 1)";
+        let (rest, parsed) = parse_model(input, "key", "endpoint").unwrap();
+        assert_eq!(rest, "");
+        assert_eq!(
+            parsed,
+            Model {
+                id: "deepseek-1".to_string(),
+                short_name: "short1".to_string(),
+                name: "Deepseek 1".to_string(),
+                api_key: "key".to_string(),
+                endpoint: "endpoint".to_string()
+            }
+        );
+
+        let input2 = "openrouter-2[o](OpenRouter 2)";
+        let (_, parsed2) = parse_model(input2, "", "").unwrap();
+        assert_eq!(parsed2.id, "openrouter-2");
+        assert_eq!(parsed2.short_name, "o");
+        assert_eq!(parsed2.name, "OpenRouter 2");
+    }
+
+    #[test]
+    fn test_parse_model_nom_invalid() {
+        assert!(parse_model("invalidmodel", "", "").is_err());
+        assert!(parse_model("id[short](name", "", "").is_err());
+        assert!(parse_model("idshort](name)", "", "").is_err());
+    }
+
+    #[test]
+    fn test_parse_models() {
+        let input = "deepseek-1[short1](Deepseek 1) openrouter-2[o](OpenRouter 2)";
+        let (rest, parsed) = parse_models(input, "key", "endpoint").unwrap();
+        assert_eq!(
+            parsed,
+            vec![
+                Model {
+                    id: "deepseek-1".to_string(),
+                    short_name: "short1".to_string(),
+                    name: "Deepseek 1".to_string(),
+                    api_key: "key".to_string(),
+                    endpoint: "endpoint".to_string()
+                },
+                Model {
+                    id: "openrouter-2".to_string(),
+                    short_name: "o".to_string(),
+                    name: "OpenRouter 2".to_string(),
+                    api_key: "key".to_string(),
+                    endpoint: "endpoint".to_string()
+                }
+            ]
+        );
+        assert_eq!(rest, "");
+    }
+}
+
+fn parse_model_config(
+    models_list: &str,
+    api_key: &str,
+    endpoint: &str,
+) -> Result<Vec<Model>, String> {
+    match parse_models(models_list, api_key, endpoint) {
+        Ok((_, models)) => Ok(models),
+        Err(e) => Err(formatget!("Invalid model syntax: {}", e)),
+    }
 }
 
 #[cfg(test)]
@@ -176,14 +261,16 @@ mod tests {
     fn setup_model_list() -> ModelList {
         let models = vec![
             Model {
-                name: "deepseek-1".to_string(),
-                short_name: Some("d".to_string()),
+                id: "deepseek-1".to_string(),
+                short_name: "d".to_string(),
+                name: "Deepseek".to_string(),
                 api_key: "key1".to_string(),
                 endpoint: DEEPSEEK_API_ENDPOINT.to_string(),
             },
             Model {
-                name: "openrouter-2".to_string(),
-                short_name: Some("o".to_string()),
+                id: "openrouter-2".to_string(),
+                short_name: "o".to_string(),
+                name: "OpenRouter".to_string(),
                 api_key: "key2".to_string(),
                 endpoint: OPENROUTER_API_ENDPOINT.to_string(),
             },
@@ -198,7 +285,7 @@ mod tests {
     fn test_new_returns_error_when_no_env_vars() {
         let cfg = Config {
             providers: vec![],
-            default_model_name: "".to_string(),
+            default_model_id: "".to_string(),
         };
         let result = ModelList::new(&cfg);
         assert!(result.is_err());
@@ -207,7 +294,6 @@ mod tests {
             "Missing API keys or model configuration"
         );
     }
-
     #[test]
     fn test_new_parses_deepseek_env_vars() {
         let cfg = Config {
@@ -215,23 +301,24 @@ mod tests {
                 name: "Deepseek".to_string(),
                 api_key: "key1".to_string(),
                 endpoint: DEEPSEEK_API_ENDPOINT.to_string(),
-                model_string: "deepseek-1(d) deepseek-2(e)".to_string(),
+                model_string: "deepseek-1[short1](Deepseek 1) deepseek-2[short2](Deepseek 2)"
+                    .to_string(),
             }],
-            default_model_name: "deepseek-1".to_string(),
+            default_model_id: "deepseek-1".to_string(),
         };
-        let result = ModelList::new(&cfg);
-        assert!(result.is_ok());
-        let model_list = result.unwrap();
+        let model_list = ModelList::new(&cfg).expect("new()");
         assert_eq!(model_list.models.len(), 2);
-        assert_eq!(model_list.models[0].name, "deepseek-1");
-        assert_eq!(model_list.models[0].short_name, Some("d".to_string()));
+        assert_eq!(model_list.models[0].id, "deepseek-1");
+        assert_eq!(model_list.models[0].short_name, "short1");
+        assert_eq!(model_list.models[0].name, "Deepseek 1");
         assert_eq!(model_list.models[0].api_key, "key1");
         assert_eq!(model_list.models[0].endpoint, DEEPSEEK_API_ENDPOINT);
-        assert_eq!(model_list.models[1].name, "deepseek-2");
-        assert_eq!(model_list.models[1].short_name, Some("e".to_string()));
+        assert_eq!(model_list.models[1].id, "deepseek-2");
+        assert_eq!(model_list.models[1].short_name, "short2");
+        assert_eq!(model_list.models[1].name, "Deepseek 2");
         assert_eq!(model_list.models[1].api_key, "key1");
         assert_eq!(model_list.models[1].endpoint, DEEPSEEK_API_ENDPOINT);
-        assert_eq!(model_list.default_model_name(), "deepseek-1");
+        assert_eq!(model_list.default_model_name(), "Deepseek 1");
     }
 
     #[test]
@@ -241,16 +328,15 @@ mod tests {
                 name: "OpenRouter".to_string(),
                 api_key: "key2".to_string(),
                 endpoint: OPENROUTER_API_ENDPOINT.to_string(),
-                model_string: "openrouter-1(o) openrouter-2(p)".to_string(),
+                model_string: "openrouter-1[o](OpenRouter 1) openrouter-2[p](OpenRouter 2)"
+                    .to_string(),
             }],
-            default_model_name: "openrouter-1".to_string(),
+            default_model_id: "openrouter-1".to_string(),
         };
-        let result = ModelList::new(&cfg);
-        assert!(result.is_ok());
-        let model_list = result.unwrap();
+        let model_list = ModelList::new(&cfg).expect("new()");
         assert_eq!(model_list.models.len(), 2);
-        assert_eq!(model_list.models[0].name, "openrouter-1");
-        assert_eq!(model_list.models[0].short_name, Some("o".to_string()));
+        assert_eq!(model_list.models[0].id, "openrouter-1");
+        assert_eq!(model_list.models[0].short_name, "o".to_string());
     }
 
     #[test]
@@ -260,19 +346,12 @@ mod tests {
                 name: "OpenRouter".to_string(),
                 api_key: "key2".to_string(),
                 endpoint: OPENROUTER_API_ENDPOINT.to_string(),
-                model_string: "openrouter-1(o) openrouter-2".to_string(),
+                model_string: "openrouter-1[o](OpenRouter-1) openrouter-2".to_string(),
             }],
-            default_model_name: "openrouter-2".to_string(),
+            default_model_id: "openrouter-1".to_string(),
         };
-        let result = ModelList::new(&cfg);
-        assert!(result.is_ok());
-        let model_list = result.unwrap();
-        assert_eq!(model_list.models.len(), 2);
-        assert_eq!(model_list.models[0].name, "openrouter-1");
-        assert_eq!(model_list.models[0].short_name, Some("o".to_string()));
-        assert_eq!(model_list.models[1].name, "openrouter-2");
-        assert_eq!(model_list.models[1].short_name, None);
-        assert_eq!(model_list.default_model_name(), "openrouter-2");
+        let err = ModelList::new(&cfg).unwrap_err();
+        assert!(err.contains("openrouter-2"), "{}", err);
     }
 
     #[test]
@@ -282,94 +361,72 @@ mod tests {
                 name: "OpenRouter".to_string(),
                 api_key: "key2".to_string(),
                 endpoint: OPENROUTER_API_ENDPOINT.to_string(),
-                model_string: "openrouter-1(o) openrouter-2".to_string(),
+                model_string: "openrouter-1[o](OpenRouter-1) openrouter-2[p](OpenRouter-2)"
+                    .to_string(),
             }],
-            default_model_name: "unknown_model".to_string(),
+            default_model_id: "unknown_model".to_string(),
         };
-        let result = ModelList::new(&cfg);
-        assert!(result.is_err());
+        let err = ModelList::new(&cfg).unwrap_err();
+        assert!(err.contains("DEFAULT_MODEL"), "{}", err);
     }
 
     #[test]
     fn test_select_model_with_empty_query() {
         let model_list = setup_model_list();
         let result = model_list.select_model(&vec![]);
-        assert!(result.is_ok());
-        let model = result.unwrap();
-        assert_eq!(model.name, "deepseek-1");
+        let model = result.expect("select_model()");
+        assert_eq!(model.id, "deepseek-1");
     }
 
     #[test]
     fn test_select_model_default() {
         let model_list = setup_model_list();
-        let result = model_list.select_model(&vec!["deepseek-1".to_string()]);
-        assert!(result.is_ok());
-        let model = result.unwrap();
-        assert_eq!(model.name, "deepseek-1");
-        assert_eq!(model.short_name, Some("d".to_string()));
+        let result = model_list.select_model(&vec!["d".to_string()]);
+        let model = result.expect("select_model()");
+        assert_eq!(model.id, "deepseek-1");
+        assert_eq!(model.short_name, "d");
     }
 
     #[test]
     fn test_select_model_with_unknown_model() {
         let model_list = setup_model_list();
         let result = model_list.select_model(&vec!["unknownmodel".to_string()]);
-        assert!(result.is_ok());
-        let model = result.unwrap();
-        assert_eq!(model.name, "deepseek-1");
-        assert_eq!(model.short_name, Some("d".to_string()));
+        let model = result.expect("select_model()");
+        assert_eq!(model.id, "deepseek-1");
+        assert_eq!(model.short_name, "d");
     }
 
     #[test]
     fn test_select_model() {
         let model_list = setup_model_list();
-        let result = model_list.select_model(&vec!["openrouter-2".to_string()]);
-        assert!(result.is_ok());
-        let model = result.unwrap();
-        assert_eq!(model.name, "openrouter-2");
-        assert_eq!(model.short_name, Some("o".to_string()));
-    }
-
-    #[test]
-    fn test_select_model_short_name() {
-        let model_list = setup_model_list();
         let result = model_list.select_model(&vec!["o".to_string()]);
-        assert!(result.is_ok());
-        let model = result.unwrap();
-        assert_eq!(model.name, "openrouter-2");
-        assert_eq!(model.short_name, Some("o".to_string()));
+        let model = result.expect("select_model()");
+        assert_eq!(model.id, "openrouter-2");
+        assert_eq!(model.short_name, "o");
     }
 
     #[test]
     fn test_select_model_with_flags_containing_empty_and_valid_model_names() {
         let model_list = setup_model_list();
-        let flags = vec![
-            "".to_string(),
-            "clear_history".to_string(),
-            "openrouter-2".to_string(),
-        ];
+        let flags = vec!["".to_string(), "clear_history".to_string(), "o".to_string()];
         let result = model_list.select_model(&flags);
-        assert!(result.is_ok());
-        let model = result.unwrap();
-        assert_eq!(model.name, "openrouter-2");
+        let model = result.expect("select_model()");
+        assert_eq!(model.id, "openrouter-2");
     }
 
     #[test]
     fn test_select_model_with_flags_containing_multiple_model_names() {
         let model_list = setup_model_list();
-        let flags = vec!["deepseek-1".to_string(), "openrouter-2".to_string()];
+        let flags = vec!["d".to_string(), "o".to_string()];
         let result = model_list.select_model(&flags);
-        assert!(result.is_ok());
-        let model = result.unwrap();
-        assert_eq!(model.name, "openrouter-2");
+        let model = result.expect("select_model()");
+        assert_eq!(model.id, "openrouter-2");
     }
 
     #[test]
     fn test_list_models_returns_all_model_names() {
         let model_list = setup_model_list();
-        assert_eq!(
-            model_list.list_model_flags(),
-            vec!["deepseek-1", "d", "openrouter-2", "o"]
-        );
+        assert_eq!(model_list.list_model_flags(), vec!["d", "o"]);
     }
 
     #[test]
@@ -377,15 +434,16 @@ mod tests {
         let model_list = setup_model_list();
         assert_eq!(
             model_list.list_model_flags_human_readable(),
-            vec!["-openrouter-2|-o"]
+            vec!["OpenRouter: -o"]
         );
     }
 
     #[test]
     fn test_list_models_with_single_model() {
         let models = vec![Model {
-            name: "only-model".to_string(),
-            short_name: Some("o".to_string()),
+            id: "only-model".to_string(),
+            short_name: "o".to_string(),
+            name: "Only Model".to_string(),
             api_key: "key".to_string(),
             endpoint: DEEPSEEK_API_ENDPOINT.to_string(),
         }];
@@ -393,7 +451,7 @@ mod tests {
             models,
             default_model_index: 0,
         };
-        assert_eq!(model_list.list_model_flags(), vec!["only-model", "o"]);
+        assert_eq!(model_list.list_model_flags(), vec!["o"]);
     }
 
     #[test]

@@ -1,12 +1,13 @@
 # Leave *_API_KEY empty to disable a provider.
+# Model syntax: Space-separated list of <model ID>[<short name for model selection>](<human-readable name>)
 
 export DEFAULT_MODEL=deepseek-chat
 
 export DEEPSEEK_API_KEY=
-export DEEPSEEK_MODELS='deepseek-chat(d)'
+export DEEPSEEK_MODELS='deepseek-chat[d](Deepseek v3 0324)'
 
 export OPENROUTER_API_KEY=
-export OPENROUTER_MODELS='google/gemini-2.5-flash(g) openai/gpt-4o-mini(o) openai/gpt-4.1(p)'
+export OPENROUTER_MODELS='google/gemini-2.5-flash[g](Gemini 2.5 Flash) openai/gpt-4o-mini[o](GPT-4o mini) openai/gpt-4.1[p](GPT-4.1)'
 
 export MISTRAL_API_KEY=
-export MISTRAL_MODELS='mistral-large-latest(m)'
+export MISTRAL_MODELS='mistral-medium-latest[m](Mistral Medium)'

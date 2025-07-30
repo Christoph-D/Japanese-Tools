@@ -38,7 +38,7 @@ fn call_api(
     }
 
     let payload = serde_json::json!(Payload {
-        model: &model.name,
+        model: &model.id,
         messages: prompt,
         max_tokens: 300,
         temperature,
@@ -91,7 +91,13 @@ fn sanitize_output(s: &str, api_key: &str) -> String {
 
 fn usage(models: &ModelList) -> String {
     formatget!(
-        "Usage: !ai [-model] [-{}|-c] [-{}=1.0|-t=1.0] <query>.  Model options: {}.  Default model: {}",
+        "Usage: !ai [{}] [-{}|-c] [-{}=1.0|-t=1.0] <query>.  Models: {}.  Default: {}",
+        models
+            .list_model_flags_without_default()
+            .into_iter()
+            .map(|f| format!("-{}", f))
+            .collect::<Vec<_>>()
+            .join("|"),
         CLEAR_MEMORY_FLAG,
         TEMPERATURE_FLAG,
         models.list_model_flags_human_readable().join(" "),
@@ -277,7 +283,7 @@ fn main() {
     let flag_state = {
         let mut flag_state: Vec<String> = Vec::new();
         if model.name != models.default_model_name() {
-            flag_state.push(model.short_name.as_ref().unwrap_or(&model.name).to_string());
+            flag_state.push(model.short_name.clone());
         }
         if let Some(t) = temperature {
             flag_state.push(format!("t={}", t));

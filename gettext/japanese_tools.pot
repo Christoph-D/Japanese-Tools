@@ -287,7 +287,7 @@ msgstr ""
 msgid "Unknown kanji number."
 msgstr ""
 
-#: simple_bot/bot.py
+#: simple_bot/bot.py simple_bot/bot.py
 msgid "An error occured."
 msgstr ""
 
@@ -335,6 +335,10 @@ msgstr ""
 msgid "DEFAULT_MODEL not found"
 msgstr ""
 
+#: ../ai/src/model.rs
+msgid "Invalid model syntax: {}"
+msgstr ""
+
 #: ../ai/src/main.rs
 msgid "HTTP client error: {}"
 msgstr ""
@@ -352,7 +356,7 @@ msgid "Invalid response: {}"
 msgstr ""
 
 #: ../ai/src/main.rs
-msgid "Usage: !ai [-model] [-{}|-c] [-{}=1.0|-t=1.0] <query>.  Model options: {}.  Default model: {}"
+msgid "Usage: !ai [{}] [-{}|-c] [-{}=1.0|-t=1.0] <query>.  Models: {}.  Default: {}"
 msgstr ""
 
 #: ../ai/src/main.rs
@@ -362,9 +366,9 @@ msgstr[0] ""
 msgstr[1] ""
 
 #: ../ai/src/main.rs
-msgid "!ai is only available in channels."
+msgid "Internal error: duplicate configured flags detected, check your model config"
 msgstr ""
 
 #: ../ai/src/main.rs
-msgid "Internal error: duplicate configured flags detected, check your model config"
+msgid "!ai is only available in channels."
 msgstr ""
