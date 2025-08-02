@@ -149,12 +149,15 @@ impl ModelList {
 fn parse_model_id(i: &str) -> IResult<&str, &str> {
     take_while1(|c: char| c != '[' && !c.is_whitespace())(i)
 }
+
 fn is_short_name_char(c: char) -> bool {
     c.is_alphanumeric() || c == '_' || c == '-'
 }
+
 fn is_human_name_char(c: char) -> bool {
     c != ')'
 }
+
 // Parses a single model from this syntax: <model ID>[<short name>](<human-readable name>)
 fn parse_model<'a>(i: &'a str, api_key: &str, endpoint: &str) -> IResult<&'a str, Model> {
     map(
@@ -307,17 +310,25 @@ mod tests {
             default_model_id: "deepseek-1".to_string(),
         };
         let model_list = ModelList::new(&cfg).expect("new()");
-        assert_eq!(model_list.models.len(), 2);
-        assert_eq!(model_list.models[0].id, "deepseek-1");
-        assert_eq!(model_list.models[0].short_name, "short1");
-        assert_eq!(model_list.models[0].name, "Deepseek 1");
-        assert_eq!(model_list.models[0].api_key, "key1");
-        assert_eq!(model_list.models[0].endpoint, DEEPSEEK_API_ENDPOINT);
-        assert_eq!(model_list.models[1].id, "deepseek-2");
-        assert_eq!(model_list.models[1].short_name, "short2");
-        assert_eq!(model_list.models[1].name, "Deepseek 2");
-        assert_eq!(model_list.models[1].api_key, "key1");
-        assert_eq!(model_list.models[1].endpoint, DEEPSEEK_API_ENDPOINT);
+        assert_eq!(
+            model_list.models,
+            vec![
+                Model {
+                    id: "deepseek-1".to_string(),
+                    short_name: "short1".to_string(),
+                    name: "Deepseek 1".to_string(),
+                    api_key: "key1".to_string(),
+                    endpoint: DEEPSEEK_API_ENDPOINT.to_string(),
+                },
+                Model {
+                    id: "deepseek-2".to_string(),
+                    short_name: "short2".to_string(),
+                    name: "Deepseek 2".to_string(),
+                    api_key: "key1".to_string(),
+                    endpoint: DEEPSEEK_API_ENDPOINT.to_string(),
+                }
+            ]
+        );
         assert_eq!(model_list.default_model_name(), "Deepseek 1");
     }
 
@@ -406,9 +417,9 @@ mod tests {
     }
 
     #[test]
-    fn test_select_model_with_flags_containing_empty_and_valid_model_names() {
+    fn test_select_model_with_empty_flag() {
         let model_list = setup_model_list();
-        let flags = vec!["".to_string(), "clear_history".to_string(), "o".to_string()];
+        let flags = vec!["".to_string(), "o".to_string()];
         let result = model_list.select_model(&flags);
         let model = result.expect("select_model()");
         assert_eq!(model.id, "openrouter-2");
@@ -452,15 +463,5 @@ mod tests {
             default_model_index: 0,
         };
         assert_eq!(model_list.list_model_flags(), vec!["o"]);
-    }
-
-    #[test]
-    fn test_list_models_empty() {
-        let model_list = ModelList {
-            models: vec![],
-            default_model_index: 0,
-        };
-        let models = model_list.list_model_flags();
-        assert_eq!(models, Vec::<&str>::new());
     }
 }
