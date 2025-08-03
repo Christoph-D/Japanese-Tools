@@ -382,5 +382,9 @@ msgid ""
 msgstr "Interner Fehler: Doppelte Option, prüf die Modellkonfiguration"
 
 #: ../ai/src/main.rs
+msgid "Config file not found."
+msgstr "Konfigurationsdatei nicht gefunden."
+
+#: ../ai/src/main.rs
 msgid "!ai is only available in channels."
 msgstr "!ai gibt es nur in Channels."

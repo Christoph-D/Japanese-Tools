@@ -263,7 +263,7 @@ msgstr "Przeczytaj: %s."
 
 #: reading_quiz/quiz.sh
 msgid "Hardest words for %s (#mistakes/#skipped): %s"
-msgstr ""
+msgstr "Najtrudniejsze słowa dla %s (błędów/pominięć): %s"
 
 #: reading_quiz/quiz.sh
 msgid "Try \"%s jlpt4\". With \"%s skip\" you can skip questions."
@@ -383,6 +383,10 @@ msgid ""
 msgstr ""
 "Błąd wewnętrzny: wykryto zduplikowane skonfigurowane flagi, sprawdź "
 "konfigurację modelu"
+
+#: ../ai/src/main.rs
+msgid "Config file not found."
+msgstr "Nie znaleziono pliku konfiguracyjnego."
 
 #: ../ai/src/main.rs
 msgid "!ai is only available in channels."

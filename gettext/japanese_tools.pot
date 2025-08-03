@@ -370,5 +370,9 @@ msgid "Internal error: duplicate configured flags detected, check your model con
 msgstr ""
 
 #: ../ai/src/main.rs
+msgid "Config file not found."
+msgstr ""
+
+#: ../ai/src/main.rs
 msgid "!ai is only available in channels."
 msgstr ""
