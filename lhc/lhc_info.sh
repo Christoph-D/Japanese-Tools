@@ -17,12 +17,12 @@ if ! command -v tesseract &> /dev/null; then
 fi
 
 if [[ $# = 1 && $1 = 'help' ]]; then
-    echo "See http://op-webtools.web.cern.ch/op-webtools/vistar/vistars.php?usr=LHC1"
+    echo "See https://op-webtools.web.cern.ch/vistar/"
     exit 0
 fi
 
 if ! wget --quiet --tries=1 --timeout=5 \
-     'http://vistar-capture.web.cern.ch/vistar-capture/lhc1.png'; then
+     'https://vistar-capture.s3.cern.ch/lhc1.png'; then
     echo 'LHC data is currently unavailable.'
     exit 0
 fi
