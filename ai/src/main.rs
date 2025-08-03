@@ -121,7 +121,7 @@ fn locate_config_path() -> Option<PathBuf> {
 }
 
 fn load_env(path: &Path) {
-    let _ = dotenv::from_path(path.join(CONFIG_FILE_NAME));
+    let _ = dotenvy::from_path(path.join(CONFIG_FILE_NAME));
 }
 
 fn textdomain_dir() -> Option<String> {

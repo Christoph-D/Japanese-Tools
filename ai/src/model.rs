@@ -50,17 +50,27 @@ impl Config {
             ("DEEPSEEK", "Deepseek", DEEPSEEK_API_ENDPOINT),
             ("MISTRAL", "Mistral", MISTRAL_API_ENDPOINT),
             ("OPENROUTER", "OpenRouter", OPENROUTER_API_ENDPOINT),
+            (
+                "LITELLM",
+                "LiteLLM",
+                &std::env::var("LITELLM_API_ENDPOINT").unwrap_or_default(),
+            ),
         ];
         for (env_prefix, name, endpoint) in provider_configs.iter() {
+            if endpoint.is_empty() {
+                continue;
+            }
             if let Ok(api_key) = std::env::var(format!("{}_API_KEY", env_prefix)) {
-                let model_string =
-                    std::env::var(format!("{}_MODELS", env_prefix)).unwrap_or_default();
-                providers.push(Provider {
-                    name: name.to_string(),
-                    api_key,
-                    endpoint: endpoint.to_string(),
-                    model_string,
-                });
+                if !api_key.is_empty() {
+                    let model_string =
+                        std::env::var(format!("{}_MODELS", env_prefix)).unwrap_or_default();
+                    providers.push(Provider {
+                        name: name.to_string(),
+                        api_key,
+                        endpoint: endpoint.to_string(),
+                        model_string,
+                    });
+                }
             }
         }
         Config {
