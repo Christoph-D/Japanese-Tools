@@ -175,40 +175,35 @@ mod tests {
     use rusqlite::Connection;
     use tempfile::tempdir;
 
+    fn setup_memory() -> (tempfile::TempDir, Memory) {
+        let dir = tempdir().unwrap();
+        let memory = Memory::new_from_path(dir.path()).unwrap();
+        (dir, memory)
+    }
+
     #[test]
     fn test_memory_new_from_path_and_save() {
-        let dir = tempdir().unwrap();
-        let mut memory = Memory::new_from_path(dir.path()).unwrap();
-
-        assert!(memory.entries.is_empty());
+        let (dir, mut memory) = setup_memory();
 
         memory.add_to_history("user1", Sender::User, "receiver1", "message1");
         memory.add_to_history("user1", Sender::Assistant, "receiver1", "message2");
         memory.add_to_history("user2", Sender::User, "receiver2", "messageA");
-
         memory.save().unwrap();
 
         let loaded_memory = Memory::new_from_path(dir.path()).unwrap();
-        assert_eq!(loaded_memory.user_history("user1", "receiver1").len(), 2);
-        assert_eq!(loaded_memory.user_history("user2", "receiver2").len(), 1);
-        assert_eq!(
-            loaded_memory.user_history("user1", "receiver1")[0].1,
-            "message1"
-        );
-        assert_eq!(
-            loaded_memory.user_history("user1", "receiver1")[1].1,
-            "message2"
-        );
-        assert_eq!(
-            loaded_memory.user_history("user2", "receiver2")[0].1,
-            "messageA"
-        );
+        let user1_history = loaded_memory.user_history("user1", "receiver1");
+        let user2_history = loaded_memory.user_history("user2", "receiver2");
+
+        assert_eq!(user1_history.len(), 2);
+        assert_eq!(user2_history.len(), 1);
+        assert_eq!(user1_history[0].1, "message1");
+        assert_eq!(user1_history[1].1, "message2");
+        assert_eq!(user2_history[0].1, "messageA");
     }
 
     #[test]
     fn test_memory_clear_history() {
-        let dir = tempdir().unwrap();
-        let mut memory = Memory::new_from_path(dir.path()).unwrap();
+        let (dir, mut memory) = setup_memory();
 
         memory.add_to_history("user1", Sender::User, "receiver1", "message1");
         memory.add_to_history("user2", Sender::User, "receiver2", "messageA");
@@ -227,49 +222,35 @@ mod tests {
         let dir = tempdir().unwrap();
         let db_path = dir.path().join(MEMORY_DB_NAME);
         let connection = Connection::open(&db_path).unwrap();
-        let create_db = "CREATE TABLE IF NOT EXISTS memory (user TEXT NOT NULL, sender TEXT NOT NULL, receiver TEXT NOT NULL, timestamp TEXT NOT NULL, message TEXT NOT NULL)";
-        connection.execute(create_db, ()).unwrap();
+        connection.execute("CREATE TABLE IF NOT EXISTS memory (user TEXT NOT NULL, sender TEXT NOT NULL, receiver TEXT NOT NULL, timestamp TEXT NOT NULL, message TEXT NOT NULL)", ()).unwrap();
 
         let now = OffsetDateTime::now_utc();
         let old_time = now - (MEMORY_RETENTION + time::Duration::seconds(1));
         let recent_time = now - (MEMORY_RETENTION - time::Duration::seconds(1));
 
-        connection
-            .execute(
+        for (user, sender, receiver, timestamp, message) in [
+            ("u1", Sender::User, "r1", old_time, "old_message"),
+            ("u1", Sender::Assistant, "r1", recent_time, "recent_message"),
+            ("u1", Sender::User, "r2", recent_time, "recent_2"),
+        ] {
+            connection.execute(
                 "INSERT INTO memory (user, sender, receiver, timestamp, message) VALUES (?1, ?2, ?3, ?4, ?5)",
-                ("user1", Sender::User, "receiver1", old_time, "old_message"),
-            )
-            .unwrap();
-        connection
-            .execute(
-                "INSERT INTO memory (user, sender, receiver, timestamp, message) VALUES (?1, ?2, ?3, ?4, ?5)",
-                ("user1", Sender::Assistant, "receiver1", recent_time, "recent_message"),
-            )
-            .unwrap();
-        connection
-            .execute(
-                "INSERT INTO memory (user, sender, receiver, timestamp, message) VALUES (?1, ?2, ?3, ?4, ?5)",
-                ("user2", Sender::User, "receiver2", recent_time, "another_recent_message"),
-            )
-            .unwrap();
+                (user, sender, receiver, timestamp, message),
+            ).unwrap();
+        }
 
         let memory = Memory::new_from_path(dir.path()).unwrap();
-        assert_eq!(memory.user_history("user1", "receiver1").len(), 1);
-        assert_eq!(
-            memory.user_history("user1", "receiver1")[0].1,
-            "recent_message"
-        );
-        assert_eq!(memory.user_history("user2", "receiver2").len(), 1);
-        assert_eq!(
-            memory.user_history("user2", "receiver2")[0].1,
-            "another_recent_message"
-        );
+        let user1_history = memory.user_history("u1", "r1");
+        let user2_history = memory.user_history("u1", "r2");
+        assert_eq!(user1_history.len(), 1);
+        assert_eq!(user1_history[0].1, "recent_message");
+        assert_eq!(user2_history.len(), 1);
+        assert_eq!(user2_history[0].1, "recent_2");
     }
 
     #[test]
     fn test_memory_max_messages() {
-        let dir = tempdir().unwrap();
-        let mut memory = Memory::new_from_path(dir.path()).unwrap();
+        let (dir, mut memory) = setup_memory();
 
         for i in 0..(MEMORY_MAX_MESSAGES + 5) {
             memory.add_to_history("user1", Sender::User, "receiver1", &format!("msg{}", i));
@@ -278,8 +259,8 @@ mod tests {
 
         let loaded_memory = Memory::new_from_path(dir.path()).unwrap();
         let history = loaded_memory.user_history("user1", "receiver1");
-        assert_eq!(history.len(), MEMORY_MAX_MESSAGES);
 
+        assert_eq!(history.len(), MEMORY_MAX_MESSAGES);
         // The oldest messages should have been dropped, so the first message should be msg5
         assert_eq!(history[0].1, "msg5");
         assert_eq!(
