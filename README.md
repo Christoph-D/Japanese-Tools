@@ -64,7 +64,7 @@ $ ./find_audio.sh 夜空
 Audio for 夜空 [よぞら]: http://tinyurl.com/p8aq8jo
 ```
 
-## compare_encoding
+## compare_encoding/
 
 Compares the size of different encodings of the same Japanese Wikipedia article.
 In almost all cases UTF-8 is smaller than UTF-16.
@@ -158,11 +158,11 @@ contains lines of the following form:
 周囲の人たちの　＿　＿　★　＿　と思う。|協力を,優勝は,無理だった,抜きにしては|2
 ```
 
-## lhc
+## lhc/
 
 This script has nothing to do with Japanese. It OCRs the image on
-<http://op-webtools.web.cern.ch/op-webtools/vistar/vistars.php?usr=LHC1> to
-provide live statistics of the status of the LHC.
+https://op-webtools.web.cern.ch/vistar/ to provide live statistics of the status
+of the LHC.
 
 ## reading/
 
