@@ -5,6 +5,8 @@ use crate::{
 use serde::{Deserialize, Serialize};
 use std::path::Path;
 
+const CHANNEL_PROMPTS_DIR: &str = "channel_prompts";
+
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Message {
     role: String,
@@ -23,16 +25,17 @@ fn format_prompt(prompt: &str) -> String {
     prompt.replace("{MAX_LINE_LENGTH}", &MAX_LINE_LENGTH.to_string())
 }
 
-fn load_prompt_file(path: &Path, receiver: &str) -> Option<String> {
-    let prompt_path = path.join("channel_prompts").join(receiver);
-    std::fs::read_to_string(prompt_path).ok()
-}
-
 // Builds the system prompt from an optional per-channel prompt and the user's history.
-pub fn build_prompt(query: &str, sender: &str, receiver: &str, memory: &Memory) -> Vec<Message> {
+pub fn build_prompt(
+    query: &str,
+    sender: &str,
+    receiver: &str,
+    memory: &Memory,
+    config_path: &Path,
+) -> Vec<Message> {
     let mut v = vec![Message {
         role: "system".to_string(),
-        content: format_prompt(&per_channel_prompt(receiver)),
+        content: format_prompt(&per_channel_prompt(receiver, config_path)),
     }];
     memory
         .user_history(sender, receiver)
@@ -49,23 +52,105 @@ pub fn build_prompt(query: &str, sender: &str, receiver: &str, memory: &Memory) 
     v
 }
 
+fn load_prompt_file(config_path: &Path, receiver: &str) -> Option<String> {
+    let prompt_path = config_path.join(CHANNEL_PROMPTS_DIR).join(receiver);
+    std::fs::read_to_string(prompt_path).ok()
+}
+
 // Loads a per-channel system prompt if one exists.
-// If receiver matches a channel name, tries to load a prompt from channel_prompts/<channel>.
-fn per_channel_prompt(receiver: &str) -> String {
+// If receiver matches a channel name, tries to load a prompt from {prompt_path}/<channel>.
+fn per_channel_prompt(receiver: &str, config_path: &Path) -> String {
     // Only allow channel names starting with '#' and without '.' or '/'
     if !receiver.starts_with('#') || receiver.contains('.') || receiver.contains('/') {
         return default_prompt().to_string();
     }
-    let paths = [
-        std::env::current_exe()
-            .ok()
-            .and_then(|p| p.parent().map(|p| p.to_path_buf())),
-        std::env::current_dir().ok(),
-    ];
-    for path in paths.iter().flatten() {
-        if let Some(prompt) = load_prompt_file(path, receiver) {
-            return prompt;
-        }
+    load_prompt_file(config_path, receiver).unwrap_or_else(|| default_prompt().to_string())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::memory::Sender;
+    use std::fs;
+    use std::io::Write;
+    use tempfile::tempdir;
+
+    #[test]
+    fn test_per_channel_prompt_with_valid_channel() {
+        let dir = tempdir().unwrap();
+        let prompt_path = dir.path();
+        let channel = "#test_channel";
+        let prompt_content = "This is a test prompt.";
+
+        fs::create_dir_all(prompt_path.join(CHANNEL_PROMPTS_DIR)).unwrap();
+        let mut file =
+            fs::File::create(prompt_path.join(CHANNEL_PROMPTS_DIR).join(channel)).unwrap();
+        file.write_all(prompt_content.as_bytes()).unwrap();
+
+        let result = per_channel_prompt(channel, prompt_path);
+        assert_eq!(result, prompt_content);
     }
-    default_prompt().to_string()
+
+    #[test]
+    fn test_per_channel_prompt_with_invalid_channel() {
+        let dir = tempdir().unwrap();
+        let result = per_channel_prompt("not_a_channel", dir.path());
+        assert_eq!(result, default_prompt());
+    }
+    #[test]
+    fn test_build_prompt() {
+        let p = format_prompt("Limit your response to {MAX_LINE_LENGTH} characters.");
+        assert_eq!(
+            p,
+            format!("Limit your response to {} characters.", MAX_LINE_LENGTH)
+        );
+    }
+
+    #[test]
+    fn test_build_prompt_with_memory() {
+        let dir = tempdir().unwrap();
+        let config_path = dir.path();
+        let query = "Test query";
+        let sender = "user1";
+        let receiver = "#test_channel";
+
+        let mut memory = Memory::new_from_path(config_path).unwrap();
+        memory.add_to_history(sender, Sender::User, receiver, "Hello!");
+        memory.add_to_history(sender, Sender::Assistant, receiver, "Hi there!");
+
+        let result = build_prompt(query, sender, receiver, &memory, config_path);
+
+        assert_eq!(result.len(), 4);
+        assert_eq!(result[0].role, "system");
+        assert_eq!(result[0].content, format_prompt(&default_prompt()));
+        assert_eq!(result[1].role, "user");
+        assert_eq!(result[1].content, "Hello!");
+        assert_eq!(result[2].role, "assistant");
+        assert_eq!(result[2].content, "Hi there!");
+        assert_eq!(result[3].role, "user");
+        assert_eq!(result[3].content, query);
+    }
+
+    #[test]
+    fn test_build_prompt_with_custom_prompt() {
+        let dir = tempdir().unwrap();
+        let config_path = dir.path();
+        let channel = "#test_channel";
+        let prompt_content = "This is a test prompt.";
+        let query = "Test query";
+        let memory = Memory::new_from_path(&config_path).unwrap();
+
+        fs::create_dir_all(config_path.join(CHANNEL_PROMPTS_DIR)).unwrap();
+        let mut file =
+            fs::File::create(config_path.join(CHANNEL_PROMPTS_DIR).join(channel)).unwrap();
+        file.write_all(prompt_content.as_bytes()).unwrap();
+
+        let result = build_prompt(query, "user1", channel, &memory, config_path);
+
+        assert_eq!(result.len(), 2);
+        assert_eq!(result[0].role, "system");
+        assert_eq!(result[0].content, prompt_content);
+        assert_eq!(result[1].role, "user");
+        assert_eq!(result[1].content, query);
+    }
 }

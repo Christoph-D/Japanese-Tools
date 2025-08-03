@@ -4,7 +4,7 @@ mod memory;
 mod model;
 mod prompt;
 
-use crate::constants::{CLEAR_MEMORY_FLAG, MAX_LINE_LENGTH, TEMPERATURE_FLAG};
+use crate::constants::{CLEAR_MEMORY_FLAG, CONFIG_FILE_NAME, MAX_LINE_LENGTH, TEMPERATURE_FLAG};
 use crate::memory::{Memory, Sender};
 use crate::model::{Config, Model, ModelList};
 use crate::prompt::{Message, build_prompt};
@@ -12,7 +12,7 @@ use crate::prompt::{Message, build_prompt};
 use formatx::formatx;
 use gettextrs::{TextDomain, gettext, ngettext};
 use std::io::Read;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::time::Duration;
 
 fn call_api(
@@ -105,10 +105,20 @@ fn usage(models: &ModelList) -> String {
     )
 }
 
-fn load_env(path: &Option<&Path>) {
-    if let Some(p) = path {
-        let _ = dotenv::from_path(p.join("api-keys"));
+fn locate_config_path() -> Option<PathBuf> {
+    let mut current_dir: &Path = &std::env::current_exe().ok()?;
+    while let Some(parent) = current_dir.parent() {
+        let config_file = parent.join(CONFIG_FILE_NAME);
+        if config_file.exists() && config_file.is_file() {
+            return Some(parent.to_path_buf());
+        }
+        current_dir = parent;
     }
+    None
+}
+
+fn load_env(path: &Path) {
+    let _ = dotenv::from_path(path.join(CONFIG_FILE_NAME));
 }
 
 fn textdomain_dir() -> Option<String> {
@@ -206,12 +216,14 @@ fn main() {
             .push(&dir)
             .init();
     }
-    {
-        let exe_path = std::env::current_exe().ok();
-        let exe_parent_dir = exe_path.as_ref().and_then(|p| p.parent());
-        load_env(&exe_parent_dir);
-        load_env(&std::env::current_dir().ok().as_deref());
-    }
+    let config_path = match locate_config_path() {
+        Some(path) => path,
+        None => {
+            println!("{}", gettext("Config file not found."));
+            std::process::exit(1);
+        }
+    };
+    load_env(&config_path);
 
     let sender = std::env::var("DMB_SENDER").unwrap_or_default();
     let receiver = std::env::var("DMB_RECEIVER").unwrap_or_default();
@@ -239,7 +251,7 @@ fn main() {
         }
     };
 
-    let mut memory = Memory::new_from_disk().unwrap_or_else(|err| {
+    let mut memory = Memory::new_from_path(&config_path).unwrap_or_else(|err| {
         println!("{}", sanitize_output(&err.to_string(), &model.api_key));
         std::process::exit(1);
     });
@@ -259,7 +271,7 @@ fn main() {
         std::process::exit(0);
     }
 
-    let prompt = build_prompt(&query, &sender, &receiver, &memory);
+    let prompt = build_prompt(&query, &sender, &receiver, &memory, &config_path);
     memory.add_to_history(&sender, Sender::User, &receiver, &query);
 
     let _ = memory.save();

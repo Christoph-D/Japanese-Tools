@@ -1,3 +1,5 @@
+pub const CONFIG_FILE_NAME: &str = "api-keys";
+
 // Hardcoded limit on line length for IRC
 pub const MAX_LINE_LENGTH: usize = 300;
 

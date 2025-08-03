@@ -56,22 +56,6 @@ pub struct Memory {
     sqlite: Connection,
 }
 
-fn locate_db() -> Result<std::path::PathBuf, String> {
-    let exe_path = std::env::current_exe()
-        .ok()
-        .and_then(|p| p.parent().map(|p| p.to_path_buf()));
-    let paths = [exe_path.clone(), std::env::current_dir().ok()];
-    for path in paths.iter().flatten() {
-        let p = path.join(MEMORY_DB_NAME);
-        if p.is_file() {
-            return Ok(p);
-        }
-    }
-    exe_path
-        .map(|p| p.join(MEMORY_DB_NAME))
-        .ok_or("Cannot find memory DB".to_string())
-}
-
 fn load(
     connection: &mut Connection,
 ) -> Result<std::collections::HashMap<String, Vec<Entry>>, Error> {
@@ -116,13 +100,9 @@ fn load(
 }
 
 impl Memory {
-    pub fn new_from_disk() -> Result<Self, String> {
-        Self::new_from_path(&locate_db()?)
-    }
-
-    fn new_from_path(db_path: &Path) -> Result<Self, String> {
-        let mut connection =
-            Connection::open(db_path).map_err(|e| format!("Failed to open memory DB: {}", e))?;
+    pub fn new_from_path(config_path: &Path) -> Result<Self, String> {
+        let mut connection = Connection::open(config_path.join(MEMORY_DB_NAME))
+            .map_err(|e| format!("Failed to open memory DB: {}", e))?;
         Ok(Self {
             entries: load(&mut connection).map_err(|e| e.to_string())?,
             sqlite: connection,
@@ -198,8 +178,7 @@ mod tests {
     #[test]
     fn test_memory_new_from_path_and_save() {
         let dir = tempdir().unwrap();
-        let db_path = dir.path().join("test_memory.db");
-        let mut memory = Memory::new_from_path(&db_path).unwrap();
+        let mut memory = Memory::new_from_path(dir.path()).unwrap();
 
         assert!(memory.entries.is_empty());
 
@@ -209,7 +188,7 @@ mod tests {
 
         memory.save().unwrap();
 
-        let loaded_memory = Memory::new_from_path(&db_path).unwrap();
+        let loaded_memory = Memory::new_from_path(dir.path()).unwrap();
         assert_eq!(loaded_memory.user_history("user1", "receiver1").len(), 2);
         assert_eq!(loaded_memory.user_history("user2", "receiver2").len(), 1);
         assert_eq!(
@@ -229,8 +208,7 @@ mod tests {
     #[test]
     fn test_memory_clear_history() {
         let dir = tempdir().unwrap();
-        let db_path = dir.path().join("test_memory_clear.db");
-        let mut memory = Memory::new_from_path(&db_path).unwrap();
+        let mut memory = Memory::new_from_path(dir.path()).unwrap();
 
         memory.add_to_history("user1", Sender::User, "receiver1", "message1");
         memory.add_to_history("user2", Sender::User, "receiver2", "messageA");
@@ -239,7 +217,7 @@ mod tests {
         memory.clear_history("user1", "receiver1");
         memory.save().unwrap();
 
-        let loaded_memory = Memory::new_from_path(&db_path).unwrap();
+        let loaded_memory = Memory::new_from_path(dir.path()).unwrap();
         assert!(loaded_memory.user_history("user1", "receiver1").is_empty());
         assert_eq!(loaded_memory.user_history("user2", "receiver2").len(), 1);
     }
@@ -247,7 +225,7 @@ mod tests {
     #[test]
     fn test_memory_load_removes_old_entries() {
         let dir = tempdir().unwrap();
-        let db_path = dir.path().join("test_memory_old_entries.db");
+        let db_path = dir.path().join(MEMORY_DB_NAME);
         let connection = Connection::open(&db_path).unwrap();
         let create_db = "CREATE TABLE IF NOT EXISTS memory (user TEXT NOT NULL, sender TEXT NOT NULL, receiver TEXT NOT NULL, timestamp TEXT NOT NULL, message TEXT NOT NULL)";
         connection.execute(create_db, ()).unwrap();
@@ -275,7 +253,7 @@ mod tests {
             )
             .unwrap();
 
-        let memory = Memory::new_from_path(&db_path).unwrap();
+        let memory = Memory::new_from_path(dir.path()).unwrap();
         assert_eq!(memory.user_history("user1", "receiver1").len(), 1);
         assert_eq!(
             memory.user_history("user1", "receiver1")[0].1,
@@ -291,15 +269,14 @@ mod tests {
     #[test]
     fn test_memory_max_messages() {
         let dir = tempdir().unwrap();
-        let db_path = dir.path().join("test_memory_max_messages.db");
-        let mut memory = Memory::new_from_path(&db_path).unwrap();
+        let mut memory = Memory::new_from_path(dir.path()).unwrap();
 
         for i in 0..(MEMORY_MAX_MESSAGES + 5) {
             memory.add_to_history("user1", Sender::User, "receiver1", &format!("msg{}", i));
         }
         memory.save().unwrap();
 
-        let loaded_memory = Memory::new_from_path(&db_path).unwrap();
+        let loaded_memory = Memory::new_from_path(dir.path()).unwrap();
         let history = loaded_memory.user_history("user1", "receiver1");
         assert_eq!(history.len(), MEMORY_MAX_MESSAGES);
 
