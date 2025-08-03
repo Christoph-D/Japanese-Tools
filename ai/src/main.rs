@@ -77,10 +77,13 @@ fn call_api(
     }
 }
 
-fn sanitize_output(s: &str, api_key: &str) -> String {
+fn sanitize_output(s: &str, api_key: &Option<&str>) -> String {
     // An HTTPS request error might expose the API key by accident, so we redact it to be safe.
     // This is irrelevant for successful requests because the LLM doesn't know the API key.
-    let redacted = s.replace(api_key, "[REDACTED]");
+    let redacted = match api_key {
+        Some(k) => s.replace(k, "[REDACTED]"),
+        None => s.to_string(),
+    };
     let s_no_newlines: String = redacted.chars().filter(|&c| c != '\n').collect();
     if s_no_newlines.len() > MAX_LINE_LENGTH {
         format!("{}...", &s_no_newlines[..MAX_LINE_LENGTH])
@@ -178,7 +181,7 @@ fn extract_flags(known_flags: &[String], query: &str) -> Result<(Vec<String>, St
     Ok((flags, rest.to_string()))
 }
 
-fn parse_command_line(query: &str, models: &ModelList) -> (Vec<String>, String) {
+fn parse_command_line(query: &str, models: &ModelList) -> Result<(Vec<String>, String), String> {
     let known_flags = {
         let mut known_flags = models.list_model_flags();
         known_flags.push(CLEAR_MEMORY_FLAG.to_string());
@@ -193,22 +196,41 @@ fn parse_command_line(query: &str, models: &ModelList) -> (Vec<String>, String) 
             .collect::<std::collections::HashSet<_>>()
             .len()
     {
-        println!(
-            "{}",
-            gettext("Internal error: duplicate configured flags detected, check your model config")
-        );
-        std::process::exit(1);
+        return Err(gettext(
+            "Internal error: duplicate configured flags detected, check your model config",
+        ));
     }
-    match extract_flags(&known_flags, query) {
-        Ok(res) => res,
+    extract_flags(&known_flags, query).map_err(|err| format!("{}.  {}", err, usage(models)))
+}
+
+struct Input {
+    config_path: PathBuf,
+    flags: Vec<String>,
+    models: ModelList,
+    model: Model,
+    sender: String,
+    receiver: String,
+    query: String,
+}
+
+fn main() {
+    let input = setup().unwrap_or_else(|err| {
+        println!("{}", sanitize_output(&err.to_string(), &None));
+        std::process::exit(1);
+    });
+    match run(&input) {
+        Ok(msg) => println!("{}", sanitize_output(&msg, &Some(&input.model.api_key))),
         Err(err) => {
-            println!("{}.  {}", err, usage(models));
+            println!(
+                "{}",
+                sanitize_output(&err.to_string(), &Some(&input.model.api_key))
+            );
             std::process::exit(1);
         }
     }
 }
 
-fn main() {
+fn setup() -> Result<Input, String> {
     if let Some(dir) = textdomain_dir() {
         // Ignore errors and use untranslated strings if it fails.
         let _ = TextDomain::new("japanese_tools")
@@ -218,10 +240,7 @@ fn main() {
     }
     let config_path = match locate_config_path() {
         Some(path) => path,
-        None => {
-            println!("{}", gettext("Config file not found."));
-            std::process::exit(1);
-        }
+        None => return Err(gettext("Config file not found.")),
     };
     load_env(&config_path);
 
@@ -229,73 +248,73 @@ fn main() {
     let receiver = std::env::var("DMB_RECEIVER").unwrap_or_default();
     // Prevent usage in private messages
     if std::env::var("IRC_PLUGIN").ok().as_deref() == Some("1") && !receiver.starts_with('#') {
-        println!("{}", gettext("!ai is only available in channels."));
-        std::process::exit(1);
+        return Err(gettext("!ai is only available in channels."));
     }
 
-    let models = ModelList::new(&Config::from_env()).unwrap_or_else(|err| {
-        println!("{}", err);
-        std::process::exit(1);
-    });
+    let models = ModelList::new(&Config::from_env())?;
 
     let (flags, query) = parse_command_line(
         &std::env::args().skip(1).collect::<Vec<_>>().join(" "),
         &models,
-    );
+    )?;
 
-    let model = match models.select_model(&flags) {
-        Ok(m) => m,
-        Err(err) => {
-            println!("{}", err);
-            std::process::exit(1);
-        }
-    };
+    let model = models.select_model(&flags)?.clone();
 
-    let mut memory = Memory::new_from_path(&config_path).unwrap_or_else(|err| {
-        println!("{}", sanitize_output(&err.to_string(), &model.api_key));
-        std::process::exit(1);
-    });
+    Ok(Input {
+        query,
+        sender,
+        receiver,
+        flags,
+        models,
+        model,
+        config_path,
+    })
+}
 
-    let history_cleared =
-        flags.contains(&CLEAR_MEMORY_FLAG.to_string()) || flags.contains(&"c".to_string());
+fn run(input: &Input) -> Result<String, String> {
+    let mut memory = Memory::new_from_path(&input.config_path)?;
+
+    let history_cleared = input.flags.contains(&CLEAR_MEMORY_FLAG.to_string())
+        || input.flags.contains(&"c".to_string());
     if history_cleared {
-        memory.clear_history(&sender, &receiver);
+        memory.clear_history(&input.sender, &input.receiver);
     }
 
-    if query.trim().is_empty() {
+    if input.query.trim().is_empty() {
         if history_cleared {
-            println!("[📜→🔥]");
+            return Ok("[📜→🔥]".to_string());
         } else {
-            println!("{}", usage(&models));
+            return Ok(usage(&input.models));
         }
-        std::process::exit(0);
     }
 
-    let prompt = build_prompt(&query, &sender, &receiver, &memory, &config_path);
-    memory.add_to_history(&sender, Sender::User, &receiver, &query);
+    let prompt = build_prompt(
+        &input.query,
+        &input.sender,
+        &input.receiver,
+        &memory,
+        &input.config_path,
+    );
+    memory.add_to_history(&input.sender, Sender::User, &input.receiver, &input.query);
 
     let _ = memory.save();
 
-    let temperature = flags
+    let temperature = input
+        .flags
         .iter()
         .find(|f| f.starts_with(&(TEMPERATURE_FLAG.to_string() + "=")) || f.starts_with("t="))
         .and_then(|f| f.split('=').nth(1))
         .and_then(|s| s.parse::<f64>().ok().map(|t| t.clamp(0.0, 2.0)));
 
-    let result = match call_api(model, &prompt, &temperature) {
-        Ok(res) => sanitize_output(&res, &model.api_key),
-        Err(err) => {
-            println!("{}", sanitize_output(&err.to_string(), &model.api_key));
-            std::process::exit(1);
-        }
-    };
-    memory.add_to_history(&sender, Sender::Assistant, &receiver, &result);
+    let result = &call_api(&input.model, &prompt, &temperature)?;
+
+    memory.add_to_history(&input.sender, Sender::Assistant, &input.receiver, result);
     let _ = memory.save();
 
     let flag_state = {
         let mut flag_state: Vec<String> = Vec::new();
-        if model.name != models.default_model_name() {
-            flag_state.push(model.short_name.clone());
+        if input.model.name != input.models.default_model_name() {
+            flag_state.push(input.model.short_name.clone());
         }
         if let Some(t) = temperature {
             flag_state.push(format!("t={}", t));
@@ -303,7 +322,7 @@ fn main() {
         flag_state.join(" ")
     };
     let result = if flag_state.is_empty() {
-        result
+        result.to_string()
     } else {
         format!("[{}] {}", flag_state, result)
     };
@@ -315,12 +334,11 @@ fn main() {
     };
 
     // Prevent triggering other bots that might be present in the same channel.
-    if let Some(first_char) = result.chars().next() {
-        if first_char == '!' {
-            print!(" ");
-        }
-    }
-    println!("{}", result);
+    let result = match result.chars().next() {
+        Some('!') => " ".to_string() + &result,
+        _ => result,
+    };
+    Ok(result)
 }
 
 #[cfg(test)]
