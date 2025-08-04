@@ -36,11 +36,11 @@ Examples:
 
 ```text
 $ ./ai
-Usage: !ai [-model] <query>. Known models: deepseek-chat google/gemini-2.5-flash openai/gpt-4o-mini openai/gpt-4.1. Default: deepseek-chat
+Usage: !ai [-g|-o|-p|-m] [-clear_history|-c] [-temp=1.0|-t=1.0] <query>.  Models: [g]Gemini 2.5 Flash [o]GPT-4o mini [p]GPT-4.1 [m]Mistral Medium.  Default: Deepseek v3 0324
 $ ./ai "What's 夜空?"
-"夜空" means "night sky" in English.
-$ ./ai "-google/gemini-2.5-flash What's 夜空? Also give me a Japanese example sentence."
-[g] 夜空 (yozora) means "night sky," as in "夜空が綺麗ですね" (Yozora ga kirei desu ne), which means "The night sky is beautiful, isn't it?"
+"夜空" means "night sky" in English. It refers to the sky as seen at night, often with stars and the moon.
+$ ./ai "-g What's 夜空? Also give me a Japanese example sentence."
+[g] Yozora (夜空) means night sky. 今夜は夜空が綺麗ですね。(The night sky is beautiful tonight.)
 ```
 
 The following example demonstrates the AI's short-term memory.
