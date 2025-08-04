@@ -15,18 +15,13 @@ if [[ $# -ne 1 ]]; then
     exit 0
 fi
 
-# URL encoding.
-encode_query() {
-    # Make the query safe: Remove backslashes and escape single quotes.
-    local ENCODED_QUERY=${1//\\/}
-    ENCODED_QUERY=${ENCODED_QUERY//\'/\\\'}
-    ENCODED_QUERY=$(perl -MURI::Escape -e "print uri_escape('$ENCODED_QUERY');")
-    printf '%s\n' "$ENCODED_QUERY"
+url_encode() {
+    perl -MURI::Escape -e 'print uri_escape($ARGV[0]);' "$1"
 }
 
 QUERY="${1:0:100}"
 
-LEMMA=$(encode_query "$QUERY")
+LEMMA=$(url_encode "$QUERY")
 URL="http://ja.wikipedia.org/wiki/$LEMMA"
 
 TMP_FILE8=$(mktemp)

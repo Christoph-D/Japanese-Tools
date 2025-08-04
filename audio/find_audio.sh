@@ -18,13 +18,8 @@ fi
 # md5sum of the "audio missing" file.
 NOT_FOUND=7e2c2f954ef6051373ba916f000168dc
 
-# URL encoding.
-encode_query() {
-    # Make the query safe: Remove backslashes and escape single quotes.
-    local ENCODED_QUERY=${1//\\/}
-    ENCODED_QUERY=${ENCODED_QUERY//\'/\\\'}
-    ENCODED_QUERY=$(perl -MURI::Escape -e "print uri_escape('$ENCODED_QUERY');")
-    printf '%s\n' "$ENCODED_QUERY"
+url_encode() {
+    perl -MURI::Escape -e 'print uri_escape($ARGV[0]);' "$1"
 }
 # Returns 0 if $1 contains only English characters (no kanji etc.).
 is_english() {
@@ -91,8 +86,8 @@ if is_english "$READING"; then
 fi
 
 WORD="${WORD:-$KANJI [$READING]}"
-KANJI="$(encode_query "$KANJI")"
-READING="$(encode_query "$READING")"
+KANJI="$(url_encode "$KANJI")"
+READING="$(url_encode "$READING")"
 
 URL="http://assets.languagepod101.com/dictionary/japanese/audiomp3.php?kana=$READING&kanji=$KANJI"
 
@@ -107,7 +102,7 @@ if [[ $(wget -q "$URL" --timeout=10 -O - | md5sum | cut -f 1 -d ' ') = "$NOT_FOU
 fi
 
 # Try generating the tinyurl link. If it fails, print the long URL.
-TINY=$(wget 'http://tinyurl.com/api-create.php?url='"$(encode_query "$URL")" \
+TINY=$(wget 'https://tinyurl.com/api-create.php?url='"$(url_encode "$URL")" \
          --quiet -O - --timeout=5 --tries=1)
 printf_ 'Audio for %s: %s' "$WORD" "${TINY:-$URL}"
 
