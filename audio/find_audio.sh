@@ -23,7 +23,7 @@ url_encode() {
 }
 # Returns 0 if $1 contains only English characters (no kanji etc.).
 is_english() {
-    printf '%s' "$1" | grep -q '^[][/'"'"' a-zA-Z0-9.()]*$'
+    LANG=C.utf8 grep -q '^[][/"'"'"' a-zA-Z0-9.()]*$' <<<"$1"
 }
 to_katakana() {
     # We need kakasi to convert to katakana. mecab only prints
@@ -59,11 +59,10 @@ figure_out_reading() {
 QUERY="$*"
 # Split query into kanji and reading part.
 KANJI=$(printf '%s' "$QUERY" | \
-    sed 's#[ 　/／・[［「【〈『《].*##' | \
-    sed 's#[　 ]##g')
+    sed 's#[/／・[［「【〈『《].*##')
 READING=$(printf '%s' "$QUERY" | \
-    sed 's#^[^ 　/／・[［「【〈『《]*.\(.*\)$#\1#' | \
-    sed 's#[] 　／・［「【〈『《］」】〉』》]##g')
+    sed 's#^[^/／・[［「【〈『《]*.\(.*\)$#\1#' | \
+    sed 's#[]／・［「【〈『《］」】〉』》]##g')
 
 # Grab the whole command line if it is all in English.
 if is_english "$QUERY"; then
@@ -89,7 +88,7 @@ WORD="${WORD:-$KANJI [$READING]}"
 KANJI="$(url_encode "$KANJI")"
 READING="$(url_encode "$READING")"
 
-URL="http://assets.languagepod101.com/dictionary/japanese/audiomp3.php?kana=$READING&kanji=$KANJI"
+URL="https://assets.languagepod101.com/dictionary/japanese/audiomp3.php?kana=$READING&kanji=$KANJI"
 
 # Only print the URL if the audio file exists.
 if [[ $(wget -q "$URL" --timeout=10 -O - | md5sum | cut -f 1 -d ' ') = "$NOT_FOUND" ]]; then
