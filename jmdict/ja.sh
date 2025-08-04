@@ -19,7 +19,7 @@ if [[ ! ${IRC_PLUGIN:-} ]]; then
     MAX_LINES=5
 fi
 
-if [[ ! $DICT ]]; then
+if [[ ! -v DICT ]]; then
    printf_ 'Please call jm.sh or wa.sh instead.'
    exit 1
 fi
