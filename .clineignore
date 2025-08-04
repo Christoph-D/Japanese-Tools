@@ -1,0 +1,7 @@
+/ai/api-keys
+/ai/channel_prompts/
+/ai/target/
+/venv/
+/jmdict/JMdict*
+/jmdict/wadoku*
+/gettext/locale/
