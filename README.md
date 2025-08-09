@@ -214,12 +214,13 @@ $ ./rtk.sh 1 2 3
 #1: one 一 | #2: two 二 | #3: three 三
 ```
 
-## simple_bot/
+## ircbot/
 
-As the name says, this is a simple IRC bot. You can start it with:
+This is a simple IRC bot. You can start it with:
 
 ```text
-./bot.py <server[:port]> <channel> <nickname> [NickServ password]
+cd ircbot
+cargo run -- <server[:port]> <channel> <nickname> [NickServ password]
 ```
 
 It uses all the other scripts.
