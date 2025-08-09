@@ -87,6 +87,13 @@ async fn main() {
             }
         }
     });
+    
+    let channels = args.channels.split(',').map(|s| s.to_string()).collect::<Vec<_>>();
+    if channels.is_empty() {
+        eprintln!("No channels specified");
+        std::process::exit(1);
+    }
+    let main_channel = channels[0].to_string();
 
     let config = irc::client::data::Config {
         nickname: Some(args.nickname.clone()),
@@ -94,11 +101,11 @@ async fn main() {
         server: Some(server.clone()),
         port: Some(port),
         use_tls: Some(false),
-        channels: args.channels.split(',').map(|s| s.to_string()).collect(),
+        channels,
         ..Default::default()
     };
 
-    match run_bot(config, shutdown_notify).await {
+    match run_bot(config, &main_channel, shutdown_notify).await {
         Ok(_) => println!("Exiting..."),
         Err(e) => {
             eprintln!("Error: {}", e);
@@ -109,6 +116,7 @@ async fn main() {
 
 async fn run_bot(
     config: irc::client::data::Config,
+    main_channel: &str,
     shutdown_notify: Arc<Notify>,
 ) -> Result<(), Box<dyn std::error::Error>> {
     let client = Client::from_config(config).await?;
@@ -140,7 +148,7 @@ async fn run_bot(
         Script::new("lhc", "../lhc/lhc_info.sh"),
     ];
 
-    let mut bot = bot::Bot::new(client, scripts);
+    let mut bot = bot::Bot::new(client, main_channel, scripts);
     let mut stream = bot.stream()?;
     loop {
         tokio::select! {

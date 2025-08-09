@@ -42,6 +42,8 @@ struct Timer {
 pub struct Bot {
     commands: HashMap<&'static str, CommandFn>,
     client: Box<dyn ClientInterface>,
+    main_channel: String,
+    main_channel_topic: Option<String>,
     magic_key: String,
     scripts: Vec<Script>,
     timers: Vec<Timer>,
@@ -89,7 +91,11 @@ impl Script {
 }
 
 impl Bot {
-    pub fn new<T: ClientInterface + 'static>(client: T, scripts: Vec<Script>) -> Self {
+    pub fn new<T: ClientInterface + 'static>(
+        client: T,
+        main_channel: &str,
+        scripts: Vec<Script>,
+    ) -> Self {
         let magic_key: String = rng()
             .sample_iter(&Alphanumeric)
             .take(8)
@@ -103,6 +109,8 @@ impl Bot {
         let bot = Bot {
             commands,
             client: Box::new(client),
+            main_channel: main_channel.to_string(),
+            main_channel_topic: None,
             magic_key,
             scripts,
             timers: Vec::new(),
@@ -150,6 +158,10 @@ impl Bot {
                     },
                 )
             }
+            Command::Response(irc::client::prelude::Response::RPL_TOPIC, ref args) => {
+                self.handle_topic_response(args);
+                Ok(())
+            }
             _ => Ok(()),
         }
     }
@@ -161,6 +173,12 @@ impl Bot {
     ) -> error::Result<()> {
         let response = self.generate_response(message, message_data);
         self.execute_response(response, &message_data.response_target)
+    }
+
+    fn handle_topic_response(&mut self, args: &[String]) {
+        if args.len() == 3 && args[1] == self.main_channel {
+            self.main_channel_topic = Some(args[2].to_string());
+        }
     }
 
     fn execute_response(&mut self, response: Response, response_target: &str) -> error::Result<()> {
