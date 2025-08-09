@@ -51,19 +51,30 @@ impl Bot {
             .take(8)
             .map(char::from)
             .collect();
-        println!("Today's magic key for admin commands: {}", magic_key);
-        std::io::stdout().flush().unwrap();
 
         let mut commands: HashMap<&'static str, CommandFn> = HashMap::new();
         commands.insert("version", version_command);
         commands.insert("help", help_command);
 
-        Bot {
+        let bot = Bot {
             commands,
             client: Box::new(client),
             magic_key,
             scripts,
-        }
+        };
+        bot.print_magic_key();
+        bot
+    }
+
+    fn print_magic_key(&self) {
+        print!("Today's magic key for admin commands: {}", self.magic_key);
+        std::io::stdout().flush().unwrap();
+    }
+
+    fn debug_out(&self, line: &str) {
+        // Overwrite magic key.
+        println!("\r{}\r{}", " ".repeat(60), line);
+        self.print_magic_key();
     }
 
     pub fn stream(&mut self) -> error::Result<ClientStream> {
@@ -108,7 +119,7 @@ impl Bot {
             Response::Join(channel) => self.client.send(Command::JOIN(channel, None, None)),
             Response::Part(channel) => self.client.send(Command::PART(channel, None)),
             Response::Privmsg(target, msg) => {
-                let lines = msg.lines().filter(|line| !line.is_empty());
+                let lines = msg.lines().filter(|line| !line.trim().is_empty());
                 // Limit maximum number of lines and line length.
                 for msg in lines.take(4) {
                     self.client.send(Command::PRIVMSG(
@@ -128,6 +139,7 @@ impl Bot {
             // Channel message without ! prefix
             return Response::None;
         } else {
+            self.debug_out(&format!("<{}> {}", sender, message));
             // Private message to the bot works without ! prefix
             message
         };
@@ -148,7 +160,7 @@ impl Bot {
                 } else {
                     sender
                 };
-                let output = run_script(path, &args, sender, room, false);
+                let output = self.run_script(path, &args, sender, room, false);
                 return Response::Reply(output);
             }
         }
@@ -201,6 +213,67 @@ impl Bot {
             (message.to_string(), String::new())
         }
     }
+
+    fn run_script(
+        &self,
+        path: &str,
+        argument: &str,
+        sender: &str,
+        room: &str,
+        ignore_errors: bool,
+    ) -> String {
+        let mut env = env::vars().collect::<HashMap<String, String>>();
+        let lang = env
+            .get("LANG")
+            .unwrap_or(&"en_US.utf8".to_string())
+            .to_string();
+        env.insert("DMB_SENDER".to_string(), sender.to_string());
+        env.insert("DMB_RECEIVER".to_string(), room.to_string());
+        env.insert("LANGUAGE".to_string(), lang.to_string());
+        env.insert("LANG".to_string(), lang.to_string());
+        env.insert("LC_ALL".to_string(), lang);
+        env.insert("IRC_PLUGIN".to_string(), "1".to_string());
+
+        let working_dir = match Path::new(path).parent() {
+            Some(p) => p,
+            None => return format!("Invalid script path: {}", path).to_string(),
+        };
+        let output = std::process::Command::new(path)
+            .arg(argument)
+            .current_dir(working_dir)
+            .envs(
+                env.iter()
+                    .map(|(k, v)| (k.as_str(), v.as_str()))
+                    .collect::<Vec<(&str, &str)>>(),
+            )
+            .output();
+
+        match output {
+            Ok(out) => {
+                if out.status.success() {
+                    String::from_utf8_lossy(&out.stdout).to_string()
+                } else {
+                    self.debug_out(&format!(
+                        "[{}] Error running {} {}\nstderr: {}\nstdout: {}",
+                        out.status,
+                        path,
+                        argument,
+                        String::from_utf8_lossy(&out.stderr),
+                        String::from_utf8_lossy(&out.stdout)
+                    ));
+                    "An error ocurred.".to_string()
+                }
+            }
+            Err(e) => {
+                if ignore_errors {
+                    String::new()
+                } else {
+                    self.debug_out(&format!("Internal error running {} {}: {}", path, argument, e));
+                    "An error occurred.".to_string()
+                }
+            }
+        }
+    }
 }
 
 fn version_command(_bot: &Bot, _args: &str) -> Response {
@@ -230,45 +303,6 @@ fn limit_length(s: &str, max_bytes: usize) -> &str {
         }
     }
     ""
-}
-
-fn run_script(path: &str, argument: &str, sender: &str, room: &str, ignore_errors: bool) -> String {
-    let mut env = env::vars().collect::<HashMap<String, String>>();
-    let lang = env
-        .get("LANG")
-        .unwrap_or(&"en_US.utf8".to_string())
-        .to_string();
-    env.insert("DMB_SENDER".to_string(), sender.to_string());
-    env.insert("DMB_RECEIVER".to_string(), room.to_string());
-    env.insert("LANGUAGE".to_string(), lang.to_string());
-    env.insert("LANG".to_string(), lang.to_string());
-    env.insert("LC_ALL".to_string(), lang);
-    env.insert("IRC_PLUGIN".to_string(), "1".to_string());
-
-    let working_dir = match Path::new(path).parent() {
-        Some(p) => p,
-        None => return format!("Invalid script path: {}", path).to_string(),
-    };
-    let output = std::process::Command::new(path)
-        .arg(argument)
-        .current_dir(working_dir)
-        .envs(
-            env.iter()
-                .map(|(k, v)| (k.as_str(), v.as_str()))
-                .collect::<Vec<(&str, &str)>>(),
-        )
-        .output();
-
-    match output {
-        Ok(out) => String::from_utf8_lossy(&out.stdout).to_string(),
-        Err(_) => {
-            if ignore_errors {
-                String::new()
-            } else {
-                "An error occurred.".to_string()
-            }
-        }
-    }
 }
 
 #[cfg(test)]
