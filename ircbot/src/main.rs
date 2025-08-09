@@ -1,0 +1,102 @@
+use clap::Parser;
+use irc::client::prelude::*;
+use std::str::FromStr;
+use std::sync::Arc;
+use tokio::signal::unix::{SignalKind, signal};
+use tokio::sync::Notify;
+use tokio_stream::StreamExt;
+use tokio_stream::wrappers::SignalStream;
+
+/// A simple IRC bot
+#[derive(Parser, Debug)]
+#[command(version)]
+struct Args {
+    /// Server address with optional port (e.g., irc.example.com:6667)
+    server: String,
+
+    /// Comma-separated list of channels to join
+    channels: String,
+
+    /// Bot nickname
+    nickname: String,
+
+    /// Optional NickServ password
+    nickserv_password: Option<String>,
+}
+
+fn parse_server_address(server: &str) -> (String, u16) {
+    if let Some((host, port_str)) = server.split_once(':') {
+        if let Ok(port) = u16::from_str(port_str) {
+            return (host.to_string(), port);
+        }
+    }
+    (server.to_string(), 6667)
+}
+
+#[tokio::main]
+async fn main() {
+    let args = Args::parse();
+    let (server, port) = parse_server_address(&args.server);
+    println!("Connecting to {}:{} as {}", server, port, args.nickname);
+
+    let shutdown_notify = Arc::new(Notify::new());
+    let shutdown_notify_clone = shutdown_notify.clone();
+    tokio::spawn(async move {
+        let term_stream = SignalStream::new(signal(SignalKind::terminate()).unwrap());
+        let int_stream = SignalStream::new(signal(SignalKind::interrupt()).unwrap());
+        let mut stream = term_stream.merge(int_stream);
+        let mut count = 0;
+        while let Some(()) = stream.next().await {
+            count += 1;
+            if count == 1 {
+                println!("Shutting down... (Press Ctrl+C again to force exit)");
+                shutdown_notify_clone.notify_one();
+            } else {
+                std::process::exit(1);
+            }
+        }
+    });
+
+    let config = irc::client::data::Config {
+        nickname: Some(args.nickname.clone()),
+        nick_password: args.nickserv_password,
+        server: Some(server.clone()),
+        port: Some(port),
+        use_tls: Some(false),
+        channels: args.channels.split(',').map(|s| s.to_string()).collect(),
+        ..Default::default()
+    };
+
+    match run_bot(config, shutdown_notify).await {
+        Ok(_) => println!("Exiting..."),
+        Err(e) => {
+            eprintln!("Error: {}", e);
+            std::process::exit(1);
+        }
+    }
+}
+
+async fn run_bot(
+    config: irc::client::data::Config,
+    shutdown_notify: Arc<Notify>,
+) -> Result<(), Box<dyn std::error::Error>> {
+    let mut client = Client::from_config(config).await?;
+    client.identify()?;
+
+    let mut stream = client.stream()?;
+    loop {
+        tokio::select! {
+            _ = shutdown_notify.notified() => client.send_quit("さようなら")?,
+            message = stream.next() => {
+                if let Some(message) = message.transpose()? {
+                    println!("{:?}", message);
+                    // TODO: Handle message
+                } else {
+                    break;
+                }
+            }
+        }
+    }
+
+    Ok(())
+}

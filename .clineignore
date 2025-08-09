@@ -1,7 +1,8 @@
 /ai/api-keys
 /ai/channel_prompts/
 /ai/target/
-/venv/
+/gettext/locale/
+/ircbot/target
 /jmdict/JMdict*
 /jmdict/wadoku*
-/gettext/locale/
+/venv/
