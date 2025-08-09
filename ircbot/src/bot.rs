@@ -1,3 +1,4 @@
+use gettextrs::gettext;
 use irc::client::prelude::Message;
 use irc::{
     client::{ClientStream, prelude::*},
@@ -396,7 +397,7 @@ impl Bot {
                         String::from_utf8_lossy(&out.stderr),
                         String::from_utf8_lossy(&out.stdout)
                     ));
-                    "An error ocurred.".to_string()
+                    gettext("An error ocurred.").to_string()
                 }
             }
             Err(e) => {
@@ -407,7 +408,7 @@ impl Bot {
                         "Internal error running {} {}: {}",
                         path, argument, e
                     ));
-                    "An error occurred.".to_string()
+                    gettext("An error occurred.").to_string()
                 }
             }
         }
@@ -415,7 +416,7 @@ impl Bot {
 }
 
 fn version_command(_bot: &Bot, _args: &str) -> Response {
-    Response::Reply("A very simple bot with 日本語 support.".to_string())
+    Response::Reply(gettext("A very simple bot with 日本語 support.").to_string())
 }
 
 fn help_command(bot: &Bot, _args: &str) -> Response {
@@ -425,9 +426,12 @@ fn help_command(bot: &Bot, _args: &str) -> Response {
         .iter()
         .map(|cmd| format!("!{}", cmd))
         .collect();
+    for script in &bot.scripts {
+        commands_list.push(format!("!{}", script.name));
+    }
     commands_list.sort();
     let commands_list = commands_list.join(", ");
-    Response::Reply(format!("Known commands: {}", commands_list))
+    Response::Reply(format!("{}{}", gettext("Known commands: "), commands_list))
 }
 
 /// Safely limits the length of a unicode string.

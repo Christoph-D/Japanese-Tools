@@ -1,4 +1,5 @@
 use clap::Parser;
+use gettextrs::TextDomain;
 use irc::client::prelude::*;
 use std::str::FromStr;
 use std::sync::Arc;
@@ -37,8 +38,34 @@ fn parse_server_address(server: &str) -> (String, u16) {
     (server.to_string(), 6667)
 }
 
+fn textdomain_dir() -> Option<String> {
+    // Start in the executable directory, walk up to find the "gettext" directory.
+    let mut dir = std::env::current_exe()
+        .ok()
+        .and_then(|p| p.parent().map(|d| d.to_path_buf()))
+        .unwrap_or_else(|| std::env::current_dir().unwrap());
+    loop {
+        let gettext_dir = dir.join("gettext");
+        if gettext_dir.is_dir() {
+            return Some(gettext_dir.to_string_lossy().into_owned());
+        }
+        if !dir.pop() {
+            break;
+        }
+    }
+    None
+}
+
 #[tokio::main]
 async fn main() {
+    if let Some(dir) = textdomain_dir() {
+        // Ignore errors and use untranslated strings if it fails.
+        let _ = TextDomain::new("japanese_tools")
+            .skip_system_data_paths()
+            .push(&dir)
+            .init();
+    }
+
     let args = Args::parse();
     let (server, port) = parse_server_address(&args.server);
     println!("Connecting to {}:{} as {}", server, port, args.nickname);
