@@ -9,3 +9,4 @@ irc = "1.1.0"
 clap = { version = "4.5.43", features = ["derive"] }
 tokio = { version = "1", features = ["full"] }
 tokio-stream = { version = "0.1.17", features = ["signal"] }
+rand = "0.9.2"

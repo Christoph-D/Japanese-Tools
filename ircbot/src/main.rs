@@ -7,6 +7,8 @@ use tokio::sync::Notify;
 use tokio_stream::StreamExt;
 use tokio_stream::wrappers::SignalStream;
 
+mod bot;
+
 /// A simple IRC bot
 #[derive(Parser, Debug)]
 #[command(version)]
@@ -80,17 +82,22 @@ async fn run_bot(
     config: irc::client::data::Config,
     shutdown_notify: Arc<Notify>,
 ) -> Result<(), Box<dyn std::error::Error>> {
-    let mut client = Client::from_config(config).await?;
+    let client = Client::from_config(config).await?;
     client.identify()?;
+    // Set bot mode.
+    client.send_mode(
+        client.current_nickname(),
+        &[Mode::Plus(UserMode::Unknown('B'), None)],
+    )?;
 
-    let mut stream = client.stream()?;
+    let mut bot = bot::Bot::new(client);
+    let mut stream = bot.stream()?;
     loop {
         tokio::select! {
-            _ = shutdown_notify.notified() => client.send_quit("さようなら")?,
+            _ = shutdown_notify.notified() => bot.quit(None)?,
             message = stream.next() => {
-                if let Some(message) = message.transpose()? {
-                    println!("{:?}", message);
-                    // TODO: Handle message
+                if let Some(Ok(message)) = message {
+                    bot.handle_message(&message)?;
                 } else {
                     break;
                 }
