@@ -87,8 +87,12 @@ async fn main() {
             }
         }
     });
-    
-    let channels = args.channels.split(',').map(|s| s.to_string()).collect::<Vec<_>>();
+
+    let channels = args
+        .channels
+        .split(',')
+        .map(|s| s.to_string())
+        .collect::<Vec<_>>();
     if channels.is_empty() {
         eprintln!("No channels specified");
         std::process::exit(1);
@@ -163,7 +167,8 @@ async fn run_bot(
                     None => break,
                 }
             }
-            timer_data = bot.next_timer() => bot.run_timed_command(timer_data)?,
+            _ = bot.next_timer() => bot.run_timed_command()?,
+            _ = bot.next_background_job() => bot.run_background_job()?,
         }
     }
 

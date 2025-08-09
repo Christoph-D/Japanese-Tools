@@ -1,3 +1,4 @@
+use chrono::Local;
 use gettextrs::gettext;
 use irc::client::prelude::Message;
 use irc::{
@@ -6,7 +7,8 @@ use irc::{
 };
 use rand::{Rng, distr::Alphanumeric, rng};
 use std::collections::HashMap;
-use std::io::Write;
+use std::fs::{File, OpenOptions};
+use std::io::{self, BufRead, BufReader, Write};
 use std::path::Path;
 use std::time::Duration;
 use std::{env, future};
@@ -47,6 +49,7 @@ pub struct Bot {
     magic_key: String,
     scripts: Vec<Script>,
     timers: Vec<Timer>,
+    next_daily_trigger: Instant,
 }
 
 type CommandFn = fn(&Bot, &str) -> Response;
@@ -114,6 +117,7 @@ impl Bot {
             magic_key,
             scripts,
             timers: Vec::new(),
+            next_daily_trigger: next_midnight(),
         };
         bot.print_magic_key();
         bot
@@ -158,8 +162,16 @@ impl Bot {
                     },
                 )
             }
+            Command::TOPIC(ref channel, ref topic) => {
+                if let Some(topic) = topic {
+                    self.handle_topic_change(channel, topic);
+                }
+                Ok(())
+            }
             Command::Response(irc::client::prelude::Response::RPL_TOPIC, ref args) => {
-                self.handle_topic_response(args);
+                if args.len() == 3 {
+                    self.handle_topic_change(&args[1], &args[2]);
+                }
                 Ok(())
             }
             _ => Ok(()),
@@ -175,9 +187,9 @@ impl Bot {
         self.execute_response(response, &message_data.response_target)
     }
 
-    fn handle_topic_response(&mut self, args: &[String]) {
-        if args.len() == 3 && args[1] == self.main_channel {
-            self.main_channel_topic = Some(args[2].to_string());
+    fn handle_topic_change(&mut self, channel: &str, topic: &str) {
+        if channel == self.main_channel {
+            self.main_channel_topic = Some(topic.to_string());
         }
     }
 
@@ -317,18 +329,18 @@ impl Bot {
                 response_target: room.to_string(),
             },
         });
-    }
-
-    pub async fn next_timer(&mut self) -> TimerData {
-        if self.timers.is_empty() {
-            return future::pending::<TimerData>().await;
-        }
         self.timers.sort_by_key(|timer| timer.deadline);
-        sleep_until(self.timers[0].deadline).await;
-        self.timers.remove(0).data
     }
 
-    pub fn run_timed_command(&mut self, data: TimerData) -> error::Result<()> {
+    pub async fn next_timer(&self) {
+        if self.timers.is_empty() {
+            return future::pending().await;
+        }
+        sleep_until(self.timers[0].deadline).await;
+    }
+
+    pub fn run_timed_command(&mut self) -> error::Result<()> {
+        let data = self.timers.remove(0).data;
         let output = self.run_script(
             &data.script,
             &data.argument,
@@ -366,6 +378,16 @@ impl Bot {
             }
         }
         filtered.join("\n")
+    }
+
+    pub async fn next_background_job(&self) -> error::Result<()> {
+        sleep_until(self.next_daily_trigger + Duration::from_secs(1)).await;
+        Ok(())
+    }
+
+    pub fn run_background_job(&mut self) -> error::Result<()> {
+        self.next_daily_trigger = next_midnight();
+        self.daily_jobs()
     }
 
     fn run_script(
@@ -431,6 +453,63 @@ impl Bot {
             }
         }
     }
+
+    fn next_word_of_the_day(&self, old_word: &str) -> io::Result<Option<String>> {
+        let file_done = "word_of_the_day_done.txt";
+        let file_next = "word_of_the_day_next.txt";
+
+        let mut input_lines = BufReader::new(File::open(file_next)?).lines();
+        let next_word = if let Some(line) = input_lines.next() {
+            line?
+        } else {
+            return Ok(None);
+        };
+
+        let mut temp_file = File::create(format!("{}.tmp", file_next))?;
+        for line in input_lines {
+            let line = line?;
+            writeln!(temp_file, "{}", line)?;
+        }
+        std::fs::rename(format!("{}.tmp", file_next), file_next)?;
+
+        if !next_word.is_empty() {
+            let mut file = OpenOptions::new()
+                .create(true)
+                .append(true)
+                .open(file_done)?;
+            writeln!(file, "{}", old_word)?;
+        }
+
+        Ok(Some(next_word.trim().to_string()))
+    }
+
+    pub fn daily_jobs(&mut self) -> error::Result<()> {
+        let marker = "Wort des Tages: ";
+        if let Some(ref topic) = self.main_channel_topic {
+            if let Some(pos) = topic.find(marker) {
+                let prefix = &topic[..pos];
+                let old_word_part = &topic[pos + marker.len()..];
+
+                let (old_word, suffix) = if let Some(space_pos) = old_word_part.find(' ') {
+                    let (word, suf) = old_word_part.split_at(space_pos);
+                    (word, " ".to_string() + suf)
+                } else {
+                    (old_word_part, String::new())
+                };
+
+                let new_word = match self.next_word_of_the_day(old_word) {
+                    Ok(Some(new_word)) => new_word,
+                    _ => return Ok(()), // Ignore errors, it's a non-essential feature
+                };
+
+                let new_topic = format!("{}{}{}{}", prefix, marker, new_word, suffix);
+                self.debug_out(&format!("New topic: [{}]", new_topic));
+                self.client
+                    .send(Command::TOPIC(self.main_channel.clone(), Some(new_topic)))?;
+            }
+        }
+        Ok(())
+    }
 }
 
 fn version_command(_bot: &Bot, _args: &str) -> Response {
@@ -463,6 +542,19 @@ fn limit_length(s: &str, max_bytes: usize) -> &str {
         }
     }
     ""
+}
+
+fn next_midnight() -> Instant {
+    let now = Local::now();
+    let midnight = now
+        .date_naive()
+        .succ_opt()
+        .unwrap()
+        .and_hms_opt(0, 0, 0)
+        .unwrap();
+    let midnight_with_timezone = midnight.and_local_timezone(*now.offset()).unwrap();
+    let duration_until_midnight = midnight_with_timezone.signed_duration_since(now);
+    Instant::now() + Duration::from_secs(duration_until_midnight.num_seconds() as u64)
 }
 
 #[cfg(test)]
