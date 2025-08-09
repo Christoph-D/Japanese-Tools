@@ -437,7 +437,7 @@ impl Bot {
                         String::from_utf8_lossy(&out.stderr),
                         String::from_utf8_lossy(&out.stdout)
                     ));
-                    gettext("An error ocurred.").to_string()
+                    gettext("An error occurred.").to_string()
                 }
             }
             Err(e) => {

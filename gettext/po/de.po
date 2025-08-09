@@ -33,22 +33,6 @@ msgstr "Keine Audio-Datei gefunden."
 msgid "Audio for %s: %s"
 msgstr "Audio für %s: %s"
 
-#: bablefish/bf.sh
-msgid "No input."
-msgstr "Keine Eingabe."
-
-#: bablefish/bf.sh mueval/eval.sh
-msgid "Time limit exceeded."
-msgstr "Zeitlimit überschritten."
-
-#: bablefish/bf.sh
-msgid "This is untranslatable. :/"
-msgstr "Das kann ich nicht übersetzen. :/"
-
-#: bablefish/bf.sh
-msgid "No result. :-("
-msgstr "Kein Ergebnis. :-("
-
 #: cdecl/cdecl.sh
 msgid "Usage: !%s [explain|declare] <something>"
 msgstr "Aufruf: !%s [explain|declare] <irgendwas>"
@@ -257,6 +241,10 @@ msgstr "Beispiel: !calc 1+1"
 msgid "Memory limit exceeded."
 msgstr "Speicherlimit überschritten."
 
+#: mueval/eval.sh
+msgid "Time limit exceeded."
+msgstr "Zeitlimit überschritten."
+
 #: reading_quiz/quiz.sh
 msgid "Please read: %s"
 msgstr "Bitte lies: %s"
@@ -292,48 +280,6 @@ msgstr "Unbekanntes Keyword."
 #: rtk/rtk.sh
 msgid "Unknown kanji number."
 msgstr "Unbekannte Kanji-Nummer."
-
-#: simple_bot/bot.py
-msgid "An error occured."
-msgstr "Ein Fehler ist aufgetreten."
-
-#: simple_bot/bot.py
-#, python-format
-msgid "Today's magic key for admin commands: %s"
-msgstr "Heutiger Magic-Key für Admin-Befehle: %s"
-
-#: simple_bot/bot.py
-#, python-format
-msgid "Caught exception: %s\n"
-msgstr "Exception gefangen: %s\n"
-
-#: simple_bot/bot.py
-msgid "Unknown command."
-msgstr "Unbekannter Befehl."
-
-#: simple_bot/bot.py
-msgid "A very simple bot with 日本語 support."
-msgstr "Ein sehr einfacher Bot mit 日本語-Features."
-
-#: simple_bot/bot.py
-msgid "Known commands: "
-msgstr "Bekannte Befehle: "
-
-#: simple_bot/bot.py
-msgid ""
-"Usage: bot.py <server[:port]> <channel[,channel...]> <nickname> [NickServ "
-"password]"
-msgstr ""
-"Aufruf: bot.py <Server[:Port]> <Channel[,Channel...]> <Nickname> [NickServ-"
-"Passwort]"
-
-#: simple_bot/bot.py
-msgid "Error: Invalid port."
-msgstr "Fehler: Ungültiger Port."
-
-#: simple_bot/bot.py
-msgid "Caught KeyboardInterrupt, exiting..."
-msgstr "Ein KeyboardInterrupt ist aufgetreten, Ende..."
 
 #: ../ai/src/model.rs
 msgid "Missing API keys or model configuration"
@@ -388,3 +334,15 @@ msgstr "Konfigurationsdatei nicht gefunden."
 #: ../ai/src/main.rs
 msgid "!ai is only available in channels."
 msgstr "!ai gibt es nur in Channels."
+
+#: ../ircbot/src/bot.rs
+msgid "An error occurred."
+msgstr "Ein Fehler ist aufgetreten."
+
+#: ../ircbot/src/bot.rs
+msgid "A very simple bot with 日本語 support."
+msgstr "Ein sehr einfacher Bot mit 日本語-Features."
+
+#: ../ircbot/src/bot.rs
+msgid "Known commands: "
+msgstr "Bekannte Befehle: "

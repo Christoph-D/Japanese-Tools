@@ -35,22 +35,6 @@ msgstr ""
 msgid "Audio for %s: %s"
 msgstr ""
 
-#: bablefish/bf.sh
-msgid "No input."
-msgstr ""
-
-#: bablefish/bf.sh mueval/eval.sh
-msgid "Time limit exceeded."
-msgstr ""
-
-#: bablefish/bf.sh
-msgid "This is untranslatable. :/"
-msgstr ""
-
-#: bablefish/bf.sh
-msgid "No result. :-("
-msgstr ""
-
 #: cdecl/cdecl.sh
 msgid "Usage: !%s [explain|declare] <something>"
 msgstr ""
@@ -251,6 +235,10 @@ msgstr ""
 msgid "Memory limit exceeded."
 msgstr ""
 
+#: mueval/eval.sh
+msgid "Time limit exceeded."
+msgstr ""
+
 #: reading_quiz/quiz.sh
 msgid "Please read: %s"
 msgstr ""
@@ -285,46 +273,6 @@ msgstr ""
 
 #: rtk/rtk.sh
 msgid "Unknown kanji number."
-msgstr ""
-
-#: simple_bot/bot.py
-msgid "An error occured."
-msgstr ""
-
-#: simple_bot/bot.py
-#, python-format
-msgid "Today's magic key for admin commands: %s"
-msgstr ""
-
-#: simple_bot/bot.py
-#, python-format
-msgid "Caught exception: %s\n"
-msgstr ""
-
-#: simple_bot/bot.py
-msgid "Unknown command."
-msgstr ""
-
-#: simple_bot/bot.py
-msgid "A very simple bot with 日本語 support."
-msgstr ""
-
-#: simple_bot/bot.py
-msgid "Known commands: "
-msgstr ""
-
-#: simple_bot/bot.py
-msgid ""
-"Usage: bot.py <server[:port]> <channel[,channel...]> <nickname> [NickServ "
-"password]"
-msgstr ""
-
-#: simple_bot/bot.py
-msgid "Error: Invalid port."
-msgstr ""
-
-#: simple_bot/bot.py
-msgid "Caught KeyboardInterrupt, exiting..."
 msgstr ""
 
 #: ../ai/src/model.rs
@@ -375,4 +323,16 @@ msgstr ""
 
 #: ../ai/src/main.rs
 msgid "!ai is only available in channels."
+msgstr ""
+
+#: ../ircbot/src/bot.rs ../ircbot/src/bot.rs
+msgid "An error occurred."
+msgstr ""
+
+#: ../ircbot/src/bot.rs
+msgid "A very simple bot with 日本語 support."
+msgstr ""
+
+#: ../ircbot/src/bot.rs
+msgid "Known commands: "
 msgstr ""
