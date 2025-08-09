@@ -1,10 +1,13 @@
+use irc::client::prelude::Message;
 use irc::{
     client::{ClientStream, prelude::*},
     error,
 };
 use rand::{Rng, distr::Alphanumeric, rng};
 use std::collections::HashMap;
+use std::env;
 use std::io::Write;
+use std::path::Path;
 
 pub trait ClientInterface {
     fn send(&mut self, command: Command) -> error::Result<()>;
@@ -24,6 +27,7 @@ pub struct Bot {
     commands: HashMap<&'static str, CommandFn>,
     client: Box<dyn ClientInterface>,
     magic_key: String,
+    scripts: Vec<(&'static str, &'static str)>,
 }
 
 type CommandFn = fn(&Bot, &str) -> Response;
@@ -38,24 +42,27 @@ enum Response {
 }
 
 impl Bot {
-    pub fn new<T: ClientInterface + 'static>(client: T) -> Self {
-        let mut commands: HashMap<&'static str, CommandFn> = HashMap::new();
-        commands.insert("version", version_command);
-        commands.insert("help", help_command);
-
+    pub fn new<T: ClientInterface + 'static>(
+        client: T,
+        scripts: Vec<(&'static str, &'static str)>,
+    ) -> Self {
         let magic_key: String = rng()
             .sample_iter(&Alphanumeric)
             .take(8)
             .map(char::from)
             .collect();
-
         println!("Today's magic key for admin commands: {}", magic_key);
         std::io::stdout().flush().unwrap();
+
+        let mut commands: HashMap<&'static str, CommandFn> = HashMap::new();
+        commands.insert("version", version_command);
+        commands.insert("help", help_command);
 
         Bot {
             commands,
             client: Box::new(client),
             magic_key,
+            scripts,
         }
     }
 
@@ -101,17 +108,20 @@ impl Bot {
             Response::Join(channel) => self.client.send(Command::JOIN(channel, None, None)),
             Response::Part(channel) => self.client.send(Command::PART(channel, None)),
             Response::Privmsg(target, msg) => {
+                let lines = msg.lines().filter(|line| !line.is_empty());
                 // Limit maximum number of lines and line length.
-                for msg in msg.split("\n").take(4) {
-                    self.client
-                        .send(Command::PRIVMSG(target.to_string(), limit_length(msg, 410).to_string()))?;
+                for msg in lines.take(4) {
+                    self.client.send(Command::PRIVMSG(
+                        target.to_string(),
+                        limit_length(msg, 410).to_string(),
+                    ))?;
                 }
                 Ok(())
             }
         }
     }
 
-    fn generate_response(&self, target: &str, message: &str, _sender: &str) -> Response {
+    fn generate_response(&self, target: &str, message: &str, sender: &str) -> Response {
         let message = if let Some(msg) = message.strip_prefix('!') {
             msg
         } else if target.starts_with('#') {
@@ -122,7 +132,6 @@ impl Bot {
             message
         };
 
-        // Check for magic key commands
         if message.starts_with(&self.magic_key) {
             return self.do_special_command(message[self.magic_key.len()..].trim_start());
         }
@@ -131,6 +140,19 @@ impl Bot {
         if let Some(command_handler) = self.commands.get(command.as_str()) {
             return command_handler(self, &args);
         }
+
+        for (name, path) in &self.scripts {
+            if *name == command {
+                let room = if target.starts_with('#') {
+                    target
+                } else {
+                    sender
+                };
+                let output = run_script(path, &args, sender, room, false);
+                return Response::Reply(output);
+            }
+        }
+
         Response::None
     }
 
@@ -210,6 +232,45 @@ fn limit_length(s: &str, max_bytes: usize) -> &str {
     ""
 }
 
+fn run_script(path: &str, argument: &str, sender: &str, room: &str, ignore_errors: bool) -> String {
+    let mut env = env::vars().collect::<HashMap<String, String>>();
+    let lang = env
+        .get("LANG")
+        .unwrap_or(&"en_US.utf8".to_string())
+        .to_string();
+    env.insert("DMB_SENDER".to_string(), sender.to_string());
+    env.insert("DMB_RECEIVER".to_string(), room.to_string());
+    env.insert("LANGUAGE".to_string(), lang.to_string());
+    env.insert("LANG".to_string(), lang.to_string());
+    env.insert("LC_ALL".to_string(), lang);
+    env.insert("IRC_PLUGIN".to_string(), "1".to_string());
+
+    let working_dir = match Path::new(path).parent() {
+        Some(p) => p,
+        None => return format!("Invalid script path: {}", path).to_string(),
+    };
+    let output = std::process::Command::new(path)
+        .arg(argument)
+        .current_dir(working_dir)
+        .envs(
+            env.iter()
+                .map(|(k, v)| (k.as_str(), v.as_str()))
+                .collect::<Vec<(&str, &str)>>(),
+        )
+        .output();
+
+    match output {
+        Ok(out) => String::from_utf8_lossy(&out.stdout).to_string(),
+        Err(_) => {
+            if ignore_errors {
+                String::new()
+            } else {
+                "An error occurred.".to_string()
+            }
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -229,7 +290,7 @@ mod tests {
         assert_eq!(limit_length("こんにちは", 3), "こ"); // 1 char * 3 bytes = 3
         assert_eq!(limit_length("こんにちは", 2), ""); // Not enough for 1 char
         for i in 1..=16 {
-            limit_length("こんにちは", i);  // assert no panics
+            limit_length("こんにちは", i); // assert no panics
         }
     }
 

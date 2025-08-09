@@ -90,16 +90,40 @@ async fn run_bot(
         &[Mode::Plus(UserMode::Unknown('B'), None)],
     )?;
 
-    let mut bot = bot::Bot::new(client);
+    let scripts = vec![
+        ("ai", "../ai/ai"),
+        ("cdecl", "../cdecl/c.sh"),
+        ("c++decl", "../cdecl/c++.sh"),
+        ("rtk", "../rtk/rtk.sh"),
+        ("romaji", "../romaji/romaji.sh"),
+        ("kanjidic", "../kanjidic/kanjidic.sh"),
+        ("kana", "../reading/read.py"),
+        ("hira", "../kana/hira.sh"),
+        ("kata", "../kana/kata.sh"),
+        ("ja", "../jmdict/jm.sh"),
+        ("wa", "../jmdict/wa.sh"),
+        ("audio", "../audio/find_audio.sh"),
+        ("quiz", "../reading_quiz/quiz.sh"),
+        ("kuiz", "../kumitate_quiz/kuiz.sh"),
+        ("calc", "../mueval/run.sh"),
+        ("type", "../mueval/type.sh"),
+        ("utf", "../compare_encoding/compare_encoding.sh"),
+        ("lhc", "../lhc/lhc_info.sh"),
+    ];
+
+    let mut bot = bot::Bot::new(client, scripts);
     let mut stream = bot.stream()?;
     loop {
         tokio::select! {
             _ = shutdown_notify.notified() => bot.quit(None)?,
             message = stream.next() => {
-                if let Some(Ok(message)) = message {
-                    bot.handle_message(&message)?;
-                } else {
-                    break;
+                match message {
+                    Some(Ok(message)) => bot.handle_message(&message)?,
+                    Some(Err(e)) => {
+                        eprintln!("Error: {}", e);
+                        break;
+                    }
+                    None => break,
                 }
             }
         }
