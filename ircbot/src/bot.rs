@@ -5,9 +5,11 @@ use irc::{
 };
 use rand::{Rng, distr::Alphanumeric, rng};
 use std::collections::HashMap;
-use std::env;
 use std::io::Write;
 use std::path::Path;
+use std::time::Duration;
+use std::{env, future};
+use tokio::time::{Instant, sleep_until};
 
 pub trait ClientInterface {
     fn send(&mut self, command: Command) -> error::Result<()>;
@@ -23,15 +25,30 @@ impl ClientInterface for Client {
     }
 }
 
+#[derive(Debug, PartialEq, Clone)]
+pub struct TimerData {
+    script: String,
+    argument: String,
+    sender: String,
+    response_target: String,
+}
+
+struct Timer {
+    deadline: Instant,
+    data: TimerData,
+}
+
 pub struct Bot {
     commands: HashMap<&'static str, CommandFn>,
     client: Box<dyn ClientInterface>,
     magic_key: String,
     scripts: Vec<(&'static str, &'static str)>,
+    timers: Vec<Timer>,
 }
 
 type CommandFn = fn(&Bot, &str) -> Response;
 
+#[derive(Debug, PartialEq, Clone)]
 enum Response {
     None,
     Quit(Option<String>),
@@ -39,6 +56,12 @@ enum Response {
     Join(String),
     Part(String),
     Privmsg(String, String),
+}
+
+struct MessageMetadata {
+    sender: String,
+    target: String,
+    response_target: String,
 }
 
 impl Bot {
@@ -61,6 +84,7 @@ impl Bot {
             client: Box::new(client),
             magic_key,
             scripts,
+            timers: Vec::new(),
         };
         bot.print_magic_key();
         bot
@@ -88,34 +112,46 @@ impl Bot {
     pub fn handle_message(&mut self, message: &Message) -> error::Result<()> {
         match message.command {
             Command::PRIVMSG(ref target, ref m) => {
-                let sender = match message.response_target() {
-                    Some(sender) => sender,
+                let sender = match message.source_nickname() {
+                    Some(sender) => sender.to_string(),
                     None => return Ok(()),
                 };
-                self.handle_privmsg(target, m, sender)
+                let response_target = match message.response_target() {
+                    Some(target) => target.to_string(),
+                    None => return Ok(()),
+                };
+                self.handle_privmsg(
+                    m,
+                    &MessageMetadata {
+                        sender,
+                        target: target.to_string(),
+                        response_target,
+                    },
+                )
             }
             _ => Ok(()),
         }
     }
 
-    pub fn handle_privmsg(
+    fn handle_privmsg(
         &mut self,
-        target: &str,
         message: &str,
-        sender: &str,
+        message_data: &MessageMetadata,
     ) -> error::Result<()> {
-        self.execute_response(self.generate_response(target, message, sender), sender)
+        let response = self.generate_response(message, message_data);
+        self.execute_response(response, &message_data.response_target)
     }
 
-    fn execute_response(&mut self, response: Response, sender: &str) -> error::Result<()> {
+    fn execute_response(&mut self, response: Response, response_target: &str) -> error::Result<()> {
         match response {
             Response::None => Ok(()),
             Response::Quit(msg) => self.client.send(Command::QUIT(Some(
                 msg.unwrap_or_else(|| "さようなら".to_string()),
             ))),
-            Response::Reply(msg) => {
-                self.execute_response(Response::Privmsg(sender.to_string(), msg), sender)
-            }
+            Response::Reply(msg) => self.execute_response(
+                Response::Privmsg(response_target.to_string(), msg),
+                response_target,
+            ),
             Response::Join(channel) => self.client.send(Command::JOIN(channel, None, None)),
             Response::Part(channel) => self.client.send(Command::PART(channel, None)),
             Response::Privmsg(target, msg) => {
@@ -132,14 +168,14 @@ impl Bot {
         }
     }
 
-    fn generate_response(&self, target: &str, message: &str, sender: &str) -> Response {
+    fn generate_response(&mut self, message: &str, message_data: &MessageMetadata) -> Response {
         let message = if let Some(msg) = message.strip_prefix('!') {
             msg
-        } else if target.starts_with('#') {
+        } else if message_data.target.starts_with('#') {
             // Channel message without ! prefix
             return Response::None;
         } else {
-            self.debug_out(&format!("<{}> {}", sender, message));
+            self.debug_out(&format!("<{}> {}", message_data.sender, message));
             // Private message to the bot works without ! prefix
             message
         };
@@ -155,13 +191,19 @@ impl Bot {
 
         for (name, path) in &self.scripts {
             if *name == command {
-                let room = if target.starts_with('#') {
-                    target
-                } else {
-                    sender
-                };
-                let output = self.run_script(path, &args, sender, room, false);
-                return Response::Reply(output);
+                let output = self.run_script(
+                    path,
+                    &args,
+                    &message_data.sender,
+                    &message_data.response_target,
+                    false,
+                );
+                return Response::Reply(self.handle_script_output(
+                    &output,
+                    path,
+                    &message_data.sender,
+                    &message_data.response_target,
+                ));
             }
         }
 
@@ -214,12 +256,80 @@ impl Bot {
         }
     }
 
+    fn add_timer(
+        &mut self,
+        delay_seconds: u64,
+        script: &str,
+        argument: &str,
+        sender: &str,
+        room: &str,
+    ) {
+        self.timers.push(Timer {
+            deadline: Instant::now() + Duration::from_secs(delay_seconds),
+            data: TimerData {
+                script: script.to_string(),
+                argument: argument.to_string(),
+                sender: sender.to_string(),
+                response_target: room.to_string(),
+            },
+        });
+    }
+
+    pub async fn next_timer(&mut self) -> TimerData {
+        if self.timers.is_empty() {
+            return future::pending::<TimerData>().await;
+        }
+        self.timers.sort_by_key(|timer| timer.deadline);
+        sleep_until(self.timers[0].deadline).await;
+        self.timers.remove(0).data
+    }
+
+    pub fn run_timed_command(&mut self, data: TimerData) -> error::Result<()> {
+        let output = self.run_script(
+            &data.script,
+            &data.argument,
+            &data.sender,
+            &data.response_target,
+            false,
+        );
+        let filtered =
+            self.handle_script_output(&output, &data.script, &data.sender, &data.response_target);
+        self.debug_out(&format!(
+            "Executing timed command: {:?}\nResponse: {:?}",
+            data, &filtered
+        ));
+        self.execute_response(Response::Reply(filtered), &data.response_target)
+    }
+
+    fn handle_script_output(
+        &mut self,
+        output: &str,
+        script: &str,
+        sender: &str,
+        room: &str,
+    ) -> String {
+        let mut filtered = vec![];
+        for line in output.lines() {
+            if line.starts_with("/timer ") {
+                let args: Vec<&str> = line.split(' ').collect();
+                if args.len() >= 3 {
+                    let delay_seconds = args[1].parse().unwrap_or(0);
+                    let argument = args[2..].join(" ");
+                    self.add_timer(delay_seconds, script, &argument, sender, room);
+                }
+            } else {
+                filtered.push(line);
+            }
+        }
+        filtered.join("\n")
+    }
+
     fn run_script(
         &self,
         path: &str,
         argument: &str,
         sender: &str,
-        room: &str,
+        response_target: &str,
         ignore_errors: bool,
     ) -> String {
         let mut env = env::vars().collect::<HashMap<String, String>>();
@@ -228,7 +338,7 @@ impl Bot {
             .unwrap_or(&"en_US.utf8".to_string())
             .to_string();
         env.insert("DMB_SENDER".to_string(), sender.to_string());
-        env.insert("DMB_RECEIVER".to_string(), room.to_string());
+        env.insert("DMB_RECEIVER".to_string(), response_target.to_string());
         env.insert("LANGUAGE".to_string(), lang.to_string());
         env.insert("LANG".to_string(), lang.to_string());
         env.insert("LC_ALL".to_string(), lang);
@@ -268,7 +378,10 @@ impl Bot {
                 if ignore_errors {
                     String::new()
                 } else {
-                    self.debug_out(&format!("Internal error running {} {}: {}", path, argument, e));
+                    self.debug_out(&format!(
+                        "Internal error running {} {}: {}",
+                        path, argument, e
+                    ));
                     "An error occurred.".to_string()
                 }
             }

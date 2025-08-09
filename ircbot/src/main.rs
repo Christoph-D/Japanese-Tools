@@ -126,6 +126,7 @@ async fn run_bot(
                     None => break,
                 }
             }
+            timer_data = bot.next_timer() => bot.run_timed_command(timer_data)?,
         }
     }
 
