@@ -346,7 +346,7 @@ impl Bot {
             &data.argument,
             &data.sender,
             &data.response_target,
-            false,
+            true,
         );
         let filtered =
             self.extract_timer_commands(&output, &data.script, &data.sender, &data.response_target);
@@ -417,11 +417,7 @@ impl Bot {
         let output = std::process::Command::new(path)
             .arg(argument)
             .current_dir(working_dir)
-            .envs(
-                env.iter()
-                    .map(|(k, v)| (k.as_str(), v.as_str()))
-                    .collect::<Vec<(&str, &str)>>(),
-            )
+            .envs(env)
             .output();
 
         match output {
@@ -442,6 +438,10 @@ impl Bot {
             }
             Err(e) => {
                 if ignore_errors {
+                    self.debug_out(&format!(
+                        "Internal error ignored running {} {}: {}",
+                        path, argument, e
+                    ));
                     String::new()
                 } else {
                     self.debug_out(&format!(
