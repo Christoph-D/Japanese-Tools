@@ -20,9 +20,21 @@ jobs:
             cargo test
             cargo build --release
           working_directory: ai
+  ircbot:
+    docker:
+      - image: cimg/rust:1.88.0
+    steps:
+      - checkout
+      - run:
+          command: |
+            cargo clippy
+            cargo test
+            cargo build --release
+          working_directory: ircbot
 
 workflows:
   test_all:
     jobs:
       - shellcheck
       - ai
+      - ircbot
