@@ -42,7 +42,7 @@ pub struct Bot {
     commands: HashMap<&'static str, CommandFn>,
     client: Box<dyn ClientInterface>,
     magic_key: String,
-    scripts: Vec<(&'static str, &'static str)>,
+    scripts: Vec<Script>,
     timers: Vec<Timer>,
 }
 
@@ -64,11 +64,31 @@ struct MessageMetadata {
     response_target: String,
 }
 
+pub struct Script {
+    name: String,
+    path: String,
+    timers_allowed: bool,
+}
+
+impl Script {
+    pub fn new(name: &str, path: &str) -> Self {
+        Script {
+            name: name.to_string(),
+            path: path.to_string(),
+            timers_allowed: false,
+        }
+    }
+    pub fn new_with_timers(name: &str, path: &str) -> Self {
+        Script {
+            name: name.to_string(),
+            path: path.to_string(),
+            timers_allowed: true,
+        }
+    }
+}
+
 impl Bot {
-    pub fn new<T: ClientInterface + 'static>(
-        client: T,
-        scripts: Vec<(&'static str, &'static str)>,
-    ) -> Self {
+    pub fn new<T: ClientInterface + 'static>(client: T, scripts: Vec<Script>) -> Self {
         let magic_key: String = rng()
             .sample_iter(&Alphanumeric)
             .take(8)
@@ -189,21 +209,26 @@ impl Bot {
             return command_handler(self, &args);
         }
 
-        for (name, path) in &self.scripts {
-            if *name == command {
+        for script in &self.scripts {
+            if *script.name == command {
                 let output = self.run_script(
-                    path,
+                    &script.path,
                     &args,
                     &message_data.sender,
                     &message_data.response_target,
                     false,
                 );
-                return Response::Reply(self.handle_script_output(
-                    &output,
-                    path,
-                    &message_data.sender,
-                    &message_data.response_target,
-                ));
+                let output = if script.timers_allowed {
+                    self.extract_timer_commands(
+                        &output,
+                        &script.path.to_string(),
+                        &message_data.sender,
+                        &message_data.response_target,
+                    )
+                } else {
+                    output
+                };
+                return Response::Reply(output);
             }
         }
 
@@ -293,7 +318,7 @@ impl Bot {
             false,
         );
         let filtered =
-            self.handle_script_output(&output, &data.script, &data.sender, &data.response_target);
+            self.extract_timer_commands(&output, &data.script, &data.sender, &data.response_target);
         self.debug_out(&format!(
             "Executing timed command: {:?}\nResponse: {:?}",
             data, &filtered
@@ -301,7 +326,7 @@ impl Bot {
         self.execute_response(Response::Reply(filtered), &data.response_target)
     }
 
-    fn handle_script_output(
+    fn extract_timer_commands(
         &mut self,
         output: &str,
         script: &str,

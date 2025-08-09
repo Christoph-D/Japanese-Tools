@@ -7,6 +7,8 @@ use tokio::sync::Notify;
 use tokio_stream::StreamExt;
 use tokio_stream::wrappers::SignalStream;
 
+use crate::bot::Script;
+
 mod bot;
 
 /// A simple IRC bot
@@ -91,24 +93,24 @@ async fn run_bot(
     )?;
 
     let scripts = vec![
-        ("ai", "../ai/ai"),
-        ("cdecl", "../cdecl/c.sh"),
-        ("c++decl", "../cdecl/c++.sh"),
-        ("rtk", "../rtk/rtk.sh"),
-        ("romaji", "../romaji/romaji.sh"),
-        ("kanjidic", "../kanjidic/kanjidic.sh"),
-        ("kana", "../reading/read.py"),
-        ("hira", "../kana/hira.sh"),
-        ("kata", "../kana/kata.sh"),
-        ("ja", "../jmdict/jm.sh"),
-        ("wa", "../jmdict/wa.sh"),
-        ("audio", "../audio/find_audio.sh"),
-        ("quiz", "../reading_quiz/quiz.sh"),
-        ("kuiz", "../kumitate_quiz/kuiz.sh"),
-        ("calc", "../mueval/run.sh"),
-        ("type", "../mueval/type.sh"),
-        ("utf", "../compare_encoding/compare_encoding.sh"),
-        ("lhc", "../lhc/lhc_info.sh"),
+        Script::new("ai", "../ai/ai"),
+        Script::new("cdecl", "../cdecl/c.sh"),
+        Script::new("c++decl", "../cdecl/c++.sh"),
+        Script::new("rtk", "../rtk/rtk.sh"),
+        Script::new("romaji", "../romaji/romaji.sh"),
+        Script::new("kanjidic", "../kanjidic/kanjidic.sh"),
+        Script::new("kana", "../reading/read.py"),
+        Script::new("hira", "../kana/hira.sh"),
+        Script::new("kata", "../kana/kata.sh"),
+        Script::new("ja", "../jmdict/jm.sh"),
+        Script::new("wa", "../jmdict/wa.sh"),
+        Script::new("audio", "../audio/find_audio.sh"),
+        Script::new_with_timers("quiz", "../reading_quiz/quiz.sh"),
+        Script::new_with_timers("kuiz", "../kumitate_quiz/kuiz.sh"),
+        Script::new("calc", "../mueval/run.sh"),
+        Script::new("type", "../mueval/type.sh"),
+        Script::new("utf", "../compare_encoding/compare_encoding.sh"),
+        Script::new("lhc", "../lhc/lhc_info.sh"),
     ];
 
     let mut bot = bot::Bot::new(client, scripts);
