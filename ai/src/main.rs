@@ -109,13 +109,10 @@ fn usage(models: &ModelList) -> String {
 }
 
 fn locate_config_path() -> Option<PathBuf> {
-    let mut current_dir: &Path = &std::env::current_exe().ok()?;
-    while let Some(parent) = current_dir.parent() {
-        let config_file = parent.join(CONFIG_FILE_NAME);
-        if config_file.exists() && config_file.is_file() {
-            return parent.canonicalize().ok();
-        }
-        current_dir = parent;
+    let current_dir = std::env::current_dir().ok()?;
+    let config_file = current_dir.join(CONFIG_FILE_NAME);
+    if config_file.exists() && config_file.is_file() {
+        return Some(current_dir);
     }
     None
 }
