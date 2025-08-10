@@ -5,27 +5,22 @@
 # Prepares wadoku for use with the lookup script "wa.sh".
 set -eu
 
+if [[ $# -ne 1 ]]; then
+    echo 'Usage:'
+    echo './prepare_wadoku.sh <wadoku.xml>'
+    exit 1
+fi
+SOURCE="$(readlink -f "$1")"
+
 cd "$(dirname "$0")"
 
-TMP1=.tmp1
+TMP1=$(mktemp)
 
 if ! command -v xsltproc &>/dev/null; then
     echo "Error, could not find xsltproc."
     echo "Please install xmlstarlet."
     exit 1
 fi
-if [[ -e $TMP1 ]]; then
-    echo "Error, temporary file \"$TMP1\" already exists."
-    exit 1
-fi
-
-if [[ $# -ne 1 ]]; then
-    echo 'Usage:'
-    echo './prepare_wadoku.sh <wadoku.xml>'
-    exit 1
-fi
-
-SOURCE="$1"
 
 if [[ ! -s "$SOURCE" ]]; then
     echo 'Please visit http://www.wadoku.de/wiki/display/WAD/Downloads+und+Links and'

@@ -2,15 +2,12 @@
 set -eu
 cd "$(dirname "$0")"
 
-echo 'This script will download and preprocess the kanjidic file for use with the kanjidic script.
-The file will be placed in the following directory:'
-echo "$(readlink -f .)/"
-read -rp "Proceed? [y]" OK
-
-[[ $OK && $OK != 'y' && $OK != 'Y' ]] && exit 1
+if [[ -e kanjidic ]]; then
+    exit 0
+fi
 
 echo 'Fetching kanjidic.gz...'
-wget http://ftp.monash.edu.au/pub/nihongo/kanjidic.gz
+wget http://ftp.edrdg.org/pub/Nihongo/kanjidic.gz
 
 echo 'Unzipping...'
 gunzip kanjidic.gz
