@@ -14,6 +14,8 @@ use std::time::Duration;
 use std::{env, future};
 use tokio::time::{Instant, sleep_until};
 
+use crate::error::BotError;
+
 pub trait ClientInterface {
     fn send(&mut self, command: Command) -> error::Result<()>;
     fn stream(&mut self) -> error::Result<ClientStream>;
@@ -134,15 +136,19 @@ impl Bot {
         self.print_magic_key();
     }
 
-    pub fn stream(&mut self) -> error::Result<ClientStream> {
-        self.client.stream()
+    fn send(&mut self, command: Command) -> Result<(), BotError> {
+        self.client.send(command).map_err(BotError::from)
     }
 
-    pub fn quit(&mut self, message: Option<String>) -> error::Result<()> {
+    pub fn stream(&mut self) -> Result<ClientStream, BotError> {
+        self.client.stream().map_err(BotError::from)
+    }
+
+    pub fn quit(&mut self, message: Option<String>) -> Result<(), BotError> {
         self.execute_response(Response::Quit(message), "")
     }
 
-    pub fn handle_message(&mut self, message: &Message) -> error::Result<()> {
+    pub fn handle_message(&mut self, message: &Message) -> Result<(), BotError> {
         match message.command {
             Command::PRIVMSG(ref target, ref m) => {
                 let sender = match message.source_nickname() {
@@ -182,8 +188,8 @@ impl Bot {
         &mut self,
         message: &str,
         message_data: &MessageMetadata,
-    ) -> error::Result<()> {
-        let response = self.generate_response(message, message_data);
+    ) -> Result<(), BotError> {
+        let response = self.generate_response(message, message_data)?;
         self.execute_response(response, &message_data.response_target)
     }
 
@@ -193,23 +199,27 @@ impl Bot {
         }
     }
 
-    fn execute_response(&mut self, response: Response, response_target: &str) -> error::Result<()> {
+    fn execute_response(
+        &mut self,
+        response: Response,
+        response_target: &str,
+    ) -> Result<(), BotError> {
         match response {
             Response::None => Ok(()),
-            Response::Quit(msg) => self.client.send(Command::QUIT(Some(
+            Response::Quit(msg) => self.send(Command::QUIT(Some(
                 msg.unwrap_or_else(|| "さようなら".to_string()),
             ))),
             Response::Reply(msg) => self.execute_response(
                 Response::Privmsg(response_target.to_string(), msg),
                 response_target,
             ),
-            Response::Join(channel) => self.client.send(Command::JOIN(channel, None, None)),
-            Response::Part(channel) => self.client.send(Command::PART(channel, None)),
+            Response::Join(channel) => self.send(Command::JOIN(channel, None, None)),
+            Response::Part(channel) => self.send(Command::PART(channel, None)),
             Response::Privmsg(target, msg) => {
                 let lines = msg.lines().filter(|line| !line.trim().is_empty());
                 // Limit maximum number of lines and line length.
                 for msg in lines.take(4) {
-                    self.client.send(Command::PRIVMSG(
+                    self.send(Command::PRIVMSG(
                         target.to_string(),
                         limit_length(msg, 410).to_string(),
                     ))?;
@@ -219,12 +229,16 @@ impl Bot {
         }
     }
 
-    fn generate_response(&mut self, message: &str, message_data: &MessageMetadata) -> Response {
+    fn generate_response(
+        &mut self,
+        message: &str,
+        message_data: &MessageMetadata,
+    ) -> Result<Response, BotError> {
         let message = if let Some(msg) = message.strip_prefix('!') {
             msg
         } else if message_data.target.starts_with('#') {
             // Channel message without ! prefix
-            return Response::None;
+            return Ok(Response::None);
         } else {
             self.debug_out(&format!("<{}> {}", message_data.sender, message));
             // Private message to the bot works without ! prefix
@@ -232,23 +246,29 @@ impl Bot {
         };
 
         if message.starts_with(&self.magic_key) {
-            return self.do_special_command(message[self.magic_key.len()..].trim_start());
+            return Ok(self.do_special_command(message[self.magic_key.len()..].trim_start()));
         }
 
         let (command, args) = self.parse_message(message);
         if let Some(command_handler) = self.commands.get(command.as_str()) {
-            return command_handler(self, &args);
+            return Ok(command_handler(self, &args));
         }
 
         for script in &self.scripts {
             if *script.name == command {
-                let output = self.run_script(
+                let output = match self.run_script(
                     &script.path,
                     &args,
                     &message_data.sender,
                     &message_data.response_target,
                     false,
-                );
+                ) {
+                    Ok(output) => output,
+                    Err(e) => {
+                        self.debug_out(&format!("run_script: {}", e));
+                        return Ok(Response::Reply(gettext("An error occurred.")));
+                    }
+                };
                 let output = if script.timers_allowed {
                     self.extract_timer_commands(
                         &output,
@@ -259,11 +279,11 @@ impl Bot {
                 } else {
                     output
                 };
-                return Response::Reply(output);
+                return Ok(Response::Reply(output));
             }
         }
 
-        Response::None
+        Ok(Response::None)
     }
 
     fn do_special_command(&self, cmd: &str) -> Response {
@@ -339,19 +359,25 @@ impl Bot {
         sleep_until(self.timers[0].deadline).await;
     }
 
-    pub fn run_timed_command(&mut self) -> error::Result<()> {
+    pub fn run_timed_command(&mut self) -> Result<(), BotError> {
         let data = self.timers.remove(0).data;
-        let output = self.run_script(
+        let output = match self.run_script(
             &data.script,
             &data.argument,
             &data.sender,
             &data.response_target,
             true,
-        );
+        ) {
+            Ok(output) => output,
+            Err(e) => {
+                self.debug_out(&format!("Timed command {:?} failed: {}", data, e));
+                return Ok(());
+            }
+        };
         let filtered =
             self.extract_timer_commands(&output, &data.script, &data.sender, &data.response_target);
         self.debug_out(&format!(
-            "Executing timed command: {:?}\nResponse: {:?}",
+            "Executed timed command: {:?}\nResponse: {:?}",
             data, &filtered
         ));
         self.execute_response(Response::Reply(filtered), &data.response_target)
@@ -380,12 +406,11 @@ impl Bot {
         filtered.join("\n")
     }
 
-    pub async fn next_background_job(&self) -> error::Result<()> {
+    pub async fn next_background_job(&self) {
         sleep_until(self.next_daily_trigger + Duration::from_secs(1)).await;
-        Ok(())
     }
 
-    pub fn run_background_job(&mut self) -> error::Result<()> {
+    pub fn run_background_job(&mut self) -> Result<(), BotError> {
         self.next_daily_trigger = next_midnight();
         self.daily_jobs()
     }
@@ -397,7 +422,7 @@ impl Bot {
         sender: &str,
         response_target: &str,
         ignore_errors: bool,
-    ) -> String {
+    ) -> Result<String, BotError> {
         let mut env = env::vars().collect::<HashMap<String, String>>();
         let lang = env
             .get("LANG")
@@ -410,10 +435,12 @@ impl Bot {
         env.insert("LC_ALL".to_string(), lang);
         env.insert("IRC_PLUGIN".to_string(), "1".to_string());
 
-        let working_dir = match Path::new(path).parent() {
-            Some(p) => p,
-            None => return format!("Invalid script path: {}", path).to_string(),
-        };
+        let working_dir = Path::new(path)
+            .parent()
+            .ok_or(BotError::InvalidScriptPath(format!(
+                "Invalid directory: {}",
+                path
+            )))?;
         let output = std::process::Command::new(path)
             .arg(argument)
             .current_dir(working_dir)
@@ -423,17 +450,16 @@ impl Bot {
         match output {
             Ok(out) => {
                 if out.status.success() {
-                    String::from_utf8_lossy(&out.stdout).to_string()
+                    Ok(String::from_utf8_lossy(&out.stdout).to_string())
                 } else {
-                    self.debug_out(&format!(
+                    Err(BotError::ScriptExecutionError(format!(
                         "[{}] Error running {} {}\nstderr: {}\nstdout: {}",
                         out.status,
                         path,
                         argument,
                         String::from_utf8_lossy(&out.stderr),
                         String::from_utf8_lossy(&out.stdout)
-                    ));
-                    gettext("An error occurred.").to_string()
+                    )))
                 }
             }
             Err(e) => {
@@ -442,13 +468,17 @@ impl Bot {
                         "Internal error ignored running {} {}: {}",
                         path, argument, e
                     ));
-                    String::new()
+                    Ok(String::new())
                 } else {
-                    self.debug_out(&format!(
-                        "Internal error running {} {}: {}",
-                        path, argument, e
-                    ));
-                    gettext("An error occurred.").to_string()
+                    match e.kind() {
+                        std::io::ErrorKind::NotFound => {
+                            Err(BotError::InvalidScriptPath(format!("Not found: {}", path)))
+                        }
+                        _ => Err(BotError::ScriptExecutionError(format!(
+                            "Internal error running {} {}: {}",
+                            path, argument, e
+                        ))),
+                    }
                 }
             }
         }
@@ -483,7 +513,7 @@ impl Bot {
         Ok(Some(next_word.trim().to_string()))
     }
 
-    pub fn daily_jobs(&mut self) -> error::Result<()> {
+    pub fn daily_jobs(&mut self) -> Result<(), BotError> {
         let marker = "Wort des Tages: ";
         if let Some(ref topic) = self.main_channel_topic {
             if let Some(pos) = topic.find(marker) {

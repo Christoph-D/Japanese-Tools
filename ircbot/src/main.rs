@@ -11,6 +11,7 @@ use tokio_stream::wrappers::SignalStream;
 use crate::bot::Script;
 
 mod bot;
+mod error;
 
 /// A simple IRC bot
 #[derive(Parser, Debug)]
