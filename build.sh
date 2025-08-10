@@ -4,6 +4,7 @@ set -eu
 
 cargo build --release
 cp target/release/ai ai/
+cp target/release/tokenizer tokenizer/
 cp target/release/ircbot ircbot/
 
 ./gettext/regenerate_mo_files.sh || echo "Continuing without translations"

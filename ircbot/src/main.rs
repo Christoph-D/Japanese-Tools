@@ -148,6 +148,7 @@ async fn run_bot(
         Script::new_with_timers("quiz", "../reading_quiz/quiz.sh"),
         Script::new_with_timers("kuiz", "../kumitate_quiz/kuiz.sh"),
         Script::new("calc", "../mueval/run.sh"),
+        Script::new("tok", "../tokenizer/tokenizer"),
         Script::new("type", "../mueval/type.sh"),
         Script::new("utf", "../compare_encoding/compare_encoding.sh"),
         Script::new("lhc", "../lhc/lhc_info.sh"),

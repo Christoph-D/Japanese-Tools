@@ -279,3 +279,15 @@ A simple IRC bot that integrates all the tools above.
 cd ircbot
 cargo run -- <server[:port]> <channel> <nickname> [NickServ password]
 ```
+
+## Tokenizer
+
+Tokenize text using the Deepseek V3 or Llama3 tokenizer, for exploring LLMs.
+
+```text
+$ cd tokenizer
+$ cargo run --  '世界は美しくなんかない。そしてそれ故に、美しい'
+"世界", "は", "美", "し", "くな", "ん", "かない", "。", "そして", "それ", "故", "に", "、", "美", "しい"
+$ cargo run --  '-llama3 世界は美しくなんかない。そしてそれ故に、美しい'
+"世界", "は", "美", "しく", "なん", "かない", "。そして", "それ", "故", "に", "、", "美", "しい"
+```
