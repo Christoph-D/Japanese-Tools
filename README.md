@@ -21,25 +21,42 @@ sudo apt install mecab-jumandic-utf8 mecab kakasi xmlstarlet xsltproc python-irc
 cargo install xtr  # development dependency
 ```
 
+## Build
+
+To build the binaries, translations, and dictionaries, run:
+
+```bash
+./build.sh
+```
+
+This step is optional. If you don't do this, then
+
+- the IRC bot won't be able to call binary modules
+- everything will be in English (no translations)
+- jmdict, wadoku and kanjidic won't work
+
+Note that wadoku requires a manual step of downloading and extracting the latest
+XML dump, which the script will tell you.
+
 ## ai/
 
-Query an LLM. To set it up, go into the `ai` directory and run the following
+Query an LLM. To use it, go into the `ai` directory and run the following
 commands:
 
 ```bash
-cargo build --release && cp target/release/ai .
 cp .env.example .env
-# Edit .env and add your keys
+# Edit .env and add your API keys and model config
+cargo run -- "What's 夜空?"
 ```
 
 Examples:
 
 ```text
-$ ./ai
+/ai $ cargo run
 Usage: !ai [-g|-o|-p|-m] [-clear_history|-c] [-temp=1.0|-t=1.0] <query>.  Models: [g]Gemini 2.5 Flash [o]GPT-4o mini [p]GPT-4.1 [m]Mistral Medium.  Default: Deepseek v3 0324
-$ ./ai "What's 夜空?"
+/ai $ cargo run -- "What's 夜空?"
 "夜空" means "night sky" in English. It refers to the sky as seen at night, often with stars and the moon.
-$ ./ai "-g What's 夜空? Also give me a Japanese example sentence."
+/ai $ cargo run -- "-g What's 夜空? Also give me a Japanese example sentence."
 [g] Yozora (夜空) means night sky. 今夜は夜空が綺麗ですね。(The night sky is beautiful tonight.)
 ```
 
@@ -149,10 +166,11 @@ now.
 <nihongobot> Flamerokz: Correct! (2: 優勝は)
 ```
 
-### Example question file
+### Question files
 
-A question file (a file ending in `.txt` in `kumitate_quiz/questions/`) should
-contains lines of the following form:
+For `!kuiz` to work, you need to put one or more question files with a `.txt`
+suffix into `kumitate_quiz/questions/`. The files need to to contain lines of
+the following form:
 
 ```text
 周囲の人たちの　＿　＿　★　＿　と思う。|協力を,優勝は,無理だった,抜きにしては|2
@@ -160,9 +178,9 @@ contains lines of the following form:
 
 ## lhc/
 
-This script has nothing to do with Japanese. It OCRs the image on
-https://op-webtools.web.cern.ch/vistar/ to provide live statistics of the status
-of the LHC.
+This script has nothing to do with Japanese. It OCRs the image from the
+[CERN website](https://op-webtools.web.cern.ch/vistar/) to print the current LHC
+status.
 
 ## reading/
 
@@ -186,6 +204,16 @@ A quiz asking kanji -> kana questions. Only works as an IRC plugin for now.
 <Christoph>  !quiz はっけん
 <nihongobot> Christoph: Correct! (はっけん:
              (n,vs) 1. discovery, 2. detection, 3. finding)
+```
+
+### Question files
+
+For `!quiz` to work, you need to put one or more question files with a `.txt`
+suffix into `reading_quiz/vocabulary/`. The files need to to contain lines of
+the following form:
+
+```text
+発見|はっけん|(n,vs) 1. discovery, 2. detection, 3. finding
 ```
 
 ## romaji/
@@ -223,4 +251,5 @@ cd ircbot
 cargo run -- <server[:port]> <channel> <nickname> [NickServ password]
 ```
 
-It uses all the other scripts.
+It uses all the other scripts. You must run the IRC bot from the `ircbot`
+directory so it can find the other scripts.
