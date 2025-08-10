@@ -1,4 +1,4 @@
-pub const CONFIG_FILE_NAME: &str = "api-keys";
+pub const CONFIG_FILE_NAME: &str = ".env";
 
 // Hardcoded limit on line length for IRC
 pub const MAX_LINE_LENGTH: usize = 300;

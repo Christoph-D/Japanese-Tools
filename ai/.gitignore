@@ -1,4 +1,4 @@
 /target
 /ai
-/api-keys
+/.env
 ai_memory.db

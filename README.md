@@ -28,8 +28,8 @@ commands:
 
 ```bash
 cargo build --release && cp target/release/ai .
-cp api-keys.example api-keys
-# Edit api-keys and add your keys
+cp .env.example .env
+# Edit .env and add your keys
 ```
 
 Examples:
