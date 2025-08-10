@@ -19,6 +19,7 @@
 <xsl:template match="/">
   <xsl:call-template name="t1"/>
 </xsl:template>
+<xsl:key name="pos-by-entry-and-value" match="pos" use="concat(generate-id(ancestor::entry), '|', .)" />
 <xsl:template name="t1">
   <xsl:for-each select="/JMdict/entry">
     <xsl:for-each select="k_ele/keb">
@@ -35,7 +36,8 @@
       </xsl:if>
     </xsl:for-each>
     <xsl:value-of select="'□'"/>
-    <xsl:for-each select="sense/pos">
+    <xsl:variable name="current-entry" select="." />
+    <xsl:for-each select="sense/pos[generate-id() = generate-id(key('pos-by-entry-and-value', concat(generate-id($current-entry), '|', .))[1])]">
       <xsl:value-of select="."/>
       <xsl:if test="position()!=last()">
         <xsl:value-of select="','"/>
