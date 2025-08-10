@@ -1,8 +1,7 @@
 .env
 /ai/channel_prompts/
-/ai/target/
 /gettext/locale/
-/ircbot/target
 /jmdict/JMdict*
 /jmdict/wadoku*
+/target/
 /venv/

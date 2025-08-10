@@ -1,3 +1,4 @@
 *.mo
 *~
+/target
 /venv
