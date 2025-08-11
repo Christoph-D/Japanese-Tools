@@ -277,11 +277,8 @@ fn process_command(
     match command {
         "join" => {
             let target_user = args.trim();
-            if target_user.is_empty() {
-                return Ok(Some("Usage: join <username>".to_string()));
-            }
-            if target_user == sender {
-                return Ok(Some("You cannot join yourself.".to_string()));
+            if target_user.is_empty() || target_user == sender {
+                return Ok(Some(gettext("Usage: join <username>").to_string()));
             }
 
             memory.join_users(sender, target_user);
@@ -289,7 +286,11 @@ fn process_command(
                 .save()
                 .map_err(|e| format!("Failed to save memory: {}", e))?;
 
-            Ok(Some(format!("Joined memory with user '{}'.", target_user)))
+            Ok(Some(formatget!(
+                "{} joined memory with the group: {}",
+                sender,
+                memory.get_joined_users_excluding_self(sender).join(", ")
+            )))
         }
         "solo" => {
             memory.make_user_solo(sender);
@@ -297,26 +298,23 @@ fn process_command(
                 .save()
                 .map_err(|e| format!("Failed to save memory: {}", e))?;
 
-            Ok(Some("You are now a solo user.".to_string()))
+            Ok(Some(formatget!("{} is now solo.", sender)))
         }
         "joined" => {
-            let joined_users = memory.get_joined_users(sender);
-            if joined_users.len() == 1 {
-                return Ok(Some("You are not joined with any other users.".to_string()));
+            let other_users = memory.get_joined_users_excluding_self(sender);
+            if other_users.is_empty() {
+                return Ok(Some(formatget!(
+                    "{} is not sharing memory with anyone.",
+                    sender
+                )));
             }
-
-            let other_users: Vec<&str> = joined_users
-                .iter()
-                .filter(|&user| user != sender)
-                .map(|s| s.as_str())
-                .collect();
-
-            Ok(Some(format!(
-                "You are joined with: {}",
+            Ok(Some(formatget!(
+                "{} is sharing memory with: {}",
+                sender,
                 other_users.join(", ")
             )))
         }
-        _ => Ok(None), // Unknown command
+        _ => Ok(None), // Not a command
     }
 }
 
@@ -418,7 +416,10 @@ mod tests {
         let mut memory = Memory::new_from_path(dir.path()).unwrap();
 
         let result = process_command("join", "alice", "bob", &mut memory).unwrap();
-        assert_eq!(result, Some("Joined memory with user 'alice'.".to_string()));
+        assert_eq!(
+            result,
+            Some("bob joined memory with the group: alice".to_string())
+        );
 
         // Verify the users are actually joined
         let joined_users = memory.get_joined_users("bob");
@@ -444,10 +445,7 @@ mod tests {
 
         let result = process_command("join", "bob", "bob", &mut memory);
         assert!(result.is_ok());
-        assert_eq!(
-            result.unwrap(),
-            Some("You cannot join yourself.".to_string())
-        );
+        assert_eq!(result.unwrap(), Some("Usage: join <username>".to_string()));
     }
 
     #[test]

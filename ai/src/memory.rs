@@ -9,7 +9,10 @@ use rusqlite::{
 use std::collections::HashMap;
 use time::OffsetDateTime;
 
-use crate::{constants::{MEMORY_MAX_MESSAGES, MEMORY_RETENTION}, memory::user_groups::{GroupInfo, GroupSets}};
+use crate::{
+    constants::{MEMORY_MAX_MESSAGES, MEMORY_RETENTION},
+    memory::user_groups::{GroupInfo, GroupSets},
+};
 
 const MEMORY_DB_NAME: &str = "ai_memory.db";
 
@@ -242,9 +245,23 @@ impl Memory {
         self.joined_users.remove_user(user);
     }
 
-    // Get all users joined with the given user (including the user themselves)
+    // Get all users joined with the given user including the user themselves
     pub fn get_joined_users(&self, user: &str) -> Vec<String> {
-        self.joined_users.get_group_members(user)
+        let mut users = self.joined_users.get_group_members(user);
+        users.sort();
+        users
+    }
+
+    // Get all users joined with the given user excluding the user themselves
+    pub fn get_joined_users_excluding_self(&self, user: &str) -> Vec<String> {
+        let mut users = self
+            .joined_users
+            .get_group_members(user)
+            .into_iter()
+            .filter(|u| u != user)
+            .collect::<Vec<String>>();
+        users.sort();
+        users
     }
 }
 

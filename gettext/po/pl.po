@@ -338,6 +338,26 @@ msgstr "Nie znaleziono pliku konfiguracyjnego."
 msgid "!ai is only available in channels."
 msgstr "!ai jest dostępne tylko na kanałach."
 
+#: ../ai/src/main.rs
+msgid "Usage: join <username>"
+msgstr "Użycie: join <użytkownika>"
+
+#: ../ai/src/main.rs
+msgid "{} joined memory with the group: {}"
+msgstr "{} dołączył do pamięci grupy: {}"
+
+#: ../ai/src/main.rs
+msgid "{} is now solo."
+msgstr "{} jest teraz samodzielny."
+
+#: ../ai/src/main.rs
+msgid "{} is not sharing memory with anyone."
+msgstr "{} nie współdzieli pamięci z nikim."
+
+#: ../ai/src/main.rs
+msgid "{} is sharing memory with: {}"
+msgstr "{} współdzieli pamięć z: {}"
+
 #: ../ircbot/src/bot.rs
 msgid "An error occurred."
 msgstr "Wystąpił błąd."

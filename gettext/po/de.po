@@ -335,6 +335,26 @@ msgstr "Konfigurationsdatei nicht gefunden."
 msgid "!ai is only available in channels."
 msgstr "!ai gibt es nur in Channels."
 
+#: ../ai/src/main.rs
+msgid "Usage: join <username>"
+msgstr "Aufruf: join <username>"
+
+#: ../ai/src/main.rs
+msgid "{} joined memory with the group: {}"
+msgstr "{} teilt jetzt seinen Speicher mit: {}"
+
+#: ../ai/src/main.rs
+msgid "{} is now solo."
+msgstr "{} teilt seinen Speicher nicht mehr."
+
+#: ../ai/src/main.rs
+msgid "{} is not sharing memory with anyone."
+msgstr "{} teilt seinen Speicher nicht."
+
+#: ../ai/src/main.rs
+msgid "{} is sharing memory with: {}"
+msgstr "{} teilt seinen Speicher mit: {}"
+
 #: ../ircbot/src/bot.rs
 msgid "An error occurred."
 msgstr "Ein Fehler ist aufgetreten."

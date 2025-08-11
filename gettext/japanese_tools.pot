@@ -325,6 +325,26 @@ msgstr ""
 msgid "!ai is only available in channels."
 msgstr ""
 
+#: ../ai/src/main.rs
+msgid "Usage: join <username>"
+msgstr ""
+
+#: ../ai/src/main.rs
+msgid "{} joined memory with the group: {}"
+msgstr ""
+
+#: ../ai/src/main.rs
+msgid "{} is now solo."
+msgstr ""
+
+#: ../ai/src/main.rs
+msgid "{} is not sharing memory with anyone."
+msgstr ""
+
+#: ../ai/src/main.rs
+msgid "{} is sharing memory with: {}"
+msgstr ""
+
 #: ../ircbot/src/bot.rs
 msgid "An error occurred."
 msgstr ""

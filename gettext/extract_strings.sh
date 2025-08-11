@@ -9,6 +9,8 @@ find . \
      -or -path "./venv" -prune \
      -or -path "./ai" -prune \
      -or -path "./ircbot" -prune \
+     -or -path "./target" -prune \
+     -or -path "./tokenizer" -prune \
      -or \( -type f -executable \
      -exec xgettext -d japanese_tools -p "./$THIS_DIR" --from-code=UTF-8 \
      --keyword=_ --keyword=echo_ \
@@ -20,7 +22,7 @@ cd "$THIS_DIR"
 POT_FILE=japanese_tools.pot
 
 mv japanese_tools.po "$POT_FILE"
-xtr ../ai/src/main.rs ../ircbot/src/main.rs --keywords formatget --keywords gettext --keywords ngettext:1,2 --omit-header -o rust.po
+xtr ../ai/src/main.rs ../ircbot/src/main.rs ../tokenizer/src/main.rs --keywords formatget --keywords gettext --keywords ngettext:1,2 --omit-header -o rust.po
 cat rust.po >> "${POT_FILE}"
 rm rust.po
 
