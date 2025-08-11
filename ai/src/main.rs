@@ -268,6 +268,58 @@ fn setup() -> Result<Input, String> {
     })
 }
 
+fn process_command(
+    command: &str,
+    args: &str,
+    sender: &str,
+    memory: &mut Memory,
+) -> Result<Option<String>, String> {
+    match command {
+        "join" => {
+            let target_user = args.trim();
+            if target_user.is_empty() {
+                return Ok(Some("Usage: join <username>".to_string()));
+            }
+            if target_user == sender {
+                return Ok(Some("You cannot join yourself.".to_string()));
+            }
+
+            memory.join_users(sender, target_user);
+            memory
+                .save()
+                .map_err(|e| format!("Failed to save memory: {}", e))?;
+
+            Ok(Some(format!("Joined memory with user '{}'.", target_user)))
+        }
+        "solo" => {
+            memory.make_user_solo(sender);
+            memory
+                .save()
+                .map_err(|e| format!("Failed to save memory: {}", e))?;
+
+            Ok(Some("You are now a solo user.".to_string()))
+        }
+        "joined" => {
+            let joined_users = memory.get_joined_users(sender);
+            if joined_users.len() == 1 {
+                return Ok(Some("You are not joined with any other users.".to_string()));
+            }
+
+            let other_users: Vec<&str> = joined_users
+                .iter()
+                .filter(|&user| user != sender)
+                .map(|s| s.as_str())
+                .collect();
+
+            Ok(Some(format!(
+                "You are joined with: {}",
+                other_users.join(", ")
+            )))
+        }
+        _ => Ok(None), // Unknown command
+    }
+}
+
 fn run(input: &Input) -> Result<String, String> {
     let mut memory = Memory::new_from_path(&input.config_path)?;
 
@@ -277,12 +329,18 @@ fn run(input: &Input) -> Result<String, String> {
         memory.clear_history(&input.sender, &input.receiver);
     }
 
-    if input.query.trim().is_empty() {
+    let query = input.query.trim();
+    if query.is_empty() {
         if history_cleared {
             return Ok("[📜→🔥]".to_string());
         } else {
             return Ok(usage(&input.models));
         }
+    }
+
+    let (command, args) = query.split_once(' ').unwrap_or((query, ""));
+    if let Some(result) = process_command(command, args, &input.sender, &mut memory)? {
+        return Ok(result);
     }
 
     let prompt = build_prompt(
@@ -341,6 +399,7 @@ fn run(input: &Input) -> Result<String, String> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use tempfile::tempdir;
 
     #[test]
     fn test_extract_flags() {
@@ -351,5 +410,52 @@ mod tests {
         .unwrap();
         assert_eq!(flags, vec!["foo", "t=1.3", "bar"]);
         assert_eq!(query, "rest -of    the   query");
+    }
+
+    #[test]
+    fn test_process_command_join() {
+        let dir = tempdir().unwrap();
+        let mut memory = Memory::new_from_path(dir.path()).unwrap();
+
+        let result = process_command("join", "alice", "bob", &mut memory).unwrap();
+        assert_eq!(result, Some("Joined memory with user 'alice'.".to_string()));
+
+        // Verify the users are actually joined
+        let joined_users = memory.get_joined_users("bob");
+        assert!(joined_users.contains(&"alice".to_string()));
+        assert!(joined_users.contains(&"bob".to_string()));
+        assert_eq!(joined_users.len(), 2);
+    }
+
+    #[test]
+    fn test_process_command_join_empty_user() {
+        let dir = tempdir().unwrap();
+        let mut memory = Memory::new_from_path(dir.path()).unwrap();
+
+        let result = process_command("join", "", "bob", &mut memory);
+        assert!(result.is_ok());
+        assert_eq!(result.unwrap(), Some("Usage: join <username>".to_string()));
+    }
+
+    #[test]
+    fn test_process_command_join_self() {
+        let dir = tempdir().unwrap();
+        let mut memory = Memory::new_from_path(dir.path()).unwrap();
+
+        let result = process_command("join", "bob", "bob", &mut memory);
+        assert!(result.is_ok());
+        assert_eq!(
+            result.unwrap(),
+            Some("You cannot join yourself.".to_string())
+        );
+    }
+
+    #[test]
+    fn test_process_command_unknown() {
+        let dir = tempdir().unwrap();
+        let mut memory = Memory::new_from_path(dir.path()).unwrap();
+
+        let result = process_command("unknown", "args", "bob", &mut memory).unwrap();
+        assert_eq!(result, None);
     }
 }

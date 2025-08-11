@@ -25,7 +25,7 @@ fn format_prompt(prompt: &str) -> String {
     prompt.replace("{MAX_LINE_LENGTH}", &MAX_LINE_LENGTH.to_string())
 }
 
-// Builds the system prompt from an optional per-channel prompt and the user's history.
+// Builds the system prompt from an optional per-channel prompt and the history of all users in the same union-set.
 pub fn build_prompt(
     query: &str,
     sender: &str,
@@ -37,14 +37,23 @@ pub fn build_prompt(
         role: "system".to_string(),
         content: format_prompt(&per_channel_prompt(receiver, config_path)),
     }];
-    memory
-        .user_history(sender, receiver)
-        .into_iter()
-        .map(|(role, content)| Message {
+
+    let joined_users = memory.get_joined_users(sender);
+    let mut all_messages = Vec::new();
+    for user in joined_users {
+        let user_history = memory.user_history(&user, receiver);
+        all_messages.extend(user_history);
+    }
+
+    all_messages.sort_by_key(|(_, _, timestamp)| *timestamp);
+
+    for (role, content, _) in all_messages {
+        v.push(Message {
             role: role.to_string(),
             content,
-        })
-        .for_each(|message| v.push(message));
+        });
+    }
+
     v.push(Message {
         role: "user".to_string(),
         content: query.to_string(),
@@ -152,5 +161,41 @@ mod tests {
         assert_eq!(result[0].content, prompt_content);
         assert_eq!(result[1].role, "user");
         assert_eq!(result[1].content, query);
+    }
+
+    #[test]
+    fn test_build_prompt_with_joined_history() {
+        let dir = tempdir().unwrap();
+        let config_path = dir.path();
+        let query = "Test query";
+        let receiver = "#test_channel";
+
+        let mut memory = Memory::new_from_path(config_path).unwrap();
+
+        memory.add_to_history("user1", Sender::User, receiver, "Hello from user1!");
+        memory.add_to_history("user1", Sender::Assistant, receiver, "Hi user1!");
+
+        memory.add_to_history("user2", Sender::User, receiver, "Hello from user2!");
+        memory.add_to_history("user2", Sender::Assistant, receiver, "Hi user2!");
+
+        memory.add_to_history("user3", Sender::User, receiver, "Hello from user3!");
+        memory.add_to_history("user3", Sender::Assistant, receiver, "Hi user3!");
+
+        memory.join_users("user1", "user2");
+
+        let result = build_prompt(query, "user1", receiver, &memory, config_path);
+
+        assert_eq!(result.len(), 6);
+        assert_eq!(result[0].role, "system");
+        assert_eq!(result[1].role, "user");
+        assert_eq!(result[1].content, "Hello from user1!");
+        assert_eq!(result[2].role, "assistant");
+        assert_eq!(result[2].content, "Hi user1!");
+        assert_eq!(result[3].role, "user");
+        assert_eq!(result[3].content, "Hello from user2!");
+        assert_eq!(result[4].role, "assistant");
+        assert_eq!(result[4].content, "Hi user2!");
+        assert_eq!(result[5].role, "user");
+        assert_eq!(result[5].content, query);
     }
 }

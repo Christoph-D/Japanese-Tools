@@ -1,12 +1,15 @@
-use std::path::Path;
+mod user_groups;
+
+use std::{collections::HashSet, path::Path};
 
 use rusqlite::{
     Connection, Error,
     types::{FromSql, ToSql},
 };
+use std::collections::HashMap;
 use time::OffsetDateTime;
 
-use crate::constants::{MEMORY_MAX_MESSAGES, MEMORY_RETENTION};
+use crate::{constants::{MEMORY_MAX_MESSAGES, MEMORY_RETENTION}, memory::user_groups::{GroupInfo, GroupSets}};
 
 const MEMORY_DB_NAME: &str = "ai_memory.db";
 
@@ -52,16 +55,12 @@ struct Entry {
 }
 
 pub struct Memory {
-    entries: std::collections::HashMap<String, Vec<Entry>>,
+    entries: HashMap<String, Vec<Entry>>,
+    joined_users: GroupSets,
     sqlite: Connection,
 }
 
-fn load(
-    connection: &mut Connection,
-) -> Result<std::collections::HashMap<String, Vec<Entry>>, Error> {
-    let create_db = "CREATE TABLE IF NOT EXISTS memory (user TEXT NOT NULL, sender TEXT NOT NULL, receiver TEXT NOT NULL, timestamp TEXT NOT NULL, message TEXT NOT NULL)";
-    connection.execute(create_db, ())?;
-
+fn load_history(connection: &mut Connection) -> Result<HashMap<String, Vec<Entry>>, Error> {
     let mut entries = {
         let mut load_entries = connection.prepare(
             "SELECT user, sender, receiver, timestamp, message FROM memory ORDER BY timestamp",
@@ -77,7 +76,7 @@ fn load(
                 },
             ))
         })?;
-        let mut entries = std::collections::HashMap::new();
+        let mut entries = HashMap::new();
         for entry in entry_iter {
             let (user, entry) = entry?;
             entries.entry(user).or_insert_with(Vec::new).push(entry);
@@ -99,12 +98,58 @@ fn load(
     Ok(entries)
 }
 
+fn load_group_sets(connection: &mut Connection) -> Result<GroupSets, Error> {
+    struct Row {
+        user: String,
+        group_id: i64,
+        last_modified: OffsetDateTime,
+    }
+    let mut load_group_sets =
+        connection.prepare("SELECT user_name, group_id, last_modified FROM group_sets")?;
+    let group_set_iter = load_group_sets.query_map([], |row| {
+        Ok(Row {
+            user: row.get("user_name")?,
+            group_id: row.get("group_id")?,
+            last_modified: row.get("last_modified")?,
+        })
+    })?;
+
+    let mut user_to_group: HashMap<String, usize> = HashMap::new();
+    let mut group_map: HashMap<usize, GroupInfo> = HashMap::new();
+
+    for row in group_set_iter {
+        let row = row?;
+        let group_id = row.group_id as usize;
+
+        let group_info = group_map.entry(group_id).or_insert_with(|| GroupInfo {
+            members: HashSet::new(),
+            last_modified: row.last_modified,
+        });
+
+        group_info.members.insert(row.user.clone());
+        user_to_group.insert(row.user, group_id);
+    }
+    Ok(GroupSets::from_maps(user_to_group, group_map))
+}
+
 impl Memory {
     pub fn new_from_path(config_path: &Path) -> Result<Self, String> {
         let mut connection = Connection::open(config_path.join(MEMORY_DB_NAME))
             .map_err(|e| format!("Failed to open memory DB: {}", e))?;
+
+        let create_db = "CREATE TABLE IF NOT EXISTS memory (user TEXT NOT NULL, sender TEXT NOT NULL, receiver TEXT NOT NULL, timestamp TEXT NOT NULL, message TEXT NOT NULL)";
+        connection
+            .execute(create_db, ())
+            .map_err(|e| e.to_string())?;
+
+        let create_group_sets_table = "CREATE TABLE IF NOT EXISTS group_sets (user_name TEXT NOT NULL, group_id INTEGER NOT NULL, last_modified TEXT NOT NULL)";
+        connection
+            .execute(create_group_sets_table, ())
+            .map_err(|e| e.to_string())?;
+
         Ok(Self {
-            entries: load(&mut connection).map_err(|e| e.to_string())?,
+            entries: load_history(&mut connection).map_err(|e| e.to_string())?,
+            joined_users: load_group_sets(&mut connection).map_err(|e| e.to_string())?,
             sqlite: connection,
         })
     }
@@ -130,6 +175,21 @@ impl Memory {
                 }
             }
         }
+
+        tx.execute("DELETE FROM group_sets", [])
+            .map_err(|e| e.to_string())?;
+        {
+            let mut stmt = tx
+                .prepare("INSERT INTO group_sets (user_name, group_id, last_modified) VALUES (?1, ?2, ?3)")
+                .map_err(|e| e.to_string())?;
+            for (user, group_id) in self.joined_users.get_user_to_group_mappings().iter() {
+                if let Some(group_info) = self.joined_users.get_groups().get(group_id) {
+                    stmt.execute((user, *group_id as i64, group_info.last_modified))
+                        .map_err(|e| e.to_string())?;
+                }
+            }
+        }
+
         tx.commit().map_err(|e| e.to_string())?;
         Ok(())
     }
@@ -157,15 +217,34 @@ impl Memory {
         }
     }
 
-    // Returns matching messages in chronological order.
-    pub fn user_history(&self, user: &str, receiver: &str) -> Vec<(Sender, String)> {
+    // Returns matching messages in chronological order with timestamps.
+    pub fn user_history(
+        &self,
+        user: &str,
+        receiver: &str,
+    ) -> Vec<(Sender, String, OffsetDateTime)> {
         self.entries.get(user).map_or_else(Vec::new, |entries| {
             entries
                 .iter()
                 .filter(|entry| entry.receiver == receiver)
-                .map(|entry| (entry.sender.clone(), entry.message.clone()))
+                .map(|entry| (entry.sender.clone(), entry.message.clone(), entry.timestamp))
                 .collect()
         })
+    }
+
+    // Join two users so they share memory
+    pub fn join_users(&mut self, user1: &str, user2: &str) {
+        self.joined_users.union(user1, user2);
+    }
+
+    // Remove a user from their joined group, making them solo
+    pub fn make_user_solo(&mut self, user: &str) {
+        self.joined_users.remove_user(user);
+    }
+
+    // Get all users joined with the given user (including the user themselves)
+    pub fn get_joined_users(&self, user: &str) -> Vec<String> {
+        self.joined_users.get_group_members(user)
     }
 }
 
@@ -267,5 +346,22 @@ mod tests {
             history[MEMORY_MAX_MESSAGES - 1].1,
             format!("msg{}", MEMORY_MAX_MESSAGES + 4)
         );
+    }
+
+    #[test]
+    fn test_memory_joined_users_persistence() {
+        let (dir, mut memory) = setup_memory();
+
+        memory.add_to_history("user1", Sender::User, "receiver1", "message1");
+        memory.add_to_history("user2", Sender::User, "receiver2", "message2");
+        memory.join_users("user1", "user2");
+        memory.save().unwrap();
+
+        let loaded_memory = Memory::new_from_path(dir.path()).unwrap();
+        let joined_users = loaded_memory.get_joined_users("user1");
+
+        assert_eq!(joined_users.len(), 2);
+        assert!(joined_users.contains(&"user1".to_string()));
+        assert!(joined_users.contains(&"user2".to_string()));
     }
 }
