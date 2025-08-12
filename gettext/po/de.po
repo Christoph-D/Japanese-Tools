@@ -294,8 +294,12 @@ msgid "Invalid model syntax: {}"
 msgstr "Ungültige Modellkonfiguration: {}"
 
 #: ../ai/src/weather.rs
-msgid "Temperature: {}°C, Cloud cover: {}%, Wind: {}km/h, Humidity: {}%, Precipitation: {}mm"
-msgstr "Temperatur: {}°C, Bewölkung: {}%, Wind: {}km/h, Luftfeuchtigkeit: {}%, Niederschlag: {}mm"
+msgid ""
+"Temperature: {}°C, Cloud cover: {}%, Wind: {}km/h, Humidity: {}%, "
+"Precipitation: {}mm"
+msgstr ""
+"Temperatur: {}°C, Bewölkung: {}%, Wind: {}km/h, Luftfeuchtigkeit: {}%, "
+"Niederschlag: {}mm"
 
 #: ../ai/src/main.rs
 msgid "HTTP client error: {}"
@@ -365,7 +369,11 @@ msgstr "Wetter"
 
 #: ../ai/src/main.rs
 msgid "Usage: weather <city>"
-msgstr ""
+msgstr "Aufruf: Wetter <Stadt>"
+
+#: ../ai/src/main.rs
+msgid "Weather data by https://open-meteo.com"
+msgstr "Wetterdaten von https://open-meteo.com"
 
 #: ../ai/src/main.rs
 msgid "The weather in {} is: {}."

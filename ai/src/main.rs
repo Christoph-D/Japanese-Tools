@@ -366,9 +366,11 @@ fn process_command(
             if command == gettext("weather").to_lowercase() {
                 let city = args.trim();
                 if city.is_empty() {
-                    return Ok(CommandResult::Message(
+                    return Ok(CommandResult::Message(format!(
+                        "{}  ({})",
                         gettext("Usage: weather <city>").to_string(),
-                    ));
+                        gettext("Weather data by https://open-meteo.com")
+                    )));
                 }
                 match weather::get_weather(city) {
                     Ok(w) => Ok(CommandResult::AskAgent {
