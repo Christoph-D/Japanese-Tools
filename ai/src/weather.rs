@@ -16,15 +16,26 @@ struct WeatherResponse {
     current: WeatherCurrent,
 }
 
-#[derive(serde::Deserialize)]
+#[derive(serde::Deserialize, Debug, PartialEq)]
 struct WeatherCurrent {
     temperature_2m: f64,
+    wind_speed_10m: f64,
+    relative_humidity_2m: f64,
+    precipitation: f64,
+    rain: f64,
 }
 
 pub fn get_weather(city: &str) -> Result<String, String> {
     let (lat, lon) = get_coordinates(city, "https://geocoding-api.open-meteo.com")?;
-    let weather = get_temperature(lat, lon, "https://api.open-meteo.com")?;
-    Ok(format!("{}°C", weather.temperature_2m))
+    let weather = get_weather_data(lat, lon, "https://api.open-meteo.com")?;
+    Ok(format!(
+        "Temperature: {}°C, Humidity: {}%, Wind: {} km/h, Precipitation: {} mm, Rain: {} mm",
+        weather.temperature_2m,
+        weather.relative_humidity_2m,
+        weather.wind_speed_10m,
+        weather.precipitation,
+        weather.rain
+    ))
 }
 
 fn get_coordinates(city: &str, base_url: &str) -> Result<(f64, f64), String> {
@@ -61,14 +72,14 @@ fn get_coordinates(city: &str, base_url: &str) -> Result<(f64, f64), String> {
     }
 }
 
-fn get_temperature(lat: f64, lon: f64, base_url: &str) -> Result<WeatherCurrent, String> {
+fn get_weather_data(lat: f64, lon: f64, base_url: &str) -> Result<WeatherCurrent, String> {
     let client = reqwest::blocking::Client::builder()
         .timeout(Duration::from_secs(10))
         .build()
         .map_err(|e| format!("HTTP client error: {}", e))?;
 
     let url = format!(
-        "{}/v1/forecast?latitude={}&longitude={}&current=temperature_2m",
+        "{}/v1/forecast?latitude={}&longitude={}&current=temperature_2m,wind_speed_10m,relative_humidity_2m,precipitation,rain",
         base_url, lat, lon
     );
 
@@ -116,14 +127,18 @@ mod tests {
         let weather_mock = weather_server
             .mock(
                 "GET",
-                "/v1/forecast?latitude=47.3769&longitude=8.5417&current=temperature_2m",
+                "/v1/forecast?latitude=47.3769&longitude=8.5417&current=temperature_2m,wind_speed_10m,relative_humidity_2m,precipitation,rain",
             )
             .with_status(200)
             .with_header("content-type", "application/json")
             .with_body(
                 r#"{
                 "current": {
-                    "temperature_2m": 22.5
+                    "temperature_2m": 22.5,
+                    "wind_speed_10m": 10.2,
+                    "relative_humidity_2m": 65.0,
+                    "precipitation": 0.0,
+                    "rain": 0.0
                 }
             }"#,
             )
@@ -133,8 +148,10 @@ mod tests {
         assert_eq!(lat, 47.3769);
         assert_eq!(lon, 8.5417);
 
-        let temperature = get_temperature(lat, lon, &weather_server.url()).unwrap();
-        assert_eq!(temperature, 22.5);
+        let weather = get_weather_data(lat, lon, &weather_server.url()).unwrap();
+        assert_eq!(weather.temperature_2m, 22.5);
+        assert_eq!(weather.wind_speed_10m, 10.2);
+        assert_eq!(weather.relative_humidity_2m, 65.0);
 
         geocoding_mock.assert();
         weather_mock.assert();
@@ -221,12 +238,12 @@ mod tests {
         let mock = server
             .mock(
                 "GET",
-                "/v1/forecast?latitude=47.3769&longitude=8.5417&current=temperature_2m",
+                "/v1/forecast?latitude=47.3769&longitude=8.5417&current=temperature_2m,wind_speed_10m,relative_humidity_2m,precipitation,rain",
             )
             .with_status(500)
             .create();
 
-        let result = get_temperature(47.3769, 8.5417, &server.url());
+        let result = get_weather_data(47.3769, 8.5417, &server.url());
         assert!(result.is_err());
         let error_msg = result.unwrap_err();
         assert!(error_msg.contains("Weather API error: HTTP 500"));
@@ -287,25 +304,37 @@ mod tests {
         let weather_mock = weather_server
             .mock(
                 "GET",
-                "/v1/forecast?latitude=35.6762&longitude=139.6503&current=temperature_2m",
+                "/v1/forecast?latitude=35.6762&longitude=139.6503&current=temperature_2m,wind_speed_10m,relative_humidity_2m,precipitation,rain",
             )
             .with_status(200)
             .with_header("content-type", "application/json")
             .with_body(
                 r#"{
                 "current": {
-                    "temperature_2m": 18.7
+                    "temperature_2m": 18.7,
+                    "wind_speed_10m": 5.4,
+                    "relative_humidity_2m": 72.0,
+                    "precipitation": 0.2,
+                    "rain": 0.1
                 }
             }"#,
             )
             .create();
 
-        // Test the complete flow by creating a custom get_weather function for testing
+        // Test the complete flow
         let (lat, lon) = get_coordinates("Tokyo", &geocoding_server.url()).unwrap();
-        let temperature = get_temperature(lat, lon, &weather_server.url()).unwrap();
-        let result = format!("{}°C", temperature);
+        let weather = get_weather_data(lat, lon, &weather_server.url()).unwrap();
+        let result = format!(
+            "Temperature: {}°C, Humidity: {}%, Wind: {} km/h, Precipitation: {} mm, Rain: {} mm",
+            weather.temperature_2m,
+            weather.relative_humidity_2m,
+            weather.wind_speed_10m,
+            weather.precipitation,
+            weather.rain
+        );
 
-        assert_eq!(result, "18.7°C");
+        assert!(result.contains("18.7°C"));
+        assert!(result.contains("72%"));
 
         geocoding_mock.assert();
         weather_mock.assert();
@@ -319,12 +348,13 @@ mod tests {
         // Run with: cargo test test_get_weather_integration -- --ignored
         let result = get_weather("Zurich");
         match result {
-            Ok(temp) => {
-                assert!(temp.ends_with("°C"));
-                // Temperature should be a reasonable value
-                let temp_str = temp.strip_suffix("°C").unwrap();
-                let temp_val: f64 = temp_str.parse().unwrap();
-                assert!(temp_val > -50.0 && temp_val < 60.0);
+            Ok(weather_info) => {
+                assert!(weather_info.contains("Temperature:"));
+                assert!(weather_info.contains("°C"));
+                assert!(weather_info.contains("Humidity:"));
+                assert!(weather_info.contains("%"));
+                assert!(weather_info.contains("Wind:"));
+                assert!(weather_info.contains("km/h"));
             }
             Err(e) => {
                 // Network errors are acceptable in tests
