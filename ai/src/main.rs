@@ -297,18 +297,26 @@ fn setup() -> Result<Input, String> {
     })
 }
 
+#[derive(Debug, PartialEq)]
+enum CommandResult {
+    NotACommand,
+    Message(String),
+}
+
 fn process_command(
     command: &str,
     args: &str,
     sender: &str,
     memory: &mut Memory,
-) -> Result<Option<String>, String> {
+) -> Result<CommandResult, String> {
     let command = command.to_lowercase();
     match command.as_ref() {
         "join" => {
             let target_user = args.trim();
             if target_user.is_empty() || target_user == sender {
-                return Ok(Some(gettext("Usage: join <username>").to_string()));
+                return Ok(CommandResult::Message(
+                    gettext("Usage: join <username>").to_string(),
+                ));
             }
 
             memory.join_users(sender, target_user);
@@ -316,7 +324,7 @@ fn process_command(
                 .save()
                 .map_err(|e| format!("Failed to save memory: {}", e))?;
 
-            Ok(Some(formatget!(
+            Ok(CommandResult::Message(formatget!(
                 "{} joined memory with the group: {}",
                 sender,
                 memory.get_joined_users_excluding_self(sender).join(", ")
@@ -331,17 +339,20 @@ fn process_command(
                 .save()
                 .map_err(|e| format!("Failed to save memory: {}", e))?;
 
-            Ok(Some(formatget!("{} is now solo.", target)))
+            Ok(CommandResult::Message(formatget!(
+                "{} is now solo.",
+                target
+            )))
         }
         "joined" => {
             let other_users = memory.get_joined_users_excluding_self(sender);
             if other_users.is_empty() {
-                return Ok(Some(formatget!(
+                return Ok(CommandResult::Message(formatget!(
                     "{} is not sharing memory with anyone.",
                     sender
                 )));
             }
-            Ok(Some(formatget!(
+            Ok(CommandResult::Message(formatget!(
                 "{} is sharing memory with: {}",
                 sender,
                 other_users.join(", ")
@@ -351,14 +362,16 @@ fn process_command(
             if command == gettext("weather").to_lowercase() {
                 let city = args.trim();
                 if city.is_empty() {
-                    return Ok(Some(gettext("Usage: weather <city>").to_string()));
+                    return Ok(CommandResult::Message(
+                        gettext("Usage: weather <city>").to_string(),
+                    ));
                 }
                 match weather::get_weather(city) {
-                    Ok(temp) => Ok(Some(temp)),
-                    Err(err) => Ok(Some(err)),
+                    Ok(temp) => Ok(CommandResult::Message(temp)),
+                    Err(err) => Ok(CommandResult::Message(err)),
                 }
             } else {
-                Ok(None) // Not a command
+                Ok(CommandResult::NotACommand)
             }
         }
     }
@@ -388,8 +401,9 @@ fn run(input: &Input) -> Result<String, String> {
     }
 
     let (command, args) = query.split_once(' ').unwrap_or((query, ""));
-    if let Some(result) = process_command(command, args, &input.sender, &mut memory)? {
-        return Ok(result);
+    match process_command(command, args, &input.sender, &mut memory)? {
+        CommandResult::Message(result) => return Ok(result),
+        CommandResult::NotACommand => {}
     }
 
     let prompt = build_prompt(
@@ -488,7 +502,7 @@ mod tests {
         let result = process_command("join", "alice", "bob", &mut memory).unwrap();
         assert_eq!(
             result,
-            Some("bob joined memory with the group: alice".to_string())
+            CommandResult::Message("bob joined memory with the group: alice".to_string())
         );
 
         // Verify the users are actually joined
@@ -505,7 +519,10 @@ mod tests {
 
         let result = process_command("join", "", "bob", &mut memory);
         assert!(result.is_ok());
-        assert_eq!(result.unwrap(), Some("Usage: join <username>".to_string()));
+        assert_eq!(
+            result.unwrap(),
+            CommandResult::Message("Usage: join <username>".to_string())
+        );
     }
 
     #[test]
@@ -515,7 +532,10 @@ mod tests {
 
         let result = process_command("join", "bob", "bob", &mut memory);
         assert!(result.is_ok());
-        assert_eq!(result.unwrap(), Some("Usage: join <username>".to_string()));
+        assert_eq!(
+            result.unwrap(),
+            CommandResult::Message("Usage: join <username>".to_string())
+        );
     }
 
     #[test]
@@ -524,6 +544,6 @@ mod tests {
         let mut memory = Memory::new_from_path(dir.path()).unwrap();
 
         let result = process_command("unknown", "args", "bob", &mut memory).unwrap();
-        assert_eq!(result, None);
+        assert_eq!(result, CommandResult::NotACommand);
     }
 }
