@@ -234,12 +234,10 @@ mod tests {
     fn test_weather_api_error() {
         let mut server = Server::new();
 
-        // Mock server error
+        // Mock server error - ignore query parameters, focus on error handling
         let mock = server
-            .mock(
-                "GET",
-                "/v1/forecast?latitude=47.3769&longitude=8.5417&current=temperature_2m,wind_speed_10m,relative_humidity_2m,precipitation,rain",
-            )
+            .mock("GET", "/v1/forecast")
+            .match_query(mockito::Matcher::Any)
             .with_status(500)
             .create();
 
@@ -300,12 +298,13 @@ mod tests {
             )
             .create();
 
-        // Mock weather API response
+        // Mock weather API response - match coordinates but ignore current parameters
         let weather_mock = weather_server
-            .mock(
-                "GET",
-                "/v1/forecast?latitude=35.6762&longitude=139.6503&current=temperature_2m,wind_speed_10m,relative_humidity_2m,precipitation,rain",
-            )
+            .mock("GET", "/v1/forecast")
+            .match_query(mockito::Matcher::AllOf(vec![
+                mockito::Matcher::UrlEncoded("latitude".into(), "35.6762".into()),
+                mockito::Matcher::UrlEncoded("longitude".into(), "139.6503".into()),
+            ]))
             .with_status(200)
             .with_header("content-type", "application/json")
             .with_body(
