@@ -15,8 +15,10 @@ pub const DEFAULT_SYSTEM_PROMPT_DE: &str = r#"Du bist eine hilfreiche KI in eine
     Schreib auf Deutsch, außer wenn der User dich um etwas anderes bittet. Wichtig: Beschränk deine Antwort auf {MAX_LINE_LENGTH} Zeichen.
     Schreib nur eine einzige Zeile ohne Markdown. Deine Antworten sind für alle Altersstufen geeignet."#;
 
-pub const DEFAULT_WEATHER_PROMPT: &str = "Describe the weather in your own words and comment on it.";
-pub const DEFAULT_WEATHER_PROMPT_DE: &str = "Beschreib das Wetter in eigenen Worten und kommentiere es.";
+pub const DEFAULT_WEATHER_PROMPT: &str =
+    "Describe the weather in your own words and comment on it.";
+pub const DEFAULT_WEATHER_PROMPT_DE: &str =
+    "Beschreib das Wetter in eigenen Worten und kommentiere es.";
 
 // MEMORY_MAX_MESSAGES divided by half is the number of remembered user queries.
 // Each invocation creates two messages, a user query and a response from the assistant.
@@ -30,3 +32,5 @@ pub const USER_GROUP_RETENTION: time::Duration = time::Duration::hours(16);
 pub const CLEAR_MEMORY_FLAG: &str = "clear_history";
 
 pub const TEMPERATURE_FLAG: &str = "temp";
+
+pub const WEATHER_API_TIMEOUT: Duration = Duration::from_secs(3);

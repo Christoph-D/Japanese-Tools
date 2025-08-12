@@ -1,4 +1,4 @@
-use crate::constants::{DEFAULT_WEATHER_PROMPT, DEFAULT_WEATHER_PROMPT_DE};
+use crate::constants::{DEFAULT_WEATHER_PROMPT, DEFAULT_WEATHER_PROMPT_DE, WEATHER_API_TIMEOUT};
 use crate::formatget;
 
 #[derive(serde::Deserialize)]
@@ -41,7 +41,7 @@ pub fn get_weather(city: &str) -> Result<String, String> {
 
 fn get_coordinates(city: &str, base_url: &str) -> Result<(f64, f64), String> {
     let client = reqwest::blocking::Client::builder()
-        .timeout(Duration::from_secs(10))
+        .timeout(WEATHER_API_TIMEOUT)
         .build()
         .map_err(|e| format!("HTTP client error: {}", e))?;
 
@@ -75,7 +75,7 @@ fn get_coordinates(city: &str, base_url: &str) -> Result<(f64, f64), String> {
 
 fn get_weather_data(lat: f64, lon: f64, base_url: &str) -> Result<WeatherCurrent, String> {
     let client = reqwest::blocking::Client::builder()
-        .timeout(Duration::from_secs(10))
+        .timeout(WEATHER_API_TIMEOUT)
         .build()
         .map_err(|e| format!("HTTP client error: {}", e))?;
 
