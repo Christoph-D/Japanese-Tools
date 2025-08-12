@@ -38,7 +38,7 @@ msgid "Usage: !%s [explain|declare] <something>"
 msgstr "Aufruf: !%s [explain|declare] <irgendwas>"
 
 #: compare_encoding/compare_encoding.sh
-msgid "Usage: %s lemma "
+msgid "Usage: %s lemma"
 msgstr "Aufruf: %s Lemma"
 
 #: compare_encoding/compare_encoding.sh
@@ -157,7 +157,7 @@ msgstr "Bitte ein paar Kanji angeben."
 
 #: kanjidic/kanjidic.sh rtk/rtk.sh
 msgid "No regular expressions, please."
-msgstr "Bitte keine regulären Audrücke."
+msgstr "Bitte keine regulären Ausdrücke."
 
 #: kanjidic/kanjidic.sh
 msgid ". In names: "

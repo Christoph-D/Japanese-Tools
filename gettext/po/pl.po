@@ -38,8 +38,8 @@ msgid "Usage: !%s [explain|declare] <something>"
 msgstr "Sposób użycia: !%s [explain|declare] <coś>"
 
 #: compare_encoding/compare_encoding.sh
-msgid "Usage: %s lemma "
-msgstr "Sposób użycia: %s test "
+msgid "Usage: %s lemma"
+msgstr "Sposób użycia: %s test"
 
 #: compare_encoding/compare_encoding.sh
 msgid "Article not found on Wikipedia."

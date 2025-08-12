@@ -11,7 +11,7 @@
 set -u
 
 if [[ $# -ne 1 ]]; then
-    printf_ 'Usage: %s lemma ' "$(basename "$0")"
+    printf_ 'Usage: %s lemma' "$(basename "$0")"
     exit 0
 fi
 

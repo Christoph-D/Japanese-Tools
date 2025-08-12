@@ -40,7 +40,7 @@ msgid "Usage: !%s [explain|declare] <something>"
 msgstr ""
 
 #: compare_encoding/compare_encoding.sh
-msgid "Usage: %s lemma "
+msgid "Usage: %s lemma"
 msgstr ""
 
 #: compare_encoding/compare_encoding.sh
