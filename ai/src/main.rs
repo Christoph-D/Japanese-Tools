@@ -291,12 +291,19 @@ fn process_command(
             )))
         }
         "solo" => {
-            memory.make_user_solo(sender);
+            let arg = args.trim();
+            let target = if arg.is_empty() {
+                sender
+            } else {
+                arg
+            };
+
+            memory.make_user_solo(target);
             memory
                 .save()
                 .map_err(|e| format!("Failed to save memory: {}", e))?;
 
-            Ok(Some(formatget!("{} is now solo.", sender)))
+            Ok(Some(formatget!("{} is now solo.", target)))
         }
         "joined" => {
             let other_users = memory.get_joined_users_excluding_self(sender);
