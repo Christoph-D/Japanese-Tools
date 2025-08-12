@@ -360,7 +360,7 @@ fn run(input: &Input) -> Result<String, String> {
     );
     memory.add_to_history(&input.sender, Sender::User, &input.receiver, &input.query);
 
-    let _ = memory.save();
+    memory.save().map_err(|e| format!("Failed to save memory: {}", e))?;
 
     let temperature = input
         .flags
@@ -372,7 +372,7 @@ fn run(input: &Input) -> Result<String, String> {
     let result = &call_api(&input.model, &prompt, &temperature)?;
 
     memory.add_to_history(&input.sender, Sender::Assistant, &input.receiver, result);
-    let _ = memory.save();
+    memory.save().map_err(|e| format!("Failed to save memory: {}", e))?;
 
     let flag_state = {
         let mut flag_state: Vec<String> = Vec::new();
