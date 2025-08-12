@@ -186,26 +186,7 @@ impl Memory {
 
     pub fn save(&mut self) -> Result<(), String> {
         let tx = self.sqlite.transaction().map_err(|e| e.to_string())?;
-        tx.execute("DELETE FROM memory", [])
-            .map_err(|e| e.to_string())?;
-        {
-            let mut stmt = tx
-                .prepare("INSERT INTO memory (user, sender, receiver, timestamp, message) VALUES (?1, ?2, ?3, ?4, ?5)")
-                .map_err(|e| e.to_string())?;
-            for (user, entries) in &self.entries {
-                for entry in entries {
-                    stmt.execute((
-                        user,
-                        entry.sender.clone(),
-                        entry.receiver.clone(),
-                        entry.timestamp,
-                        entry.message.clone(),
-                    ))
-                    .map_err(|e| e.to_string())?;
-                }
-            }
-        }
-
+        // Only save group_sets since memory entries are now saved immediately
         tx.execute("DELETE FROM group_sets", [])
             .map_err(|e| e.to_string())?;
         {
@@ -219,32 +200,46 @@ impl Memory {
                 }
             }
         }
-
         tx.commit().map_err(|e| e.to_string())?;
         Ok(())
     }
 
     // Add to the history of the given user.
-    pub fn add_to_history(&mut self, user: &str, sender: Sender, receiver: &str, message: &str) {
+    pub fn add_to_history(&mut self, user: &str, sender: Sender, receiver: &str, message: &str) -> Result<(), String> {
+        let entry = Entry {
+            sender: sender.clone(),
+            receiver: receiver.to_string(),
+            timestamp: OffsetDateTime::now_utc(),
+            message: message.to_string(),
+        };
+        self.sqlite
+            .execute(
+                "INSERT INTO memory (user, sender, receiver, timestamp, message) VALUES (?1, ?2, ?3, ?4, ?5)",
+                (user, &entry.sender, &entry.receiver, entry.timestamp, &entry.message),
+            )
+            .map_err(|e| format!("Failed to save history to database: {}", e))?;
         self.entries
             .entry(user.to_string())
             .or_default()
-            .push(Entry {
-                sender,
-                receiver: receiver.to_string(),
-                timestamp: OffsetDateTime::now_utc(),
-                message: message.to_string(),
-            });
+            .push(entry);
+        Ok(())
     }
 
     // Clear the history of the given user.
-    pub fn clear_history(&mut self, user: &str, receiver: &str) {
+    pub fn clear_history(&mut self, user: &str, receiver: &str) -> Result<(), String> {
+        self.sqlite
+            .execute(
+                "DELETE FROM memory WHERE user = ?1 AND receiver = ?2",
+                (user, receiver),
+            )
+            .map_err(|e| format!("Failed to clear history from database: {}", e))?;
         if let Some(entries) = self.entries.get_mut(user) {
             entries.retain(|entry| entry.receiver != receiver);
             if entries.is_empty() {
                 self.entries.remove(user);
             }
         }
+        Ok(())
     }
 
     // Returns matching messages in chronological order with timestamps.
@@ -308,9 +303,9 @@ mod tests {
     fn test_memory_new_from_path_and_save() {
         let (dir, mut memory) = setup_memory();
 
-        memory.add_to_history("user1", Sender::User, "receiver1", "message1");
-        memory.add_to_history("user1", Sender::Assistant, "receiver1", "message2");
-        memory.add_to_history("user2", Sender::User, "receiver2", "messageA");
+        memory.add_to_history("user1", Sender::User, "receiver1", "message1").unwrap();
+        memory.add_to_history("user1", Sender::Assistant, "receiver1", "message2").unwrap();
+        memory.add_to_history("user2", Sender::User, "receiver2", "messageA").unwrap();
         memory.save().unwrap();
 
         // Drop the first memory instance to release the file lock
@@ -331,11 +326,11 @@ mod tests {
     fn test_memory_clear_history() {
         let (dir, mut memory) = setup_memory();
 
-        memory.add_to_history("user1", Sender::User, "receiver1", "message1");
-        memory.add_to_history("user2", Sender::User, "receiver2", "messageA");
+        memory.add_to_history("user1", Sender::User, "receiver1", "message1").unwrap();
+        memory.add_to_history("user2", Sender::User, "receiver2", "messageA").unwrap();
         memory.save().unwrap();
 
-        memory.clear_history("user1", "receiver1");
+        memory.clear_history("user1", "receiver1").unwrap();
         memory.save().unwrap();
 
         // Drop the first memory instance to release the file lock
@@ -382,7 +377,7 @@ mod tests {
         let (dir, mut memory) = setup_memory();
 
         for i in 0..(MEMORY_MAX_MESSAGES + 5) {
-            memory.add_to_history("user1", Sender::User, "receiver1", &format!("msg{}", i));
+            memory.add_to_history("user1", Sender::User, "receiver1", &format!("msg{}", i)).unwrap();
         }
         memory.save().unwrap();
 
@@ -405,8 +400,8 @@ mod tests {
     fn test_memory_joined_users_persistence() {
         let (dir, mut memory) = setup_memory();
 
-        memory.add_to_history("user1", Sender::User, "receiver1", "message1");
-        memory.add_to_history("user2", Sender::User, "receiver2", "message2");
+        memory.add_to_history("user1", Sender::User, "receiver1", "message1").unwrap();
+        memory.add_to_history("user2", Sender::User, "receiver2", "message2").unwrap();
         memory.join_users("user1", "user2");
         memory.save().unwrap();
 

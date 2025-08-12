@@ -397,7 +397,8 @@ fn run(input: &Input) -> Result<String, String> {
     let history_cleared = input.flags.contains(&CLEAR_MEMORY_FLAG.to_string())
         || input.flags.contains(&"c".to_string());
     if history_cleared {
-        memory.clear_history(&input.sender, &input.receiver);
+        memory.clear_history(&input.sender, &input.receiver)
+            .map_err(|e| format!("Failed to clear history: {}", e))?;
     }
 
     let query = input.query.trim();
@@ -417,7 +418,8 @@ fn run(input: &Input) -> Result<String, String> {
             query,
             extra_history,
         } => {
-            memory.add_to_history(&input.sender, Sender::User, &input.receiver, &extra_history);
+            memory.add_to_history(&input.sender, Sender::User, &input.receiver, &extra_history)
+                .map_err(|e| format!("Failed to add extra history: {}", e))?;
             query
         }
     };
@@ -429,11 +431,8 @@ fn run(input: &Input) -> Result<String, String> {
         &memory,
         &input.config_path,
     );
-    memory.add_to_history(&input.sender, Sender::User, &input.receiver, &query);
-
-    memory
-        .save()
-        .map_err(|e| format!("Failed to save memory: {}", e))?;
+    memory.add_to_history(&input.sender, Sender::User, &input.receiver, &query)
+        .map_err(|e| format!("Failed to add user query to history: {}", e))?;
 
     let temperature = input
         .flags
@@ -444,10 +443,8 @@ fn run(input: &Input) -> Result<String, String> {
 
     let result = &call_api(&input.model, &prompt, &temperature)?;
 
-    memory.add_to_history(&input.sender, Sender::Assistant, &input.receiver, result);
-    memory
-        .save()
-        .map_err(|e| format!("Failed to save memory: {}", e))?;
+    memory.add_to_history(&input.sender, Sender::Assistant, &input.receiver, result)
+        .map_err(|e| format!("Failed to add assistant response to history: {}", e))?;
 
     let flag_state = {
         let mut flag_state: Vec<String> = Vec::new();
