@@ -3,6 +3,7 @@ mod gettext;
 mod memory;
 mod model;
 mod prompt;
+mod weather;
 
 use crate::constants::{CLEAR_MEMORY_FLAG, CONFIG_FILE_NAME, MAX_LINE_LENGTH, TEMPERATURE_FLAG};
 use crate::memory::{Memory, Sender};
@@ -23,7 +24,10 @@ struct Flag {
 
 impl Flag {
     fn new(name: String, requires_value: bool) -> Self {
-        Flag { name, requires_value }
+        Flag {
+            name,
+            requires_value,
+        }
     }
 }
 
@@ -167,10 +171,14 @@ fn extract_flags(known_flags: &[Flag], query: &str) -> Result<(Vec<String>, Stri
         let (flag_with_value, remaining) = stripped.split_once(' ').unwrap_or((stripped, ""));
         rest = remaining.trim_start();
         let flag_name = flag_with_value.split('=').next().unwrap_or(flag_with_value);
-        
+
         if let Some(known_flag) = known_flags.iter().find(|f| f.name == flag_name) {
             if known_flag.requires_value && !flag_with_value.contains('=') {
-                return Err(formatget!("Flag -{} requires a value (e.g., -{}=1.0)", flag_name, flag_name));
+                return Err(formatget!(
+                    "Flag -{} requires a value (e.g., -{}=1.0)",
+                    flag_name,
+                    flag_name
+                ));
             }
             flags.push(flag_with_value.to_string());
         } else {
@@ -205,12 +213,17 @@ fn parse_command_line(query: &str, models: &ModelList) -> Result<(Vec<String>, S
         }
         known_flags.push(Flag::new(CLEAR_MEMORY_FLAG.to_string(), false));
         known_flags.push(Flag::new("c".to_string(), false)); // Short for CLEAR_MEMORY_FLAG
-                known_flags.push(Flag::new(TEMPERATURE_FLAG.to_string(), true));
+        known_flags.push(Flag::new(TEMPERATURE_FLAG.to_string(), true));
         known_flags.push(Flag::new("t".to_string(), true)); // Short for TEMPERATURE_FLAG
         known_flags
     };
     let flag_names: Vec<&String> = known_flags.iter().map(|f| &f.name).collect();
-    if flag_names.len() != flag_names.iter().collect::<std::collections::HashSet<_>>().len() {
+    if flag_names.len()
+        != flag_names
+            .iter()
+            .collect::<std::collections::HashSet<_>>()
+            .len()
+    {
         return Err(gettext(
             "Internal error: duplicate configured flags detected, check your model config",
         ));
@@ -310,11 +323,7 @@ fn process_command(
         }
         "solo" => {
             let arg = args.trim();
-            let target = if arg.is_empty() {
-                sender
-            } else {
-                arg
-            };
+            let target = if arg.is_empty() { sender } else { arg };
 
             memory.make_user_solo(target);
             memory
@@ -336,6 +345,16 @@ fn process_command(
                 sender,
                 other_users.join(", ")
             )))
+        }
+        "weather" => {
+            let city = args.trim();
+            if city.is_empty() {
+                return Ok(Some(gettext("Usage: weather <city>").to_string()));
+            }
+            match weather::get_weather(city) {
+                Ok(temp) => Ok(Some(temp)),
+                Err(err) => Ok(Some(err)),
+            }
         }
         _ => Ok(None), // Not a command
     }
@@ -378,7 +397,9 @@ fn run(input: &Input) -> Result<String, String> {
     );
     memory.add_to_history(&input.sender, Sender::User, &input.receiver, &input.query);
 
-    memory.save().map_err(|e| format!("Failed to save memory: {}", e))?;
+    memory
+        .save()
+        .map_err(|e| format!("Failed to save memory: {}", e))?;
 
     let temperature = input
         .flags
@@ -390,7 +411,9 @@ fn run(input: &Input) -> Result<String, String> {
     let result = &call_api(&input.model, &prompt, &temperature)?;
 
     memory.add_to_history(&input.sender, Sender::Assistant, &input.receiver, result);
-    memory.save().map_err(|e| format!("Failed to save memory: {}", e))?;
+    memory
+        .save()
+        .map_err(|e| format!("Failed to save memory: {}", e))?;
 
     let flag_state = {
         let mut flag_state: Vec<String> = Vec::new();
@@ -434,11 +457,8 @@ mod tests {
             Flag::new("bar".to_string(), false),
             Flag::new("t".to_string(), true),
         ];
-        let (flags, query) = extract_flags(
-            &known_flags,
-            "-foo -t=1.3 -bar   rest -of    the   query",
-        )
-        .unwrap();
+        let (flags, query) =
+            extract_flags(&known_flags, "-foo -t=1.3 -bar   rest -of    the   query").unwrap();
         assert_eq!(flags, vec!["foo", "t=1.3", "bar"]);
         assert_eq!(query, "rest -of    the   query");
     }
@@ -449,10 +469,7 @@ mod tests {
             Flag::new("foo".to_string(), false),
             Flag::new("t".to_string(), true),
         ];
-        let result = extract_flags(
-            &known_flags,
-            "-t foo",
-        );
+        let result = extract_flags(&known_flags, "-t foo");
         assert!(result.is_err());
         let error = result.unwrap_err();
         assert!(error.contains("Flag -t requires a value"));
