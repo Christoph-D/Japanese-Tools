@@ -356,7 +356,7 @@ mod tests {
         assert_eq!(lat, 35.6762);
         assert_eq!(lon, 139.6503);
         assert_eq!(city, "Tokyo (JP)");
-        
+
         let weather = get_weather_data(lat, lon, &weather_server.url()).unwrap();
         let result = format!(
             "Temperature: {}°C, Cloud cover: {}%, Wind: {}km/h, Humidity: {}%, Precipitation: {}mm",

@@ -6,6 +6,7 @@ edition = "2024"
 [dependencies]
 dotenvy = "0.15.7"
 formatx = "0.2.4"
+fs2 = "0.4"
 gettext-rs = "0.7.2"
 nom = "8.0.0"
 regex = "1.11.1"

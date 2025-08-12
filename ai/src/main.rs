@@ -368,7 +368,7 @@ fn process_command(
                 if city.is_empty() {
                     return Ok(CommandResult::Message(format!(
                         "{}  ({})",
-                        gettext("Usage: weather <city>").to_string(),
+                        gettext("Usage: weather <city>"),
                         gettext("Weather data by https://open-meteo.com")
                     )));
                 }

@@ -1,7 +1,8 @@
 mod user_groups;
 
-use std::{collections::HashSet, path::Path};
+use std::{collections::HashSet, fs::File, path::Path};
 
+use fs2::FileExt;
 use rusqlite::{
     Connection, Error,
     types::{FromSql, ToSql},
@@ -63,6 +64,7 @@ pub struct Memory {
     entries: HashMap<String, Vec<Entry>>,
     joined_users: GroupSets,
     sqlite: Connection,
+    _lock_file: File,
 }
 
 fn load_history(
@@ -151,6 +153,17 @@ fn load_group_sets(connection: &mut Connection, now: OffsetDateTime) -> Result<G
 
 impl Memory {
     pub fn new_from_path(config_path: &Path) -> Result<Self, String> {
+        // Create and acquire exclusive lock to prevent DB corruption.
+        // TODO: Instead of locking the whole DB, perform transactions as needed.
+        let lock_file_path = config_path.join(format!("{}.lock", MEMORY_DB_NAME));
+        let lock_file = File::create(&lock_file_path)
+            .map_err(|e| format!("Failed to create lock file: {}", e))?;
+
+        // Wait until the lock is available
+        lock_file
+            .lock_exclusive()
+            .map_err(|e| format!("Failed to acquire database lock: {}", e))?;
+
         let mut connection = Connection::open(config_path.join(MEMORY_DB_NAME))
             .map_err(|e| format!("Failed to open memory DB: {}", e))?;
 
@@ -167,6 +180,7 @@ impl Memory {
             entries: load_history(&mut connection, now).map_err(|e| e.to_string())?,
             joined_users: load_group_sets(&mut connection, now).map_err(|e| e.to_string())?,
             sqlite: connection,
+            _lock_file: lock_file,
         })
     }
 
@@ -299,6 +313,9 @@ mod tests {
         memory.add_to_history("user2", Sender::User, "receiver2", "messageA");
         memory.save().unwrap();
 
+        // Drop the first memory instance to release the file lock
+        drop(memory);
+
         let loaded_memory = Memory::new_from_path(dir.path()).unwrap();
         let user1_history = loaded_memory.user_history("user1", "receiver1");
         let user2_history = loaded_memory.user_history("user2", "receiver2");
@@ -320,6 +337,9 @@ mod tests {
 
         memory.clear_history("user1", "receiver1");
         memory.save().unwrap();
+
+        // Drop the first memory instance to release the file lock
+        drop(memory);
 
         let loaded_memory = Memory::new_from_path(dir.path()).unwrap();
         assert!(loaded_memory.user_history("user1", "receiver1").is_empty());
@@ -366,6 +386,9 @@ mod tests {
         }
         memory.save().unwrap();
 
+        // Drop the first memory instance to release the file lock
+        drop(memory);
+
         let loaded_memory = Memory::new_from_path(dir.path()).unwrap();
         let history = loaded_memory.user_history("user1", "receiver1");
 
@@ -386,6 +409,9 @@ mod tests {
         memory.add_to_history("user2", Sender::User, "receiver2", "message2");
         memory.join_users("user1", "user2");
         memory.save().unwrap();
+
+        // Drop the first memory instance to release the file lock
+        drop(memory);
 
         let loaded_memory = Memory::new_from_path(dir.path()).unwrap();
         let joined_users = loaded_memory.get_joined_users("user1");
