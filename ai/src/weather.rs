@@ -10,6 +10,8 @@ struct GeocodeResult {
 struct GeocodeLocation {
     latitude: f64,
     longitude: f64,
+    name: String,
+    country_code: String,
 }
 
 #[derive(serde::Deserialize)]
@@ -26,20 +28,29 @@ struct WeatherCurrent {
     precipitation: f64,
 }
 
-pub fn get_weather(city: &str) -> Result<String, String> {
-    let (lat, lon) = get_coordinates(city, "https://geocoding-api.open-meteo.com")?;
-    let weather = get_weather_data(lat, lon, "https://api.open-meteo.com")?;
-    Ok(formatget!(
-        "Temperature: {}°C, Cloud cover: {}%, Wind: {}km/h, Humidity: {}%, Precipitation: {}mm",
-        weather.temperature_2m,
-        weather.cloud_cover,
-        weather.wind_speed_10m,
-        weather.relative_humidity_2m,
-        weather.precipitation,
-    ))
+#[derive(Debug, PartialEq)]
+pub struct Weather {
+    pub city: String,
+    pub weather: String,
 }
 
-fn get_coordinates(city: &str, base_url: &str) -> Result<(f64, f64), String> {
+pub fn get_weather(city: &str) -> Result<Weather, String> {
+    let (lat, lon, city) = get_coordinates(city, "https://geocoding-api.open-meteo.com")?;
+    let weather = get_weather_data(lat, lon, "https://api.open-meteo.com")?;
+    Ok(Weather {
+        city,
+        weather: formatget!(
+            "Temperature: {}°C, Cloud cover: {}%, Wind: {}km/h, Humidity: {}%, Precipitation: {}mm",
+            weather.temperature_2m,
+            weather.cloud_cover,
+            weather.wind_speed_10m,
+            weather.relative_humidity_2m,
+            weather.precipitation,
+        ),
+    })
+}
+
+fn get_coordinates(city: &str, base_url: &str) -> Result<(f64, f64, String), String> {
     let client = reqwest::blocking::Client::builder()
         .timeout(WEATHER_API_TIMEOUT)
         .build()
@@ -67,7 +78,11 @@ fn get_coordinates(city: &str, base_url: &str) -> Result<(f64, f64), String> {
     match geocode_result.results {
         Some(results) if !results.is_empty() => {
             let location = &results[0];
-            Ok((location.latitude, location.longitude))
+            Ok((
+                location.latitude,
+                location.longitude,
+                format!("{} ({})", location.name, location.country_code),
+            ))
         }
         _ => Err(format!("Unknown location: {}", city)),
     }
@@ -128,7 +143,9 @@ mod tests {
                 r#"{
                 "results": [{
                     "latitude": 47.3769,
-                    "longitude": 8.5417
+                    "longitude": 8.5417,
+                    "name": "Zürich",
+                    "country_code": "CH"
                 }]
             }"#,
             )
@@ -153,9 +170,10 @@ mod tests {
             )
             .create();
 
-        let (lat, lon) = get_coordinates("Zurich", &geocoding_server.url()).unwrap();
+        let (lat, lon, city) = get_coordinates("Zurich", &geocoding_server.url()).unwrap();
         assert_eq!(lat, 47.3769);
         assert_eq!(lon, 8.5417);
+        assert_eq!(city, "Zürich (CH)");
 
         let weather = get_weather_data(lat, lon, &weather_server.url()).unwrap();
         assert_eq!(weather.temperature_2m, 22.5);
@@ -303,7 +321,9 @@ mod tests {
                 r#"{
                 "results": [{
                     "latitude": 35.6762,
-                    "longitude": 139.6503
+                    "longitude": 139.6503,
+                    "name": "Tokyo",
+                    "country_code": "JP"
                 }]
             }"#,
             )
@@ -332,10 +352,14 @@ mod tests {
             .create();
 
         // Test the complete flow
-        let (lat, lon) = get_coordinates("Tokyo", &geocoding_server.url()).unwrap();
+        let (lat, lon, city) = get_coordinates("Tokyo", &geocoding_server.url()).unwrap();
+        assert_eq!(lat, 35.6762);
+        assert_eq!(lon, 139.6503);
+        assert_eq!(city, "Tokyo (JP)");
+        
         let weather = get_weather_data(lat, lon, &weather_server.url()).unwrap();
         let result = format!(
-            "Temperature: {}°C, Cloud cover: {}%, Wind: {} km/h, Humidity: {}%, Precipitation: {} mm",
+            "Temperature: {}°C, Cloud cover: {}%, Wind: {}km/h, Humidity: {}%, Precipitation: {}mm",
             weather.temperature_2m,
             weather.cloud_cover,
             weather.wind_speed_10m,
@@ -359,12 +383,12 @@ mod tests {
         let result = get_weather("Zurich");
         match result {
             Ok(weather_info) => {
-                assert!(weather_info.contains("Temperature:"));
-                assert!(weather_info.contains("°C"));
-                assert!(weather_info.contains("Humidity:"));
-                assert!(weather_info.contains("%"));
-                assert!(weather_info.contains("Wind:"));
-                assert!(weather_info.contains("km/h"));
+                assert!(weather_info.weather.contains("Temperature:"));
+                assert!(weather_info.weather.contains("°C"));
+                assert!(weather_info.weather.contains("Humidity:"));
+                assert!(weather_info.weather.contains("%"));
+                assert!(weather_info.weather.contains("Wind:"));
+                assert!(weather_info.weather.contains("km/h"));
             }
             Err(e) => {
                 // Network errors are acceptable in tests

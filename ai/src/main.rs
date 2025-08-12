@@ -373,7 +373,7 @@ fn process_command(
                 match weather::get_weather(city) {
                     Ok(w) => Ok(CommandResult::AskAgent {
                         query: weather::weather_prompt().to_string(),
-                        extra_history: formatget!("The weather in {} is: {}.", city, w),
+                        extra_history: formatget!("The weather in {} is: {}.", w.city, w.weather),
                     }),
                     Err(err) => Ok(CommandResult::Message(err)),
                 }
