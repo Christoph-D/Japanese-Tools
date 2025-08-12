@@ -288,7 +288,7 @@ msgid "Invalid model syntax: {}"
 msgstr ""
 
 #: ../ai/src/weather.rs
-msgid "Temperature: {}°C, Humidity: {}%, Wind: {}km/h, Precipitation: {}mm, Rain: {}mm"
+msgid "Temperature: {}°C, Cloud cover: {}%, Wind: {}km/h, Humidity: {}%, Precipitation: {}mm"
 msgstr ""
 
 #: ../ai/src/main.rs

@@ -294,12 +294,8 @@ msgid "Invalid model syntax: {}"
 msgstr "Ungültige Modellkonfiguration: {}"
 
 #: ../ai/src/weather.rs
-msgid ""
-"Temperature: {}°C, Humidity: {}%, Wind: {}km/h, Precipitation: {}mm, Rain: {}"
-"mm"
-msgstr ""
-"Temperatur: {}°C, Luftfeuchtigkeit: {}%, Wind: {}km/h, Niederschlag: {}mm, "
-"Regen: {}mm"
+msgid "Temperature: {}°C, Cloud cover: {}%, Wind: {}km/h, Humidity: {}%, Precipitation: {}mm"
+msgstr "Temperatur: {}°C, Bewölkung: {}%, Wind: {}km/h, Luftfeuchtigkeit: {}%, Niederschlag: {}mm"
 
 #: ../ai/src/main.rs
 msgid "HTTP client error: {}"

@@ -20,22 +20,22 @@ struct WeatherResponse {
 #[derive(serde::Deserialize, Debug, PartialEq)]
 struct WeatherCurrent {
     temperature_2m: f64,
+    cloud_cover: f64,
     wind_speed_10m: f64,
     relative_humidity_2m: f64,
     precipitation: f64,
-    rain: f64,
 }
 
 pub fn get_weather(city: &str) -> Result<String, String> {
     let (lat, lon) = get_coordinates(city, "https://geocoding-api.open-meteo.com")?;
     let weather = get_weather_data(lat, lon, "https://api.open-meteo.com")?;
     Ok(formatget!(
-        "Temperature: {}°C, Humidity: {}%, Wind: {}km/h, Precipitation: {}mm, Rain: {}mm",
+        "Temperature: {}°C, Cloud cover: {}%, Wind: {}km/h, Humidity: {}%, Precipitation: {}mm",
         weather.temperature_2m,
-        weather.relative_humidity_2m,
+        weather.cloud_cover,
         weather.wind_speed_10m,
+        weather.relative_humidity_2m,
         weather.precipitation,
-        weather.rain
     ))
 }
 
@@ -80,7 +80,7 @@ fn get_weather_data(lat: f64, lon: f64, base_url: &str) -> Result<WeatherCurrent
         .map_err(|e| format!("HTTP client error: {}", e))?;
 
     let url = format!(
-        "{}/v1/forecast?latitude={}&longitude={}&current=temperature_2m,wind_speed_10m,relative_humidity_2m,precipitation,rain",
+        "{}/v1/forecast?latitude={}&longitude={}&current=temperature_2m,cloud_cover,wind_speed_10m,relative_humidity_2m,precipitation",
         base_url, lat, lon
     );
 
@@ -136,7 +136,7 @@ mod tests {
         let weather_mock = weather_server
             .mock(
                 "GET",
-                "/v1/forecast?latitude=47.3769&longitude=8.5417&current=temperature_2m,wind_speed_10m,relative_humidity_2m,precipitation,rain",
+                "/v1/forecast?latitude=47.3769&longitude=8.5417&current=temperature_2m,cloud_cover,wind_speed_10m,relative_humidity_2m,precipitation",
             )
             .with_status(200)
             .with_header("content-type", "application/json")
@@ -144,10 +144,10 @@ mod tests {
                 r#"{
                 "current": {
                     "temperature_2m": 22.5,
+                    "cloud_cover": 0.0,
                     "wind_speed_10m": 10.2,
                     "relative_humidity_2m": 65.0,
-                    "precipitation": 0.0,
-                    "rain": 0.0
+                    "precipitation": 0.0
                 }
             }"#,
             )
@@ -159,8 +159,10 @@ mod tests {
 
         let weather = get_weather_data(lat, lon, &weather_server.url()).unwrap();
         assert_eq!(weather.temperature_2m, 22.5);
+        assert_eq!(weather.cloud_cover, 0.0);
         assert_eq!(weather.wind_speed_10m, 10.2);
         assert_eq!(weather.relative_humidity_2m, 65.0);
+        assert_eq!(weather.precipitation, 0.0);
 
         geocoding_mock.assert();
         weather_mock.assert();
@@ -320,10 +322,10 @@ mod tests {
                 r#"{
                 "current": {
                     "temperature_2m": 18.7,
+                    "cloud_cover": 0.1,
                     "wind_speed_10m": 5.4,
                     "relative_humidity_2m": 72.0,
-                    "precipitation": 0.2,
-                    "rain": 0.1
+                    "precipitation": 0.2
                 }
             }"#,
             )
@@ -333,12 +335,12 @@ mod tests {
         let (lat, lon) = get_coordinates("Tokyo", &geocoding_server.url()).unwrap();
         let weather = get_weather_data(lat, lon, &weather_server.url()).unwrap();
         let result = format!(
-            "Temperature: {}°C, Humidity: {}%, Wind: {} km/h, Precipitation: {} mm, Rain: {} mm",
+            "Temperature: {}°C, Cloud cover: {}%, Wind: {} km/h, Humidity: {}%, Precipitation: {} mm",
             weather.temperature_2m,
-            weather.relative_humidity_2m,
+            weather.cloud_cover,
             weather.wind_speed_10m,
-            weather.precipitation,
-            weather.rain
+            weather.relative_humidity_2m,
+            weather.precipitation
         );
 
         assert!(result.contains("18.7°C"));
