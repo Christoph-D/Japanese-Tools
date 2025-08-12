@@ -308,6 +308,10 @@ msgid "Usage: !ai [{}] [-{}|-c] [-{}=1.0|-t=1.0] <query>.  Models: {}.  Default:
 msgstr ""
 
 #: ../ai/src/main.rs
+msgid "Flag -{} requires a value (e.g., -{}=1.0)"
+msgstr ""
+
+#: ../ai/src/main.rs
 msgid "Unknown flag: {}"
 msgid_plural "Unknown flags: {}"
 msgstr[0] ""
@@ -319,10 +323,6 @@ msgstr ""
 
 #: ../ai/src/main.rs
 msgid "Config file not found."
-msgstr ""
-
-#: ../ai/src/main.rs
-msgid "!ai is only available in channels."
 msgstr ""
 
 #: ../ai/src/main.rs
@@ -343,6 +343,10 @@ msgstr ""
 
 #: ../ai/src/main.rs
 msgid "{} is sharing memory with: {}"
+msgstr ""
+
+#: ../ai/src/main.rs
+msgid "!ai is only available in channels."
 msgstr ""
 
 #: ../ircbot/src/bot.rs

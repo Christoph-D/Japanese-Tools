@@ -317,6 +317,10 @@ msgstr ""
 "Standardmodell: {}"
 
 #: ../ai/src/main.rs
+msgid "Flag -{} requires a value (e.g., -{}=1.0)"
+msgstr "Option -{} benötigt einen Wert (z.B. -{}=1.0)"
+
+#: ../ai/src/main.rs
 msgid "Unknown flag: {}"
 msgid_plural "Unknown flags: {}"
 msgstr[0] "Unbekannte Option: {}"
@@ -330,10 +334,6 @@ msgstr "Interner Fehler: Doppelte Option, prüf die Modellkonfiguration"
 #: ../ai/src/main.rs
 msgid "Config file not found."
 msgstr "Konfigurationsdatei nicht gefunden."
-
-#: ../ai/src/main.rs
-msgid "!ai is only available in channels."
-msgstr "!ai gibt es nur in Channels."
 
 #: ../ai/src/main.rs
 msgid "Usage: join <username>"
@@ -354,6 +354,10 @@ msgstr "{} teilt seinen Speicher nicht."
 #: ../ai/src/main.rs
 msgid "{} is sharing memory with: {}"
 msgstr "{} teilt seinen Speicher mit: {}"
+
+#: ../ai/src/main.rs
+msgid "!ai is only available in channels."
+msgstr "!ai gibt es nur in Channels."
 
 #: ../ircbot/src/bot.rs
 msgid "An error occurred."

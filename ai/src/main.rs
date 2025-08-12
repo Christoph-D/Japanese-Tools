@@ -15,6 +15,18 @@ use std::io::Read;
 use std::path::{Path, PathBuf};
 use std::time::Duration;
 
+#[derive(Debug, Clone, PartialEq, Eq)]
+struct Flag {
+    name: String,
+    requires_value: bool,
+}
+
+impl Flag {
+    fn new(name: String, requires_value: bool) -> Self {
+        Flag { name, requires_value }
+    }
+}
+
 fn call_api(
     model: &Model,
     prompt: &Vec<Message>,
@@ -140,8 +152,11 @@ fn textdomain_dir() -> Option<String> {
 }
 
 // Extracts known flags from the query. Returns the flags and the remaining query.
-// Example: ["foo", "bar", "t"], "-foo -bar -t=foo   rest -of    the   query" -> ["foo", "bar", "t=foo"], "rest -of    the   query"
-fn extract_flags(known_flags: &[String], query: &str) -> Result<(Vec<String>, String), String> {
+// Example:
+// Input: [Flag{name:"foo", requires_value:false}, Flag{name:"t", requires_value:true}],
+//        "-foo -t=1.3   rest -of    the   query"
+// Result: ["foo", "t=1.3"], "rest -of    the   query"
+fn extract_flags(known_flags: &[Flag], query: &str) -> Result<(Vec<String>, String), String> {
     // Extract all -flags from query from the beginning until query no longer starts with - or we hit the end of string. Use string splitting or something, don't iterate over individual characters.
     // Collect all extracted flags which are not in known_flags. If non-empty, return all of them in the error.
     // Otherwise, return the extracted flags and the remaining query.
@@ -152,7 +167,11 @@ fn extract_flags(known_flags: &[String], query: &str) -> Result<(Vec<String>, St
         let (flag_with_value, remaining) = stripped.split_once(' ').unwrap_or((stripped, ""));
         rest = remaining.trim_start();
         let flag_name = flag_with_value.split('=').next().unwrap_or(flag_with_value);
-        if known_flags.contains(&flag_name.to_string()) {
+        
+        if let Some(known_flag) = known_flags.iter().find(|f| f.name == flag_name) {
+            if known_flag.requires_value && !flag_with_value.contains('=') {
+                return Err(formatget!("Flag -{} requires a value (e.g., -{}=1.0)", flag_name, flag_name));
+            }
             flags.push(flag_with_value.to_string());
         } else {
             unknown_flags.push(flag_with_value.to_string());
@@ -180,19 +199,18 @@ fn extract_flags(known_flags: &[String], query: &str) -> Result<(Vec<String>, St
 
 fn parse_command_line(query: &str, models: &ModelList) -> Result<(Vec<String>, String), String> {
     let known_flags = {
-        let mut known_flags = models.list_model_flags();
-        known_flags.push(CLEAR_MEMORY_FLAG.to_string());
-        known_flags.push("c".to_string()); // Short for CLEAR_MEMORY_FLAG
-        known_flags.push(TEMPERATURE_FLAG.to_string());
-        known_flags.push("t".to_string()); // Short for TEMPERATURE_FLAG
+        let mut known_flags = Vec::new();
+        for model_flag in models.list_model_flags() {
+            known_flags.push(Flag::new(model_flag, false));
+        }
+        known_flags.push(Flag::new(CLEAR_MEMORY_FLAG.to_string(), false));
+        known_flags.push(Flag::new("c".to_string(), false)); // Short for CLEAR_MEMORY_FLAG
+                known_flags.push(Flag::new(TEMPERATURE_FLAG.to_string(), true));
+        known_flags.push(Flag::new("t".to_string(), true)); // Short for TEMPERATURE_FLAG
         known_flags
     };
-    if known_flags.len()
-        != known_flags
-            .iter()
-            .collect::<std::collections::HashSet<_>>()
-            .len()
-    {
+    let flag_names: Vec<&String> = known_flags.iter().map(|f| &f.name).collect();
+    if flag_names.len() != flag_names.iter().collect::<std::collections::HashSet<_>>().len() {
         return Err(gettext(
             "Internal error: duplicate configured flags detected, check your model config",
         ));
@@ -411,13 +429,34 @@ mod tests {
 
     #[test]
     fn test_extract_flags() {
+        let known_flags = vec![
+            Flag::new("foo".to_string(), false),
+            Flag::new("bar".to_string(), false),
+            Flag::new("t".to_string(), true),
+        ];
         let (flags, query) = extract_flags(
-            &vec!["foo".to_string(), "bar".to_string(), "t".to_string()],
+            &known_flags,
             "-foo -t=1.3 -bar   rest -of    the   query",
         )
         .unwrap();
         assert_eq!(flags, vec!["foo", "t=1.3", "bar"]);
         assert_eq!(query, "rest -of    the   query");
+    }
+
+    #[test]
+    fn test_extract_flags_temperature_requires_value() {
+        let known_flags = vec![
+            Flag::new("foo".to_string(), false),
+            Flag::new("t".to_string(), true),
+        ];
+        let result = extract_flags(
+            &known_flags,
+            "-t foo",
+        );
+        assert!(result.is_err());
+        let error = result.unwrap_err();
+        assert!(error.contains("Flag -t requires a value"));
+        assert!(error.contains("-t=1.0"));
     }
 
     #[test]
