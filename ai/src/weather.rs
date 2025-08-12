@@ -1,5 +1,7 @@
 use std::time::Duration;
 
+use crate::formatget;
+
 #[derive(serde::Deserialize)]
 struct GeocodeResult {
     results: Option<Vec<GeocodeLocation>>,
@@ -28,8 +30,8 @@ struct WeatherCurrent {
 pub fn get_weather(city: &str) -> Result<String, String> {
     let (lat, lon) = get_coordinates(city, "https://geocoding-api.open-meteo.com")?;
     let weather = get_weather_data(lat, lon, "https://api.open-meteo.com")?;
-    Ok(format!(
-        "Temperature: {}°C, Humidity: {}%, Wind: {} km/h, Precipitation: {} mm, Rain: {} mm",
+    Ok(formatget!(
+        "Temperature: {}°C, Humidity: {}%, Wind: {}km/h, Precipitation: {}mm, Rain: {}mm",
         weather.temperature_2m,
         weather.relative_humidity_2m,
         weather.wind_speed_10m,

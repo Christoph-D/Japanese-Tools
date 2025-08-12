@@ -303,7 +303,8 @@ fn process_command(
     sender: &str,
     memory: &mut Memory,
 ) -> Result<Option<String>, String> {
-    match command {
+    let command = command.to_lowercase();
+    match command.as_ref() {
         "join" => {
             let target_user = args.trim();
             if target_user.is_empty() || target_user == sender {
@@ -346,17 +347,20 @@ fn process_command(
                 other_users.join(", ")
             )))
         }
-        "weather" => {
-            let city = args.trim();
-            if city.is_empty() {
-                return Ok(Some(gettext("Usage: weather <city>").to_string()));
-            }
-            match weather::get_weather(city) {
-                Ok(temp) => Ok(Some(temp)),
-                Err(err) => Ok(Some(err)),
+        _ => {
+            if command == gettext("weather").to_lowercase() {
+                let city = args.trim();
+                if city.is_empty() {
+                    return Ok(Some(gettext("Usage: weather <city>").to_string()));
+                }
+                match weather::get_weather(city) {
+                    Ok(temp) => Ok(Some(temp)),
+                    Err(err) => Ok(Some(err)),
+                }
+            } else {
+                Ok(None) // Not a command
             }
         }
-        _ => Ok(None), // Not a command
     }
 }
 

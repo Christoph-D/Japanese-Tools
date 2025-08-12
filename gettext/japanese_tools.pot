@@ -287,6 +287,10 @@ msgstr ""
 msgid "Invalid model syntax: {}"
 msgstr ""
 
+#: ../ai/src/weather.rs
+msgid "Temperature: {}°C, Humidity: {}%, Wind: {}km/h, Precipitation: {}mm, Rain: {}mm"
+msgstr ""
+
 #: ../ai/src/main.rs
 msgid "HTTP client error: {}"
 msgstr ""
@@ -343,6 +347,14 @@ msgstr ""
 
 #: ../ai/src/main.rs
 msgid "{} is sharing memory with: {}"
+msgstr ""
+
+#: ../ai/src/main.rs
+msgid "weather"
+msgstr ""
+
+#: ../ai/src/main.rs
+msgid "Usage: weather <city>"
 msgstr ""
 
 #: ../ai/src/main.rs

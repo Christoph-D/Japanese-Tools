@@ -293,6 +293,12 @@ msgstr "Nie znaleziono DEFAULT_MODEL"
 msgid "Invalid model syntax: {}"
 msgstr "Nieprawidłowa składnia modelu: {}"
 
+#: ../ai/src/weather.rs
+msgid ""
+"Temperature: {}°C, Humidity: {}%, Wind: {}km/h, Precipitation: {}mm, Rain: {}"
+"mm"
+msgstr "Temperatura: {}°C, Wilgotność: {}%, Wiatr: {}km/h, Opady: {}mm, Deszcz: {}mm"
+
 #: ../ai/src/main.rs
 msgid "HTTP client error: {}"
 msgstr "Błąd klienta HTTP: {}"
@@ -357,6 +363,14 @@ msgstr "{} nie współdzieli pamięci z nikim."
 #: ../ai/src/main.rs
 msgid "{} is sharing memory with: {}"
 msgstr "{} współdzieli pamięć z: {}"
+
+#: ../ai/src/main.rs
+msgid "weather"
+msgstr "pogoda"
+
+#: ../ai/src/main.rs
+msgid "Usage: weather <city>"
+msgstr "Użycie: pogoda <miasto>"
 
 #: ../ai/src/main.rs
 msgid "!ai is only available in channels."
