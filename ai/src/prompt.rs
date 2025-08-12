@@ -124,8 +124,12 @@ mod tests {
         let receiver = "#test_channel";
 
         let mut memory = Memory::new_from_path(config_path).unwrap();
-        memory.add_to_history(sender, Sender::User, receiver, "Hello!").unwrap();
-        memory.add_to_history(sender, Sender::Assistant, receiver, "Hi there!").unwrap();
+        memory
+            .add_to_history(sender, Sender::User, receiver, "Hello!")
+            .unwrap();
+        memory
+            .add_to_history(sender, Sender::Assistant, receiver, "Hi there!")
+            .unwrap();
 
         let result = build_prompt(query, sender, receiver, &memory, config_path);
 
@@ -172,16 +176,28 @@ mod tests {
 
         let mut memory = Memory::new_from_path(config_path).unwrap();
 
-        memory.add_to_history("user1", Sender::User, receiver, "Hello from user1!").unwrap();
-        memory.add_to_history("user1", Sender::Assistant, receiver, "Hi user1!").unwrap();
+        memory
+            .add_to_history("user1", Sender::User, receiver, "Hello from user1!")
+            .unwrap();
+        memory
+            .add_to_history("user1", Sender::Assistant, receiver, "Hi user1!")
+            .unwrap();
 
-        memory.add_to_history("user2", Sender::User, receiver, "Hello from user2!").unwrap();
-        memory.add_to_history("user2", Sender::Assistant, receiver, "Hi user2!").unwrap();
+        memory
+            .add_to_history("user2", Sender::User, receiver, "Hello from user2!")
+            .unwrap();
+        memory
+            .add_to_history("user2", Sender::Assistant, receiver, "Hi user2!")
+            .unwrap();
 
-        memory.add_to_history("user3", Sender::User, receiver, "Hello from user3!").unwrap();
-        memory.add_to_history("user3", Sender::Assistant, receiver, "Hi user3!").unwrap();
+        memory
+            .add_to_history("user3", Sender::User, receiver, "Hello from user3!")
+            .unwrap();
+        memory
+            .add_to_history("user3", Sender::Assistant, receiver, "Hi user3!")
+            .unwrap();
 
-        memory.join_users("user1", "user2");
+        memory.join_users("user1", "user2").unwrap();
 
         let result = build_prompt(query, "user1", receiver, &memory, config_path);
 

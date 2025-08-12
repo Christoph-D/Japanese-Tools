@@ -1,8 +1,7 @@
 mod user_groups;
 
-use std::{collections::HashSet, fs::File, path::Path};
+use std::{collections::HashSet, path::Path};
 
-use fs2::FileExt;
 use rusqlite::{
     Connection, Error,
     types::{FromSql, ToSql},
@@ -64,7 +63,6 @@ pub struct Memory {
     entries: HashMap<String, Vec<Entry>>,
     joined_users: GroupSets,
     sqlite: Connection,
-    _lock_file: File,
 }
 
 fn load_history(
@@ -108,7 +106,7 @@ fn load_history(
     Ok(entries)
 }
 
-fn load_group_sets(connection: &mut Connection, now: OffsetDateTime) -> Result<GroupSets, Error> {
+fn load_group_sets(connection: &Connection, now: OffsetDateTime) -> Result<GroupSets, Error> {
     struct Row {
         user: String,
         group_id: i64,
@@ -151,19 +149,21 @@ fn load_group_sets(connection: &mut Connection, now: OffsetDateTime) -> Result<G
     Ok(GroupSets::from_maps(user_to_group, group_map))
 }
 
+fn save_group_sets(connection: &Connection, group_sets: &GroupSets) -> Result<(), Error> {
+    connection.execute("DELETE FROM group_sets", [])?;
+    let mut stmt = connection.prepare(
+        "INSERT INTO group_sets (user_name, group_id, last_modified) VALUES (?1, ?2, ?3)",
+    )?;
+    for (user, group_id) in group_sets.get_user_to_group_mappings().iter() {
+        if let Some(group_info) = group_sets.get_groups().get(group_id) {
+            stmt.execute((user, *group_id as i64, group_info.last_modified))?;
+        }
+    }
+    Ok(())
+}
+
 impl Memory {
     pub fn new_from_path(config_path: &Path) -> Result<Self, String> {
-        // Create and acquire exclusive lock to prevent DB corruption.
-        // TODO: Instead of locking the whole DB, perform transactions as needed.
-        let lock_file_path = config_path.join(format!("{}.lock", MEMORY_DB_NAME));
-        let lock_file = File::create(&lock_file_path)
-            .map_err(|e| format!("Failed to create lock file: {}", e))?;
-
-        // Wait until the lock is available
-        lock_file
-            .lock_exclusive()
-            .map_err(|e| format!("Failed to acquire database lock: {}", e))?;
-
         let mut connection = Connection::open(config_path.join(MEMORY_DB_NAME))
             .map_err(|e| format!("Failed to open memory DB: {}", e))?;
 
@@ -178,34 +178,19 @@ impl Memory {
 
         Ok(Self {
             entries: load_history(&mut connection, now).map_err(|e| e.to_string())?,
-            joined_users: load_group_sets(&mut connection, now).map_err(|e| e.to_string())?,
+            joined_users: load_group_sets(&connection, now).map_err(|e| e.to_string())?,
             sqlite: connection,
-            _lock_file: lock_file,
         })
     }
 
-    pub fn save(&mut self) -> Result<(), String> {
-        let tx = self.sqlite.transaction().map_err(|e| e.to_string())?;
-        // Only save group_sets since memory entries are now saved immediately
-        tx.execute("DELETE FROM group_sets", [])
-            .map_err(|e| e.to_string())?;
-        {
-            let mut stmt = tx
-                .prepare("INSERT INTO group_sets (user_name, group_id, last_modified) VALUES (?1, ?2, ?3)")
-                .map_err(|e| e.to_string())?;
-            for (user, group_id) in self.joined_users.get_user_to_group_mappings().iter() {
-                if let Some(group_info) = self.joined_users.get_groups().get(group_id) {
-                    stmt.execute((user, *group_id as i64, group_info.last_modified))
-                        .map_err(|e| e.to_string())?;
-                }
-            }
-        }
-        tx.commit().map_err(|e| e.to_string())?;
-        Ok(())
-    }
-
     // Add to the history of the given user.
-    pub fn add_to_history(&mut self, user: &str, sender: Sender, receiver: &str, message: &str) -> Result<(), String> {
+    pub fn add_to_history(
+        &mut self,
+        user: &str,
+        sender: Sender,
+        receiver: &str,
+        message: &str,
+    ) -> Result<(), String> {
         let entry = Entry {
             sender: sender.clone(),
             receiver: receiver.to_string(),
@@ -258,13 +243,27 @@ impl Memory {
     }
 
     // Join two users so they share memory
-    pub fn join_users(&mut self, user1: &str, user2: &str) {
-        self.joined_users.union(user1, user2);
+    pub fn join_users(&mut self, user1: &str, user2: &str) -> Result<(), String> {
+        let tx = self.sqlite.transaction().map_err(|e| e.to_string())?;
+        let mut group_sets =
+            load_group_sets(&tx, OffsetDateTime::now_utc()).map_err(|e| e.to_string())?;
+        group_sets.union(user1, user2);
+        save_group_sets(&tx, &group_sets).map_err(|e| e.to_string())?;
+        tx.commit().map_err(|e| e.to_string())?;
+        self.joined_users = group_sets;
+        Ok(())
     }
 
     // Remove a user from their joined group, making them solo
-    pub fn make_user_solo(&mut self, user: &str) {
-        self.joined_users.remove_user(user);
+    pub fn make_user_solo(&mut self, user: &str) -> Result<(), String> {
+        let tx = self.sqlite.transaction().map_err(|e| e.to_string())?;
+        let mut group_sets =
+            load_group_sets(&tx, OffsetDateTime::now_utc()).map_err(|e| e.to_string())?;
+        group_sets.remove_user(user);
+        save_group_sets(&tx, &group_sets).map_err(|e| e.to_string())?;
+        tx.commit().map_err(|e| e.to_string())?;
+        self.joined_users = group_sets;
+        Ok(())
     }
 
     // Get all users joined with the given user including the user themselves
@@ -300,16 +299,18 @@ mod tests {
     }
 
     #[test]
-    fn test_memory_new_from_path_and_save() {
+    fn test_memory_new_from_path_and_persistence() {
         let (dir, mut memory) = setup_memory();
 
-        memory.add_to_history("user1", Sender::User, "receiver1", "message1").unwrap();
-        memory.add_to_history("user1", Sender::Assistant, "receiver1", "message2").unwrap();
-        memory.add_to_history("user2", Sender::User, "receiver2", "messageA").unwrap();
-        memory.save().unwrap();
-
-        // Drop the first memory instance to release the file lock
-        drop(memory);
+        memory
+            .add_to_history("user1", Sender::User, "receiver1", "message1")
+            .unwrap();
+        memory
+            .add_to_history("user1", Sender::Assistant, "receiver1", "message2")
+            .unwrap();
+        memory
+            .add_to_history("user2", Sender::User, "receiver2", "messageA")
+            .unwrap();
 
         let loaded_memory = Memory::new_from_path(dir.path()).unwrap();
         let user1_history = loaded_memory.user_history("user1", "receiver1");
@@ -326,15 +327,14 @@ mod tests {
     fn test_memory_clear_history() {
         let (dir, mut memory) = setup_memory();
 
-        memory.add_to_history("user1", Sender::User, "receiver1", "message1").unwrap();
-        memory.add_to_history("user2", Sender::User, "receiver2", "messageA").unwrap();
-        memory.save().unwrap();
+        memory
+            .add_to_history("user1", Sender::User, "receiver1", "message1")
+            .unwrap();
+        memory
+            .add_to_history("user2", Sender::User, "receiver2", "messageA")
+            .unwrap();
 
         memory.clear_history("user1", "receiver1").unwrap();
-        memory.save().unwrap();
-
-        // Drop the first memory instance to release the file lock
-        drop(memory);
 
         let loaded_memory = Memory::new_from_path(dir.path()).unwrap();
         assert!(loaded_memory.user_history("user1", "receiver1").is_empty());
@@ -377,12 +377,10 @@ mod tests {
         let (dir, mut memory) = setup_memory();
 
         for i in 0..(MEMORY_MAX_MESSAGES + 5) {
-            memory.add_to_history("user1", Sender::User, "receiver1", &format!("msg{}", i)).unwrap();
+            memory
+                .add_to_history("user1", Sender::User, "receiver1", &format!("msg{}", i))
+                .unwrap();
         }
-        memory.save().unwrap();
-
-        // Drop the first memory instance to release the file lock
-        drop(memory);
 
         let loaded_memory = Memory::new_from_path(dir.path()).unwrap();
         let history = loaded_memory.user_history("user1", "receiver1");
@@ -400,13 +398,13 @@ mod tests {
     fn test_memory_joined_users_persistence() {
         let (dir, mut memory) = setup_memory();
 
-        memory.add_to_history("user1", Sender::User, "receiver1", "message1").unwrap();
-        memory.add_to_history("user2", Sender::User, "receiver2", "message2").unwrap();
-        memory.join_users("user1", "user2");
-        memory.save().unwrap();
-
-        // Drop the first memory instance to release the file lock
-        drop(memory);
+        memory
+            .add_to_history("user1", Sender::User, "receiver1", "message1")
+            .unwrap();
+        memory
+            .add_to_history("user2", Sender::User, "receiver2", "message2")
+            .unwrap();
+        memory.join_users("user1", "user2").unwrap();
 
         let loaded_memory = Memory::new_from_path(dir.path()).unwrap();
         let joined_users = loaded_memory.get_joined_users("user1");
