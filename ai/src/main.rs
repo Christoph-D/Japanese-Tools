@@ -208,6 +208,7 @@ struct Input {
     sender: String,
     receiver: String,
     query: String,
+    irc_plugin: bool,
 }
 
 fn main() {
@@ -243,10 +244,6 @@ fn setup() -> Result<Input, String> {
 
     let sender = std::env::var("DMB_SENDER").unwrap_or_default();
     let receiver = std::env::var("DMB_RECEIVER").unwrap_or_default();
-    // Prevent usage in private messages
-    if std::env::var("IRC_PLUGIN").ok().as_deref() == Some("1") && !receiver.starts_with('#') {
-        return Err(gettext("!ai is only available in channels."));
-    }
 
     let models = ModelList::new(&Config::from_env())?;
 
@@ -265,6 +262,7 @@ fn setup() -> Result<Input, String> {
         models,
         model,
         config_path,
+        irc_plugin: std::env::var("IRC_PLUGIN").ok().as_deref() == Some("1"),
     })
 }
 
@@ -319,6 +317,11 @@ fn process_command(
 }
 
 fn run(input: &Input) -> Result<String, String> {
+    // Prevent usage in private messages
+    if input.irc_plugin && !input.receiver.starts_with('#') {
+        return Ok(gettext("!ai is only available in channels."));
+    }
+
     let mut memory = Memory::new_from_path(&input.config_path)?;
 
     let history_cleared = input.flags.contains(&CLEAR_MEMORY_FLAG.to_string())
