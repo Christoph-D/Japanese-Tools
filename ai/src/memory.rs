@@ -3,7 +3,7 @@ mod user_groups;
 use std::{collections::HashSet, path::Path};
 
 use rusqlite::{
-    Connection, Error,
+    Connection, Error, TransactionBehavior,
     types::{FromSql, ToSql},
 };
 use std::collections::HashMap;
@@ -244,7 +244,10 @@ impl Memory {
 
     // Join two users so they share memory
     pub fn join_users(&mut self, user1: &str, user2: &str) -> Result<(), String> {
-        let tx = self.sqlite.transaction().map_err(|e| e.to_string())?;
+        let tx = self
+            .sqlite
+            .transaction_with_behavior(TransactionBehavior::Immediate)
+            .map_err(|e| e.to_string())?;
         let mut group_sets =
             load_group_sets(&tx, OffsetDateTime::now_utc()).map_err(|e| e.to_string())?;
         group_sets.union(user1, user2);
@@ -256,7 +259,10 @@ impl Memory {
 
     // Remove a user from their joined group, making them solo
     pub fn make_user_solo(&mut self, user: &str) -> Result<(), String> {
-        let tx = self.sqlite.transaction().map_err(|e| e.to_string())?;
+        let tx = self
+            .sqlite
+            .transaction_with_behavior(TransactionBehavior::Immediate)
+            .map_err(|e| e.to_string())?;
         let mut group_sets =
             load_group_sets(&tx, OffsetDateTime::now_utc()).map_err(|e| e.to_string())?;
         group_sets.remove_user(user);
