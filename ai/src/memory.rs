@@ -10,11 +10,13 @@ use std::collections::HashMap;
 use time::OffsetDateTime;
 
 use crate::{
-    constants::{MEMORY_MAX_MESSAGES, MEMORY_RETENTION},
+    constants::{MEMORY_MAX_MESSAGES, MEMORY_RETENTION, USER_GROUP_RETENTION},
     memory::user_groups::{GroupInfo, GroupSets},
 };
 
 const MEMORY_DB_NAME: &str = "ai_memory.db";
+const MEMORY_TABLE_SCHEMA: &str = "CREATE TABLE IF NOT EXISTS memory (user TEXT NOT NULL, sender TEXT NOT NULL, receiver TEXT NOT NULL, timestamp TEXT NOT NULL, message TEXT NOT NULL)";
+const GROUP_SETS_TABLE_SCHEMA: &str = "CREATE TABLE IF NOT EXISTS group_sets (user_name TEXT NOT NULL, group_id INTEGER NOT NULL, last_modified TEXT NOT NULL)";
 
 #[derive(Debug, PartialEq, Clone)]
 pub enum Sender {
@@ -63,7 +65,10 @@ pub struct Memory {
     sqlite: Connection,
 }
 
-fn load_history(connection: &mut Connection) -> Result<HashMap<String, Vec<Entry>>, Error> {
+fn load_history(
+    connection: &mut Connection,
+    now: OffsetDateTime,
+) -> Result<HashMap<String, Vec<Entry>>, Error> {
     let mut entries = {
         let mut load_entries = connection.prepare(
             "SELECT user, sender, receiver, timestamp, message FROM memory ORDER BY timestamp",
@@ -87,7 +92,7 @@ fn load_history(connection: &mut Connection) -> Result<HashMap<String, Vec<Entry
         entries
     };
     // Remove expired entries
-    let oldest_allowed = OffsetDateTime::now_utc() - MEMORY_RETENTION;
+    let oldest_allowed = now - MEMORY_RETENTION;
     entries.retain(|_, user_entries| {
         user_entries.retain(|entry| entry.timestamp > oldest_allowed);
         !user_entries.is_empty()
@@ -101,7 +106,7 @@ fn load_history(connection: &mut Connection) -> Result<HashMap<String, Vec<Entry
     Ok(entries)
 }
 
-fn load_group_sets(connection: &mut Connection) -> Result<GroupSets, Error> {
+fn load_group_sets(connection: &mut Connection, now: OffsetDateTime) -> Result<GroupSets, Error> {
     struct Row {
         user: String,
         group_id: i64,
@@ -132,6 +137,15 @@ fn load_group_sets(connection: &mut Connection) -> Result<GroupSets, Error> {
         group_info.members.insert(row.user.clone());
         user_to_group.insert(row.user, group_id);
     }
+
+    // Remove groups that are older than USER_GROUP_RETENTION.
+    let oldest_allowed = now - USER_GROUP_RETENTION;
+    group_map.retain(|_, group_info| group_info.last_modified > oldest_allowed);
+    user_to_group.retain(|_, group_id| group_map.contains_key(group_id));
+
+    // Remove singleton groups, they are redundant
+    group_map.retain(|_, group_info| group_info.members.len() > 1);
+
     Ok(GroupSets::from_maps(user_to_group, group_map))
 }
 
@@ -140,19 +154,18 @@ impl Memory {
         let mut connection = Connection::open(config_path.join(MEMORY_DB_NAME))
             .map_err(|e| format!("Failed to open memory DB: {}", e))?;
 
-        let create_db = "CREATE TABLE IF NOT EXISTS memory (user TEXT NOT NULL, sender TEXT NOT NULL, receiver TEXT NOT NULL, timestamp TEXT NOT NULL, message TEXT NOT NULL)";
         connection
-            .execute(create_db, ())
+            .execute(MEMORY_TABLE_SCHEMA, ())
+            .map_err(|e| e.to_string())?;
+        connection
+            .execute(GROUP_SETS_TABLE_SCHEMA, ())
             .map_err(|e| e.to_string())?;
 
-        let create_group_sets_table = "CREATE TABLE IF NOT EXISTS group_sets (user_name TEXT NOT NULL, group_id INTEGER NOT NULL, last_modified TEXT NOT NULL)";
-        connection
-            .execute(create_group_sets_table, ())
-            .map_err(|e| e.to_string())?;
+        let now = OffsetDateTime::now_utc();
 
         Ok(Self {
-            entries: load_history(&mut connection).map_err(|e| e.to_string())?,
-            joined_users: load_group_sets(&mut connection).map_err(|e| e.to_string())?,
+            entries: load_history(&mut connection, now).map_err(|e| e.to_string())?,
+            joined_users: load_group_sets(&mut connection, now).map_err(|e| e.to_string())?,
             sqlite: connection,
         })
     }
@@ -318,7 +331,7 @@ mod tests {
         let dir = tempdir().unwrap();
         let db_path = dir.path().join(MEMORY_DB_NAME);
         let connection = Connection::open(&db_path).unwrap();
-        connection.execute("CREATE TABLE IF NOT EXISTS memory (user TEXT NOT NULL, sender TEXT NOT NULL, receiver TEXT NOT NULL, timestamp TEXT NOT NULL, message TEXT NOT NULL)", ()).unwrap();
+        connection.execute(MEMORY_TABLE_SCHEMA, ()).unwrap();
 
         let now = OffsetDateTime::now_utc();
         let old_time = now - (MEMORY_RETENTION + time::Duration::seconds(1));
@@ -380,5 +393,51 @@ mod tests {
         assert_eq!(joined_users.len(), 2);
         assert!(joined_users.contains(&"user1".to_string()));
         assert!(joined_users.contains(&"user2".to_string()));
+    }
+
+    #[test]
+    fn test_memory_removes_expired_groups() {
+        let dir = tempdir().unwrap();
+        let db_path = dir.path().join(MEMORY_DB_NAME);
+        let connection = Connection::open(&db_path).unwrap();
+        connection.execute(MEMORY_TABLE_SCHEMA, ()).unwrap();
+        connection.execute(GROUP_SETS_TABLE_SCHEMA, ()).unwrap();
+
+        let now = OffsetDateTime::now_utc();
+        let old_time = now - (USER_GROUP_RETENTION + time::Duration::seconds(1));
+        let recent_time = now - (USER_GROUP_RETENTION - time::Duration::seconds(1));
+
+        // Create two groups: one expired, one recent
+        for (user, group_id, last_modified) in [
+            ("user1", 1, old_time),
+            ("user2", 1, old_time),
+            ("user3", 2, recent_time),
+            ("user4", 2, recent_time),
+        ] {
+            connection.execute(
+                "INSERT INTO group_sets (user_name, group_id, last_modified) VALUES (?1, ?2, ?3)",
+                (user, group_id, last_modified),
+            ).unwrap();
+        }
+
+        let memory = Memory::new_from_path(dir.path()).unwrap();
+
+        let user1_group = memory.joined_users.find_group("user1");
+        let user3_group = memory.joined_users.find_group("user3");
+
+        assert!(user1_group.is_none());
+        assert!(user3_group.is_some());
+
+        assert_eq!(memory.get_joined_users("user3").len(), 2);
+        assert!(
+            memory
+                .get_joined_users("user3")
+                .contains(&"user3".to_string())
+        );
+        assert!(
+            memory
+                .get_joined_users("user3")
+                .contains(&"user4".to_string())
+        );
     }
 }
