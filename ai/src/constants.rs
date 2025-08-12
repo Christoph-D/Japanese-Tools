@@ -1,3 +1,5 @@
+use std::time::Duration;
+
 pub const CONFIG_FILE_NAME: &str = ".env";
 
 // Hardcoded limit on line length for IRC
@@ -12,6 +14,9 @@ pub const DEFAULT_SYSTEM_PROMPT: &str = r#"You are a helpful AI in an IRC chatro
 pub const DEFAULT_SYSTEM_PROMPT_DE: &str = r#"Du bist eine hilfreiche KI in einem IRC-Chatraum. Du redest mit erfahrenen Software-Entwicklern.
     Schreib auf Deutsch, außer wenn der User dich um etwas anderes bittet. Wichtig: Beschränk deine Antwort auf {MAX_LINE_LENGTH} Zeichen.
     Schreib nur eine einzige Zeile ohne Markdown. Deine Antworten sind für alle Altersstufen geeignet."#;
+
+pub const DEFAULT_WEATHER_PROMPT: &str = "Describe the weather in your own words and comment on it.";
+pub const DEFAULT_WEATHER_PROMPT_DE: &str = "Beschreib das Wetter in eigenen Worten und kommentiere es.";
 
 // MEMORY_MAX_MESSAGES divided by half is the number of remembered user queries.
 // Each invocation creates two messages, a user query and a response from the assistant.

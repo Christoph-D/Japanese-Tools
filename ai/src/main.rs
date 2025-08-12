@@ -301,6 +301,10 @@ fn setup() -> Result<Input, String> {
 enum CommandResult {
     NotACommand,
     Message(String),
+    AskAgent {
+        extra_history: String,
+        query: String,
+    },
 }
 
 fn process_command(
@@ -367,7 +371,10 @@ fn process_command(
                     ));
                 }
                 match weather::get_weather(city) {
-                    Ok(temp) => Ok(CommandResult::Message(temp)),
+                    Ok(w) => Ok(CommandResult::AskAgent {
+                        query: weather::weather_prompt().to_string(),
+                        extra_history: formatget!("The weather in {} is: {}.", city, w),
+                    }),
                     Err(err) => Ok(CommandResult::Message(err)),
                 }
             } else {
@@ -401,19 +408,26 @@ fn run(input: &Input) -> Result<String, String> {
     }
 
     let (command, args) = query.split_once(' ').unwrap_or((query, ""));
-    match process_command(command, args, &input.sender, &mut memory)? {
+    let query = match process_command(command, args, &input.sender, &mut memory)? {
         CommandResult::Message(result) => return Ok(result),
-        CommandResult::NotACommand => {}
-    }
+        CommandResult::NotACommand => query.to_string(),
+        CommandResult::AskAgent {
+            query,
+            extra_history,
+        } => {
+            memory.add_to_history(&input.sender, Sender::User, &input.receiver, &extra_history);
+            query
+        }
+    };
 
     let prompt = build_prompt(
-        &input.query,
+        &query,
         &input.sender,
         &input.receiver,
         &memory,
         &input.config_path,
     );
-    memory.add_to_history(&input.sender, Sender::User, &input.receiver, &input.query);
+    memory.add_to_history(&input.sender, Sender::User, &input.receiver, &query);
 
     memory
         .save()

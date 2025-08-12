@@ -358,6 +358,10 @@ msgid "Usage: weather <city>"
 msgstr ""
 
 #: ../ai/src/main.rs
+msgid "The weather in {} is: {}."
+msgstr ""
+
+#: ../ai/src/main.rs
 msgid "!ai is only available in channels."
 msgstr ""
 

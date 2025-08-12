@@ -297,7 +297,8 @@ msgstr "Nieprawidłowa składnia modelu: {}"
 msgid ""
 "Temperature: {}°C, Humidity: {}%, Wind: {}km/h, Precipitation: {}mm, Rain: {}"
 "mm"
-msgstr "Temperatura: {}°C, Wilgotność: {}%, Wiatr: {}km/h, Opady: {}mm, Deszcz: {}mm"
+msgstr ""
+"Temperatura: {}°C, Wilgotność: {}%, Wiatr: {}km/h, Opady: {}mm, Deszcz: {}mm"
 
 #: ../ai/src/main.rs
 msgid "HTTP client error: {}"
@@ -371,6 +372,10 @@ msgstr "pogoda"
 #: ../ai/src/main.rs
 msgid "Usage: weather <city>"
 msgstr "Użycie: pogoda <miasto>"
+
+#: ../ai/src/main.rs
+msgid "The weather in {} is: {}."
+msgstr "Pogoda w {} jest: {}."
 
 #: ../ai/src/main.rs
 msgid "!ai is only available in channels."

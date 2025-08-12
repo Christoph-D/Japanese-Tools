@@ -1,5 +1,4 @@
-use std::time::Duration;
-
+use crate::constants::{DEFAULT_WEATHER_PROMPT, DEFAULT_WEATHER_PROMPT_DE};
 use crate::formatget;
 
 #[derive(serde::Deserialize)]
@@ -99,6 +98,14 @@ fn get_weather_data(lat: f64, lon: f64, base_url: &str) -> Result<WeatherCurrent
         .map_err(|e| format!("Failed to parse weather response: {}", e))?;
 
     Ok(weather_response.current)
+}
+
+pub fn weather_prompt() -> &'static str {
+    if std::env::var("LANG").unwrap_or_default().starts_with("de") {
+        DEFAULT_WEATHER_PROMPT_DE
+    } else {
+        DEFAULT_WEATHER_PROMPT
+    }
 }
 
 #[cfg(test)]
