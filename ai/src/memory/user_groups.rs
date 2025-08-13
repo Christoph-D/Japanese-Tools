@@ -94,6 +94,12 @@ impl GroupSets {
             .retain(|_, group_id| self.groups.contains_key(group_id));
 
         // Remove singleton groups, they are redundant
+        self.groups.iter().for_each(|(_, info)| {
+            if info.members.len() == 1 {
+                self.user_to_group
+                    .remove(info.members.iter().next().unwrap());
+            }
+        });
         self.groups.retain(|_, info| info.members.len() > 1);
     }
 

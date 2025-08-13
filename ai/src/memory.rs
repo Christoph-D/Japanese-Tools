@@ -476,4 +476,29 @@ mod tests {
         assert!(joined.contains(&"user3".to_string()));
         assert!(joined.contains(&"user4".to_string()));
     }
+
+    #[test]
+    fn test_memory_singletons() {
+        let dir = tempdir().unwrap();
+        let db_path = dir.path().join(MEMORY_DB_NAME);
+        let connection = Connection::open(&db_path).unwrap();
+        connection.execute(GROUP_SETS_TABLE_SCHEMA, ()).unwrap();
+
+        let now = OffsetDateTime::now_utc();
+        for (user, receiver, group_id, last_modified) in [
+            ("user1", "receiver1", 0, now),
+            ("user2", "receiver1", 1, now),
+        ] {
+            connection.execute(
+                "INSERT INTO group_sets (user_name, receiver, group_id, last_modified) VALUES (?1, ?2, ?3, ?4)",
+                (user, receiver, group_id, last_modified),
+            ).unwrap();
+        }
+
+        let memory = Memory::new_from_path(dir.path()).unwrap();
+        assert_eq!(
+            memory.get_joined_users("user2", "receiver1"),
+            vec!["user2".to_string()]
+        );
+    }
 }
