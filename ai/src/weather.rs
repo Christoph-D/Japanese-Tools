@@ -54,7 +54,7 @@ fn get_coordinates(city: &str, base_url: &str) -> Result<(f64, f64, String), Str
     let client = reqwest::blocking::Client::builder()
         .timeout(WEATHER_API_TIMEOUT)
         .build()
-        .map_err(|e| format!("HTTP client error: {}", e))?;
+        .map_err(|e| formatget!("HTTP client error: {}", e))?;
 
     let encoded_city = urlencoding::encode(city);
     let url = format!(
@@ -65,15 +65,15 @@ fn get_coordinates(city: &str, base_url: &str) -> Result<(f64, f64, String), Str
     let response = client
         .get(&url)
         .send()
-        .map_err(|e| format!("Geocoding API error: {}", e))?;
+        .map_err(|e| formatget!("Geocoding API error: {}", e))?;
 
     if !response.status().is_success() {
-        return Err(format!("Geocoding API error: HTTP {}", response.status()));
+        return Err(formatget!("Geocoding API error: HTTP {}", response.status()));
     }
 
     let geocode_result: GeocodeResult = response
         .json()
-        .map_err(|e| format!("Failed to parse geocoding response: {}", e))?;
+        .map_err(|e| formatget!("Failed to parse geocoding response: {}", e))?;
 
     match geocode_result.results {
         Some(results) if !results.is_empty() => {
@@ -84,7 +84,7 @@ fn get_coordinates(city: &str, base_url: &str) -> Result<(f64, f64, String), Str
                 format!("{} ({})", location.name, location.country_code),
             ))
         }
-        _ => Err(format!("Unknown location: {}", city)),
+        _ => Err(formatget!("Unknown location: {}", city)),
     }
 }
 
@@ -102,15 +102,15 @@ fn get_weather_data(lat: f64, lon: f64, base_url: &str) -> Result<WeatherCurrent
     let response = client
         .get(&url)
         .send()
-        .map_err(|e| format!("Weather API error: {}", e))?;
+        .map_err(|e| formatget!("Weather API error: {}", e))?;
 
     if !response.status().is_success() {
-        return Err(format!("Weather API error: HTTP {}", response.status()));
+        return Err(formatget!("Weather API error: HTTP {}", response.status()));
     }
 
     let weather_response: WeatherResponse = response
         .json()
-        .map_err(|e| format!("Failed to parse weather response: {}", e))?;
+        .map_err(|e| formatget!("Failed to parse weather API response: {}", e))?;
 
     Ok(weather_response.current)
 }

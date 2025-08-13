@@ -301,9 +301,37 @@ msgstr ""
 "Temperatura: {}°C, Zachmurzenie: {}%, Wiatr: {}km/h, Wilgotność: {}%, Opady: "
 "{}mm"
 
-#: ../ai/src/main.rs
+#: ../ai/src/weather.rs ../ai/src/main.rs
 msgid "HTTP client error: {}"
 msgstr "Błąd klienta HTTP: {}"
+
+#: ../ai/src/weather.rs
+msgid "Geocoding API error: {}"
+msgstr "Błąd API geokodowania: {}"
+
+#: ../ai/src/weather.rs
+msgid "Geocoding API error: HTTP {}"
+msgstr "Błąd API geokodowania: HTTP {}"
+
+#: ../ai/src/weather.rs
+msgid "Failed to parse geocoding response: {}"
+msgstr "Nie udało się przeanalizować odpowiedzi geokodowania: {}"
+
+#: ../ai/src/weather.rs
+msgid "Unknown location: {}"
+msgstr "Nieznana lokalizacja: {}"
+
+#: ../ai/src/weather.rs
+msgid "Weather API error: {}"
+msgstr "Błąd API pogody: {}"
+
+#: ../ai/src/weather.rs
+msgid "Weather API error: HTTP {}"
+msgstr "Błąd API pogody: HTTP {}"
+
+#: ../ai/src/weather.rs
+msgid "Failed to parse weather API response: {}"
+msgstr "Nie udało się przeanalizować odpowiedzi API pogody: {}"
 
 #: ../ai/src/main.rs
 msgid "API error: {}"

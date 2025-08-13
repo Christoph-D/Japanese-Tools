@@ -301,9 +301,37 @@ msgstr ""
 "Temperatur: {}°C, Bewölkung: {}%, Wind: {}km/h, Luftfeuchtigkeit: {}%, "
 "Niederschlag: {}mm"
 
-#: ../ai/src/main.rs
+#: ../ai/src/weather.rs ../ai/src/main.rs
 msgid "HTTP client error: {}"
 msgstr "HTTP-Client-Fehler: {}"
+
+#: ../ai/src/weather.rs
+msgid "Geocoding API error: {}"
+msgstr "Geocoding-API-Fehler: {}"
+
+#: ../ai/src/weather.rs
+msgid "Geocoding API error: HTTP {}"
+msgstr "Geocodeing-API-Fehler: HTTP {}"
+
+#: ../ai/src/weather.rs
+msgid "Failed to parse geocoding response: {}"
+msgstr "Konnte Geocoding-Antwort nicht lesen: {}"
+
+#: ../ai/src/weather.rs
+msgid "Unknown location: {}"
+msgstr "Unbekannter Ort: {}"
+
+#: ../ai/src/weather.rs
+msgid "Weather API error: {}"
+msgstr "Wetter-API-Fehler: {}"
+
+#: ../ai/src/weather.rs
+msgid "Weather API error: HTTP {}"
+msgstr "Wetter-API-Fehler: HTTP {}"
+
+#: ../ai/src/weather.rs
+msgid "Failed to parse weather API response: {}"
+msgstr "Konnte Wetter-API-Antwort nicht lesen: {}"
 
 #: ../ai/src/main.rs
 msgid "API error: {}"
