@@ -16,7 +16,7 @@ use crate::{
 
 const MEMORY_DB_NAME: &str = "ai_memory.db";
 const MEMORY_TABLE_SCHEMA: &str = "CREATE TABLE IF NOT EXISTS memory (user TEXT NOT NULL, sender TEXT NOT NULL, receiver TEXT NOT NULL, timestamp TEXT NOT NULL, message TEXT NOT NULL)";
-const GROUP_SETS_TABLE_SCHEMA: &str = "CREATE TABLE IF NOT EXISTS group_sets (user_name TEXT NOT NULL, group_id INTEGER NOT NULL, last_modified TEXT NOT NULL)";
+const GROUP_SETS_TABLE_SCHEMA: &str = "CREATE TABLE IF NOT EXISTS group_sets (user_name TEXT NOT NULL, receiver TEXT NOT NULL, group_id INTEGER NOT NULL, last_modified TEXT NOT NULL)";
 
 #[derive(Debug, PartialEq, Clone)]
 pub enum Sender {
@@ -61,7 +61,7 @@ struct Entry {
 
 pub struct Memory {
     entries: HashMap<String, Vec<Entry>>,
-    joined_users: GroupSets,
+    joined_users: HashMap<String, GroupSets>,
     sqlite: Connection,
 }
 
@@ -106,57 +106,91 @@ fn load_history(
     Ok(entries)
 }
 
-fn load_group_sets(connection: &Connection, now: OffsetDateTime) -> Result<GroupSets, Error> {
+fn load_group_sets(
+    connection: &Connection,
+    now: OffsetDateTime,
+) -> Result<HashMap<String, GroupSets>, Error> {
     struct Row {
         user: String,
+        receiver: String,
         group_id: i64,
         last_modified: OffsetDateTime,
     }
-    let mut load_group_sets =
-        connection.prepare("SELECT user_name, group_id, last_modified FROM group_sets")?;
+    let mut load_group_sets = connection
+        .prepare("SELECT user_name, receiver, group_id, last_modified FROM group_sets")?;
     let group_set_iter = load_group_sets.query_map([], |row| {
         Ok(Row {
             user: row.get("user_name")?,
+            receiver: row.get("receiver")?,
             group_id: row.get("group_id")?,
             last_modified: row.get("last_modified")?,
         })
     })?;
 
-    let mut user_to_group: HashMap<String, usize> = HashMap::new();
-    let mut group_map: HashMap<usize, GroupInfo> = HashMap::new();
+    let mut user_to_group: HashMap<String, HashMap<String, usize>> = HashMap::new();
+    let mut group_map: HashMap<String, HashMap<usize, GroupInfo>> = HashMap::new();
 
     for row in group_set_iter {
         let row = row?;
         let group_id = row.group_id as usize;
 
-        let group_info = group_map.entry(group_id).or_insert_with(|| GroupInfo {
-            members: HashSet::new(),
-            last_modified: row.last_modified,
-        });
+        let group_info = group_map
+            .entry(row.receiver.clone())
+            .or_default()
+            .entry(group_id)
+            .or_insert_with(|| GroupInfo {
+                members: HashSet::new(),
+                last_modified: row.last_modified,
+            });
 
         group_info.members.insert(row.user.clone());
-        user_to_group.insert(row.user, group_id);
+        user_to_group
+            .entry(row.receiver)
+            .or_default()
+            .insert(row.user, group_id);
     }
 
     // Remove groups that are older than USER_GROUP_RETENTION.
     let oldest_allowed = now - USER_GROUP_RETENTION;
-    group_map.retain(|_, group_info| group_info.last_modified > oldest_allowed);
-    user_to_group.retain(|_, group_id| group_map.contains_key(group_id));
+    group_map
+        .values_mut()
+        .for_each(|g| g.retain(|_, info| info.last_modified > oldest_allowed));
+    user_to_group.iter_mut().for_each(|(r, u)| {
+        u.retain(|_, group_id| {
+            group_map
+                .entry(r.to_string())
+                .or_default()
+                .contains_key(group_id)
+        })
+    });
 
     // Remove singleton groups, they are redundant
-    group_map.retain(|_, group_info| group_info.members.len() > 1);
+    group_map
+        .values_mut()
+        .for_each(|g| g.retain(|_, info| info.members.len() > 1));
 
-    Ok(GroupSets::from_maps(user_to_group, group_map))
+    let mut ret = HashMap::new();
+    for r in user_to_group.keys() {
+        let u = user_to_group.get(r).cloned().unwrap_or_default();
+        let g = group_map.get(r).cloned().unwrap_or_default();
+        ret.insert(r.clone(), GroupSets::from_maps(u, g));
+    }
+    Ok(ret)
 }
 
-fn save_group_sets(connection: &Connection, group_sets: &GroupSets) -> Result<(), Error> {
+fn save_group_sets(
+    connection: &Connection,
+    group_sets: &HashMap<String, GroupSets>,
+) -> Result<(), Error> {
     connection.execute("DELETE FROM group_sets", [])?;
     let mut stmt = connection.prepare(
-        "INSERT INTO group_sets (user_name, group_id, last_modified) VALUES (?1, ?2, ?3)",
+        "INSERT INTO group_sets (user_name, receiver, group_id, last_modified) VALUES (?1, ?2, ?3, ?4)",
     )?;
-    for (user, group_id) in group_sets.get_user_to_group_mappings().iter() {
-        if let Some(group_info) = group_sets.get_groups().get(group_id) {
-            stmt.execute((user, *group_id as i64, group_info.last_modified))?;
+    for (receiver, g) in group_sets.iter() {
+        for (user, group_id) in g.get_user_to_group_mappings().iter() {
+            if let Some(group_info) = g.get_groups().get(group_id) {
+                stmt.execute((user, receiver, *group_id as i64, group_info.last_modified))?;
+            }
         }
     }
     Ok(())
@@ -243,14 +277,15 @@ impl Memory {
     }
 
     // Join two users so they share memory
-    pub fn join_users(&mut self, user1: &str, user2: &str) -> Result<(), String> {
+    pub fn join_users(&mut self, user1: &str, user2: &str, receiver: &str) -> Result<(), String> {
         let tx = self
             .sqlite
             .transaction_with_behavior(TransactionBehavior::Immediate)
             .map_err(|e| e.to_string())?;
         let mut group_sets =
             load_group_sets(&tx, OffsetDateTime::now_utc()).map_err(|e| e.to_string())?;
-        group_sets.union(user1, user2);
+        let g = group_sets.entry(receiver.to_string()).or_default();
+        g.union(user1, user2);
         save_group_sets(&tx, &group_sets).map_err(|e| e.to_string())?;
         tx.commit().map_err(|e| e.to_string())?;
         self.joined_users = group_sets;
@@ -258,14 +293,15 @@ impl Memory {
     }
 
     // Remove a user from their joined group, making them solo
-    pub fn make_user_solo(&mut self, user: &str) -> Result<(), String> {
+    pub fn make_user_solo(&mut self, user: &str, receiver: &str) -> Result<(), String> {
         let tx = self
             .sqlite
             .transaction_with_behavior(TransactionBehavior::Immediate)
             .map_err(|e| e.to_string())?;
         let mut group_sets =
             load_group_sets(&tx, OffsetDateTime::now_utc()).map_err(|e| e.to_string())?;
-        group_sets.remove_user(user);
+        let g = group_sets.entry(receiver.to_string()).or_default();
+        g.remove_user(user);
         save_group_sets(&tx, &group_sets).map_err(|e| e.to_string())?;
         tx.commit().map_err(|e| e.to_string())?;
         self.joined_users = group_sets;
@@ -273,22 +309,22 @@ impl Memory {
     }
 
     // Get all users joined with the given user including the user themselves
-    pub fn get_joined_users(&self, user: &str) -> Vec<String> {
-        let mut users = self.joined_users.get_group_members(user);
+    pub fn get_joined_users(&self, user: &str, receiver: &str) -> Vec<String> {
+        let mut users = self
+            .joined_users
+            .get(receiver)
+            .map(|g| g.get_group_members(user))
+            .unwrap_or(vec![user.to_string()]);
         users.sort();
         users
     }
 
     // Get all users joined with the given user excluding the user themselves
-    pub fn get_joined_users_excluding_self(&self, user: &str) -> Vec<String> {
-        let mut users = self
-            .joined_users
-            .get_group_members(user)
+    pub fn get_joined_users_excluding_self(&self, user: &str, receiver: &str) -> Vec<String> {
+        self.get_joined_users(user, receiver)
             .into_iter()
             .filter(|u| u != user)
-            .collect::<Vec<String>>();
-        users.sort();
-        users
+            .collect()
     }
 }
 
@@ -408,12 +444,12 @@ mod tests {
             .add_to_history("user1", Sender::User, "receiver1", "message1")
             .unwrap();
         memory
-            .add_to_history("user2", Sender::User, "receiver2", "message2")
+            .add_to_history("user2", Sender::User, "receiver1", "message2")
             .unwrap();
-        memory.join_users("user1", "user2").unwrap();
+        memory.join_users("user1", "user2", "receiver1").unwrap();
 
         let loaded_memory = Memory::new_from_path(dir.path()).unwrap();
-        let joined_users = loaded_memory.get_joined_users("user1");
+        let joined_users = loaded_memory.get_joined_users("user1", "receiver1");
 
         assert_eq!(joined_users.len(), 2);
         assert!(joined_users.contains(&"user1".to_string()));
@@ -433,36 +469,30 @@ mod tests {
         let recent_time = now - (USER_GROUP_RETENTION - time::Duration::seconds(1));
 
         // Create two groups: one expired, one recent
-        for (user, group_id, last_modified) in [
-            ("user1", 1, old_time),
-            ("user2", 1, old_time),
-            ("user3", 2, recent_time),
-            ("user4", 2, recent_time),
+        for (user, receiver, group_id, last_modified) in [
+            ("user1", "receiver1", 1, old_time),
+            ("user2", "receiver1", 1, old_time),
+            ("user3", "receiver1", 2, recent_time),
+            ("user4", "receiver1", 2, recent_time),
         ] {
             connection.execute(
-                "INSERT INTO group_sets (user_name, group_id, last_modified) VALUES (?1, ?2, ?3)",
-                (user, group_id, last_modified),
+                "INSERT INTO group_sets (user_name, receiver, group_id, last_modified) VALUES (?1, ?2, ?3, ?4)",
+                (user, receiver, group_id, last_modified),
             ).unwrap();
         }
 
         let memory = Memory::new_from_path(dir.path()).unwrap();
 
-        let user1_group = memory.joined_users.find_group("user1");
-        let user3_group = memory.joined_users.find_group("user3");
+        let g = memory.joined_users.get("receiver1").unwrap();
+        let user1_group = g.find_group("user1");
+        let user3_group = g.find_group("user3");
 
         assert!(user1_group.is_none());
         assert!(user3_group.is_some());
 
-        assert_eq!(memory.get_joined_users("user3").len(), 2);
-        assert!(
-            memory
-                .get_joined_users("user3")
-                .contains(&"user3".to_string())
-        );
-        assert!(
-            memory
-                .get_joined_users("user3")
-                .contains(&"user4".to_string())
-        );
+        let joined = memory.get_joined_users("user3", "receiver1");
+        assert_eq!(joined.len(), 2);
+        assert!(joined.contains(&"user3".to_string()));
+        assert!(joined.contains(&"user4".to_string()));
     }
 }

@@ -38,7 +38,7 @@ pub fn build_prompt(
         content: format_prompt(&per_channel_prompt(receiver, config_path)),
     }];
 
-    let joined_users = memory.get_joined_users(sender);
+    let joined_users = memory.get_joined_users(sender, receiver);
     let mut all_messages = Vec::new();
     for user in joined_users {
         let user_history = memory.user_history(&user, receiver);
@@ -197,7 +197,7 @@ mod tests {
             .add_to_history("user3", Sender::Assistant, receiver, "Hi user3!")
             .unwrap();
 
-        memory.join_users("user1", "user2").unwrap();
+        memory.join_users("user1", "user2", receiver).unwrap();
 
         let result = build_prompt(query, "user1", receiver, &memory, config_path);
 

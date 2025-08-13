@@ -68,7 +68,10 @@ fn get_coordinates(city: &str, base_url: &str) -> Result<(f64, f64, String), Str
         .map_err(|e| formatget!("Geocoding API error: {}", e))?;
 
     if !response.status().is_success() {
-        return Err(formatget!("Geocoding API error: HTTP {}", response.status()));
+        return Err(formatget!(
+            "Geocoding API error: HTTP {}",
+            response.status()
+        ));
     }
 
     let geocode_result: GeocodeResult = response

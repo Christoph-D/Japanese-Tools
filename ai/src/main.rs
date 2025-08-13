@@ -311,6 +311,7 @@ fn process_command(
     command: &str,
     args: &str,
     sender: &str,
+    receiver: &str,
     memory: &mut Memory,
 ) -> Result<CommandResult, String> {
     let command = command.to_lowercase();
@@ -324,13 +325,15 @@ fn process_command(
             }
 
             memory
-                .join_users(sender, target_user)
+                .join_users(sender, target_user, receiver)
                 .map_err(|e| format!("Failed to join users: {}", e))?;
 
             Ok(CommandResult::Message(formatget!(
                 "{} joined memory with the group: {}",
                 sender,
-                memory.get_joined_users_excluding_self(sender).join(", ")
+                memory
+                    .get_joined_users_excluding_self(sender, receiver)
+                    .join(", ")
             )))
         }
         "solo" => {
@@ -338,7 +341,7 @@ fn process_command(
             let target = if arg.is_empty() { sender } else { arg };
 
             memory
-                .make_user_solo(target)
+                .make_user_solo(target, receiver)
                 .map_err(|e| format!("Failed to make user solo: {}", e))?;
 
             Ok(CommandResult::Message(formatget!(
@@ -347,7 +350,7 @@ fn process_command(
             )))
         }
         "joined" => {
-            let other_users = memory.get_joined_users_excluding_self(sender);
+            let other_users = memory.get_joined_users_excluding_self(sender, receiver);
             if other_users.is_empty() {
                 return Ok(CommandResult::Message(formatget!(
                     "{} is not sharing memory with anyone.",
@@ -410,7 +413,7 @@ fn run(input: &Input) -> Result<String, String> {
     }
 
     let (command, args) = query.split_once(' ').unwrap_or((query, ""));
-    let query = match process_command(command, args, &input.sender, &mut memory)? {
+    let query = match process_command(command, args, &input.sender, &input.receiver, &mut memory)? {
         CommandResult::Message(result) => return Ok(result),
         CommandResult::NotACommand => query.to_string(),
         CommandResult::AskAgent {
@@ -514,14 +517,14 @@ mod tests {
         let dir = tempdir().unwrap();
         let mut memory = Memory::new_from_path(dir.path()).unwrap();
 
-        let result = process_command("join", "alice", "bob", &mut memory).unwrap();
+        let result = process_command("join", "alice", "bob", "receiver1", &mut memory).unwrap();
         assert_eq!(
             result,
             CommandResult::Message("bob joined memory with the group: alice".to_string())
         );
 
         // Verify the users are actually joined
-        let joined_users = memory.get_joined_users("bob");
+        let joined_users = memory.get_joined_users("bob", "receiver1");
         assert!(joined_users.contains(&"alice".to_string()));
         assert!(joined_users.contains(&"bob".to_string()));
         assert_eq!(joined_users.len(), 2);
@@ -532,7 +535,7 @@ mod tests {
         let dir = tempdir().unwrap();
         let mut memory = Memory::new_from_path(dir.path()).unwrap();
 
-        let result = process_command("join", "", "bob", &mut memory);
+        let result = process_command("join", "", "bob", "receiver1", &mut memory);
         assert!(result.is_ok());
         assert_eq!(
             result.unwrap(),
@@ -545,7 +548,7 @@ mod tests {
         let dir = tempdir().unwrap();
         let mut memory = Memory::new_from_path(dir.path()).unwrap();
 
-        let result = process_command("join", "bob", "bob", &mut memory);
+        let result = process_command("join", "bob", "bob", "receiver1", &mut memory);
         assert!(result.is_ok());
         assert_eq!(
             result.unwrap(),
@@ -558,7 +561,7 @@ mod tests {
         let dir = tempdir().unwrap();
         let mut memory = Memory::new_from_path(dir.path()).unwrap();
 
-        let result = process_command("unknown", "args", "bob", &mut memory).unwrap();
+        let result = process_command("unknown", "args", "bob", "receiver1", &mut memory).unwrap();
         assert_eq!(result, CommandResult::NotACommand);
     }
 }

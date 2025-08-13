@@ -23,7 +23,7 @@ impl GroupInfo {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct GroupSets {
     // Maps user -> group_id
     user_to_group: HashMap<String, usize>,
