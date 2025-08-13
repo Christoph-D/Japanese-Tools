@@ -10,7 +10,7 @@ use std::collections::HashMap;
 use time::OffsetDateTime;
 
 use crate::{
-    constants::{MEMORY_MAX_MESSAGES, MEMORY_RETENTION, USER_GROUP_RETENTION},
+    constants::{MEMORY_MAX_MESSAGES, MEMORY_RETENTION},
     memory::user_groups::{GroupInfo, GroupSets},
 };
 
@@ -127,53 +127,32 @@ fn load_group_sets(
         })
     })?;
 
-    let mut user_to_group: HashMap<String, HashMap<String, usize>> = HashMap::new();
-    let mut group_map: HashMap<String, HashMap<usize, GroupInfo>> = HashMap::new();
-
+    let mut receiver_to_rows: HashMap<String, Vec<Row>> = HashMap::new();
     for row in group_set_iter {
         let row = row?;
-        let group_id = row.group_id as usize;
-
-        let group_info = group_map
+        receiver_to_rows
             .entry(row.receiver.clone())
             .or_default()
-            .entry(group_id)
-            .or_insert_with(|| GroupInfo {
+            .push(row);
+    }
+
+    let mut ret = HashMap::new();
+    for (receiver, rows) in receiver_to_rows.into_iter() {
+        let mut user_to_group: HashMap<String, usize> = HashMap::new();
+        let mut group_map: HashMap<usize, GroupInfo> = HashMap::new();
+
+        for row in rows {
+            let group_id = row.group_id as usize;
+            let group_info = group_map.entry(group_id).or_insert_with(|| GroupInfo {
                 members: HashSet::new(),
                 last_modified: row.last_modified,
             });
-
-        group_info.members.insert(row.user.clone());
-        user_to_group
-            .entry(row.receiver)
-            .or_default()
-            .insert(row.user, group_id);
-    }
-
-    // Remove groups that are older than USER_GROUP_RETENTION.
-    let oldest_allowed = now - USER_GROUP_RETENTION;
-    group_map
-        .values_mut()
-        .for_each(|g| g.retain(|_, info| info.last_modified > oldest_allowed));
-    user_to_group.iter_mut().for_each(|(r, u)| {
-        u.retain(|_, group_id| {
-            group_map
-                .entry(r.to_string())
-                .or_default()
-                .contains_key(group_id)
-        })
-    });
-
-    // Remove singleton groups, they are redundant
-    group_map
-        .values_mut()
-        .for_each(|g| g.retain(|_, info| info.members.len() > 1));
-
-    let mut ret = HashMap::new();
-    for r in user_to_group.keys() {
-        let u = user_to_group.get(r).cloned().unwrap_or_default();
-        let g = group_map.get(r).cloned().unwrap_or_default();
-        ret.insert(r.clone(), GroupSets::from_maps(u, g));
+            group_info.members.insert(row.user.clone());
+            user_to_group.insert(row.user, group_id);
+        }
+        let mut g = GroupSets::from_maps(user_to_group, group_map);
+        g.expire_old_groups(now);
+        ret.insert(receiver, g);
     }
     Ok(ret)
 }
@@ -330,6 +309,8 @@ impl Memory {
 
 #[cfg(test)]
 mod tests {
+    use crate::constants::USER_GROUP_RETENTION;
+
     use super::*;
     use rusqlite::Connection;
     use tempfile::tempdir;

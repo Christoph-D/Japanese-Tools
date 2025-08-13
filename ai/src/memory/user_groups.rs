@@ -1,6 +1,8 @@
 use std::collections::{HashMap, HashSet};
 use time::OffsetDateTime;
 
+use crate::constants::USER_GROUP_RETENTION;
+
 #[derive(Debug, Clone)]
 pub struct GroupInfo {
     pub members: HashSet<String>,
@@ -81,6 +83,18 @@ impl GroupSets {
             groups,
             next_group_id,
         }
+    }
+
+    pub fn expire_old_groups(&mut self, now: OffsetDateTime) {
+        // Remove groups that are older than USER_GROUP_RETENTION.
+        let oldest_allowed = now - USER_GROUP_RETENTION;
+        self.groups
+            .retain(|_, info| info.last_modified > oldest_allowed);
+        self.user_to_group
+            .retain(|_, group_id| self.groups.contains_key(group_id));
+
+        // Remove singleton groups, they are redundant
+        self.groups.retain(|_, info| info.members.len() > 1);
     }
 
     /// Find the group ID that a user belongs to
