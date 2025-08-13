@@ -52,16 +52,30 @@ impl GroupSets {
         user_to_group.retain(|_user, group_id| groups.contains_key(group_id));
 
         // Consistency check: Ensure all users in groups are present in user_to_group
-        // and vice versa
+        // and vice versa. Handle users appearing in multiple groups by keeping them
+        // in the first group encountered and removing from others.
         let mut users_in_groups: HashSet<String> = HashSet::new();
+        let mut user_assignments: HashMap<String, usize> = HashMap::new();
+
+        // First pass: collect all users and their first group assignment
         for (group_id, group_info) in &groups {
             for user in &group_info.members {
                 users_in_groups.insert(user.clone());
-                // If user is not in user_to_group or points to wrong group, fix it
-                if user_to_group.get(user) != Some(group_id) {
-                    user_to_group.insert(user.clone(), *group_id);
-                }
+                // Only assign to first group encountered
+                user_assignments.entry(user.clone()).or_insert(*group_id);
             }
+        }
+
+        // Update user_to_group with the assignments
+        for (user, group_id) in &user_assignments {
+            user_to_group.insert(user.clone(), *group_id);
+        }
+
+        // Remove users from groups where they don't belong
+        for (group_id, group_info) in groups.iter_mut() {
+            group_info
+                .members
+                .retain(|user| user_assignments.get(user) == Some(group_id));
         }
 
         // Remove users from user_to_group that don't exist in any group
@@ -192,278 +206,4 @@ impl GroupSets {
 }
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_new_group_set() {
-        let group_set = GroupSets::new();
-        assert_eq!(group_set.user_to_group.len(), 0);
-        assert_eq!(group_set.groups.len(), 0);
-        assert_eq!(group_set.next_group_id, 0);
-    }
-
-    #[test]
-    fn test_add_user() {
-        let mut group_set = GroupSets::new();
-
-        group_set.add_user("alice");
-        assert_eq!(group_set.find_group("alice"), Some(0));
-        assert_eq!(group_set.get_group_members("alice"), vec!["alice"]);
-
-        group_set.add_user("bob");
-        assert_eq!(group_set.find_group("bob"), Some(1));
-        assert_eq!(group_set.get_group_members("bob"), vec!["bob"]);
-
-        // Adding the same user again should not create a new group
-        group_set.add_user("alice");
-        assert_eq!(group_set.find_group("alice"), Some(0));
-        assert_eq!(group_set.groups.len(), 2);
-    }
-
-    #[test]
-    fn test_union_different_groups() {
-        let mut group_set = GroupSets::new();
-
-        group_set.add_user("alice");
-        group_set.add_user("bob");
-
-        // Initially in different groups
-        assert_ne!(group_set.find_group("alice"), group_set.find_group("bob"));
-
-        // Union them
-        group_set.union("alice", "bob");
-
-        // Now they should be in the same group
-        assert_eq!(group_set.find_group("alice"), group_set.find_group("bob"));
-
-        let alice_members = group_set.get_group_members("alice");
-        let bob_members = group_set.get_group_members("bob");
-        assert_eq!(alice_members, bob_members);
-        assert_eq!(alice_members.len(), 2);
-        assert!(alice_members.contains(&"alice".to_string()));
-        assert!(alice_members.contains(&"bob".to_string()));
-    }
-
-    #[test]
-    fn test_union_same_group() {
-        let mut group_set = GroupSets::new();
-
-        group_set.add_user("alice");
-        group_set.add_user("bob");
-        group_set.union("alice", "bob");
-
-        let group_id_before = group_set.find_group("alice");
-        let members_before = group_set.get_group_members("alice");
-
-        // Union again - should be no-op
-        group_set.union("alice", "bob");
-
-        assert_eq!(group_set.find_group("alice"), group_id_before);
-        assert_eq!(group_set.get_group_members("alice"), members_before);
-    }
-
-    #[test]
-    fn test_union_new_users() {
-        let mut group_set = GroupSets::new();
-
-        // Union two users that don't exist yet
-        group_set.union("alice", "bob");
-
-        // They should both exist and be in the same group
-        assert_eq!(group_set.find_group("alice"), group_set.find_group("bob"));
-        assert_eq!(group_set.get_group_members("alice").len(), 2);
-    }
-
-    #[test]
-    fn test_remove_user() {
-        let mut group_set = GroupSets::new();
-
-        group_set.add_user("alice");
-        group_set.add_user("bob");
-        group_set.add_user("charlie");
-        group_set.union("alice", "bob");
-        group_set.union("bob", "charlie");
-
-        // All three should be in the same group
-        let group_id = group_set.find_group("alice");
-        assert_eq!(group_set.find_group("bob"), group_id);
-        assert_eq!(group_set.find_group("charlie"), group_id);
-        assert_eq!(group_set.get_group_members("alice").len(), 3);
-
-        // Remove alice
-        group_set.remove_user("alice");
-
-        // Alice should be in a new singleton group
-        assert_ne!(group_set.find_group("alice"), group_id);
-        assert_eq!(group_set.get_group_members("alice"), vec!["alice"]);
-
-        // Bob and charlie should still be together
-        assert_eq!(group_set.find_group("bob"), group_set.find_group("charlie"));
-        assert_eq!(group_set.get_group_members("bob").len(), 2);
-    }
-
-    #[test]
-    fn test_complex_unions() {
-        let mut group_set = GroupSets::new();
-
-        // Create multiple separate groups
-        group_set.union("alice", "bob");
-        group_set.union("charlie", "david");
-        group_set.union("eve", "frank");
-
-        // Verify separate groups
-        assert_eq!(group_set.get_group_members("alice").len(), 2);
-        assert_eq!(group_set.get_group_members("charlie").len(), 2);
-        assert_eq!(group_set.get_group_members("eve").len(), 2);
-
-        // Merge two groups
-        group_set.union("alice", "charlie");
-
-        // Alice, bob, charlie, david should all be together
-        assert_eq!(group_set.get_group_members("alice").len(), 4);
-        assert_eq!(group_set.find_group("alice"), group_set.find_group("bob"));
-        assert_eq!(
-            group_set.find_group("alice"),
-            group_set.find_group("charlie")
-        );
-        assert_eq!(group_set.find_group("alice"), group_set.find_group("david"));
-
-        // Eve and frank should still be separate
-        assert_eq!(group_set.get_group_members("eve").len(), 2);
-        assert_ne!(group_set.find_group("alice"), group_set.find_group("eve"));
-    }
-
-    #[test]
-    fn test_from_maps_consistency_checks() {
-        // Test case 1: user_to_group references non-existent group
-        let mut user_to_group = HashMap::new();
-        user_to_group.insert("alice".to_string(), 0);
-        user_to_group.insert("bob".to_string(), 999); // Non-existent group
-
-        let mut groups = HashMap::new();
-        let mut alice_members = HashSet::new();
-        alice_members.insert("alice".to_string());
-        groups.insert(
-            0,
-            GroupInfo {
-                members: alice_members,
-                last_modified: OffsetDateTime::now_utc(),
-            },
-        );
-
-        let group_set = GroupSets::from_maps(user_to_group, groups);
-
-        // Bob should be removed from user_to_group since group 999 doesn't exist
-        assert_eq!(group_set.user_to_group.len(), 1);
-        assert!(group_set.user_to_group.contains_key("alice"));
-        assert!(!group_set.user_to_group.contains_key("bob"));
-    }
-
-    #[test]
-    fn test_from_maps_missing_user_in_mapping() {
-        // Test case 2: Group contains user not in user_to_group
-        let user_to_group = HashMap::new(); // Empty mapping
-
-        let mut groups = HashMap::new();
-        let mut members = HashSet::new();
-        members.insert("alice".to_string());
-        members.insert("bob".to_string());
-        groups.insert(
-            0,
-            GroupInfo {
-                members,
-                last_modified: OffsetDateTime::now_utc(),
-            },
-        );
-
-        let group_set = GroupSets::from_maps(user_to_group, groups);
-
-        // Both users should be added to user_to_group
-        assert_eq!(group_set.user_to_group.len(), 2);
-        assert_eq!(group_set.user_to_group.get("alice"), Some(&0));
-        assert_eq!(group_set.user_to_group.get("bob"), Some(&0));
-    }
-
-    #[test]
-    fn test_from_maps_wrong_group_mapping() {
-        // Test case 3: User points to wrong group in user_to_group
-        let mut user_to_group = HashMap::new();
-        user_to_group.insert("alice".to_string(), 1); // Points to wrong group
-
-        let mut groups = HashMap::new();
-        let mut members = HashSet::new();
-        members.insert("alice".to_string());
-        groups.insert(
-            0,
-            GroupInfo {
-                members,
-                last_modified: OffsetDateTime::now_utc(),
-            },
-        );
-
-        let group_set = GroupSets::from_maps(user_to_group, groups);
-
-        // Alice should be corrected to point to group 0
-        assert_eq!(group_set.user_to_group.get("alice"), Some(&0));
-    }
-
-    #[test]
-    fn test_from_maps_empty_groups_removed() {
-        // Test case 4: Empty groups should be removed
-        let user_to_group = HashMap::new();
-
-        let mut groups = HashMap::new();
-        groups.insert(
-            0,
-            GroupInfo {
-                members: HashSet::new(), // Empty group
-                last_modified: OffsetDateTime::now_utc(),
-            },
-        );
-
-        let mut valid_members = HashSet::new();
-        valid_members.insert("alice".to_string());
-        groups.insert(
-            1,
-            GroupInfo {
-                members: valid_members,
-                last_modified: OffsetDateTime::now_utc(),
-            },
-        );
-
-        let group_set = GroupSets::from_maps(user_to_group, groups);
-
-        // Empty group should be removed, alice should be in user_to_group
-        assert_eq!(group_set.groups.len(), 1);
-        assert!(!group_set.groups.contains_key(&0));
-        assert!(group_set.groups.contains_key(&1));
-        assert_eq!(group_set.user_to_group.get("alice"), Some(&1));
-    }
-
-    #[test]
-    fn test_from_maps_orphaned_users_removed() {
-        // Test case 5: Users in user_to_group but not in any group should be removed
-        let mut user_to_group = HashMap::new();
-        user_to_group.insert("alice".to_string(), 0);
-        user_to_group.insert("orphan".to_string(), 0);
-
-        let mut groups = HashMap::new();
-        let mut members = HashSet::new();
-        members.insert("alice".to_string()); // orphan is not in the group
-        groups.insert(
-            0,
-            GroupInfo {
-                members,
-                last_modified: OffsetDateTime::now_utc(),
-            },
-        );
-
-        let group_set = GroupSets::from_maps(user_to_group, groups);
-
-        // Orphan should be removed from user_to_group
-        assert_eq!(group_set.user_to_group.len(), 1);
-        assert!(group_set.user_to_group.contains_key("alice"));
-        assert!(!group_set.user_to_group.contains_key("orphan"));
-    }
-}
+mod tests;
