@@ -67,7 +67,7 @@ msgstr "Proszę użyj jm.sh albo wa.sh"
 
 #: jmdict/ja.sh
 msgid "Could not find the dictionary."
-msgstr "Nie można znaleźć słownika"
+msgstr "Nie można znaleźć słownika."
 
 #: jmdict/ja.sh kanjidic/kanjidic.sh rtk/rtk.sh
 msgid "epsilon."
@@ -83,7 +83,7 @@ msgstr "Nieznane słowo."
 
 #: jmdict/ja2.sh
 msgid "Please run: source_dict=<source> ./ja.sh"
-msgstr "Proszę użyć: słownik_źródłowy=<źródło> ./ja.sh"
+msgstr "Proszę użyć: source_dict=<źródło> ./ja.sh"
 
 #: jmdict/jm.sh jmdict/wa.sh kanjidic/kanjidic.sh
 msgid "Please run: %s"

@@ -15,7 +15,7 @@ msgstr ""
 
 #: audio/find_audio.sh
 msgid "Usage: %s word [reading]"
-msgstr "Aufruf: %s Kanji [Hiragana]"
+msgstr "Aufruf: %s Wort [Lesung]"
 
 #: audio/find_audio.sh
 msgid "Please provide a word."
@@ -119,7 +119,7 @@ msgid ""
 "helpdiff <level>\"."
 msgstr ""
 "Beginnen mit \"%s <Stufe> [Anzahl]\". Bekannte Stufen sind 0 bis %s. Für "
-"Erklärung einer Stufe bitte %s help <Stufe>\" eingeben.\n"
+"Erklärung einer Stufe bitte \"%s help <Stufe>\" eingeben.\n"
 "Um nur die neuen Zeichen einer Stufe anzuzeigen bitte \"%s helpdiff "
 "<Stufe>\" verwenden."
 
@@ -311,7 +311,7 @@ msgstr "Geocoding-API-Fehler: {}"
 
 #: ../ai/src/weather.rs
 msgid "Geocoding API error: HTTP {}"
-msgstr "Geocodeing-API-Fehler: HTTP {}"
+msgstr "Geocoding-API-Fehler: HTTP {}"
 
 #: ../ai/src/weather.rs
 msgid "Failed to parse geocoding response: {}"
