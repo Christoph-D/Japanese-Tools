@@ -1,21 +1,12 @@
 use gettextrs::gettext;
-use nom::{
-    IResult, Parser,
-    bytes::complete::{tag, take_while1},
-    character::complete::multispace1,
-    combinator::{all_consuming, map},
-    multi::separated_list0,
-    sequence::delimited,
-};
-
-use crate::formatget;
+use std::collections::HashMap;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Provider {
     name: String,
     api_key: String,
     endpoint: String,
-    model_string: String,
+    models: Vec<TomlModel>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -44,40 +35,99 @@ const MISTRAL_API_ENDPOINT: &str = "https://api.mistral.ai/v1/chat/completions";
 const OPENROUTER_API_ENDPOINT: &str = "https://openrouter.ai/api/v1/chat/completions";
 const ANTHROPIC_API_ENDPOINT: &str = "https://api.anthropic.com/v1/chat/completions";
 
+#[derive(Debug, serde::Deserialize)]
+struct TomlConfig {
+    general: TomlGeneral,
+    providers: HashMap<String, TomlProvider>,
+}
+
+#[derive(Debug, serde::Deserialize)]
+struct TomlGeneral {
+    default_model: String,
+}
+
+#[derive(Debug, serde::Deserialize)]
+struct TomlProvider {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    endpoint: Option<String>,
+    models: Vec<TomlModel>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, serde::Deserialize)]
+struct TomlModel {
+    id: String,
+    short_name: String,
+    name: String,
+}
+
 impl Config {
-    pub fn from_env() -> Self {
+    pub fn new(config_path: &std::path::Path) -> Result<Self, String> {
+        let toml_path = config_path.join("config.toml");
+        let toml_content = std::fs::read_to_string(toml_path)
+            .map_err(|e| format!("Failed to read config.toml: {}", e))?;
+        let toml_config: TomlConfig = toml::from_str(&toml_content)
+            .map_err(|e| format!("Failed to parse config.toml: {}", e))?;
+
         let mut providers = Vec::new();
-        let provider_configs = [
-            ("ANTHROPIC", "Anthropic", ANTHROPIC_API_ENDPOINT),
-            ("DEEPSEEK", "Deepseek", DEEPSEEK_API_ENDPOINT),
-            (
-                "LITELLM",
-                "LiteLLM",
-                &std::env::var("LITELLM_API_ENDPOINT").unwrap_or_default(),
-            ),
-            ("MISTRAL", "Mistral", MISTRAL_API_ENDPOINT),
-            ("OPENROUTER", "OpenRouter", OPENROUTER_API_ENDPOINT),
-        ];
-        for (env_prefix, name, endpoint) in provider_configs.iter() {
-            if endpoint.is_empty() {
-                continue;
+        for (provider_name, toml_provider) in toml_config.providers {
+            let env_prefix = provider_name.to_uppercase();
+            match provider_name.as_str() {
+                "litellm" => {
+                    if toml_provider
+                        .endpoint
+                        .as_deref()
+                        .unwrap_or_default()
+                        .is_empty()
+                    {
+                        return Err("LiteLLM provider requires an endpoint.".to_string());
+                    }
+                }
+                "anthropic" | "deepseek" | "mistral" | "openrouter" => {
+                    if toml_provider.endpoint.is_some() {
+                        return Err(format!(
+                            "Provider '{}' endpoint is not configurable.",
+                            provider_name
+                        ));
+                    }
+                }
+                _ => return Err(format!("Unknown provider: {}", provider_name)),
             }
+
+            // API key comes from an environment variable
             if let Ok(api_key) = std::env::var(format!("{}_API_KEY", env_prefix)) {
                 if !api_key.is_empty() {
-                    let model_string =
-                        std::env::var(format!("{}_MODELS", env_prefix)).unwrap_or_default();
+                    let endpoint = match provider_name.as_str() {
+                        "anthropic" => ANTHROPIC_API_ENDPOINT.to_string(),
+                        "deepseek" => DEEPSEEK_API_ENDPOINT.to_string(),
+                        "mistral" => MISTRAL_API_ENDPOINT.to_string(),
+                        "openrouter" => OPENROUTER_API_ENDPOINT.to_string(),
+                        "litellm" => toml_provider.endpoint.unwrap(), // we validated above
+                        _ => unreachable!(),                          // validated above
+                    };
                     providers.push(Provider {
-                        name: name.to_string(),
+                        name: Self::provider_display_name(&provider_name),
                         api_key,
-                        endpoint: endpoint.to_string(),
-                        model_string,
+                        endpoint,
+                        models: toml_provider.models,
                     });
                 }
             }
         }
-        Config {
+
+        Ok(Config {
             providers,
-            default_model_id: std::env::var("DEFAULT_MODEL").unwrap_or_default(),
+            default_model_id: toml_config.general.default_model,
+        })
+    }
+
+    fn provider_display_name(provider_name: &str) -> String {
+        match provider_name {
+            "anthropic" => "Anthropic".to_string(),
+            "deepseek" => "Deepseek".to_string(),
+            "litellm" => "LiteLLM".to_string(),
+            "mistral" => "Mistral".to_string(),
+            "openrouter" => "OpenRouter".to_string(),
+            _ => provider_name.to_string(),
         }
     }
 }
@@ -86,12 +136,14 @@ impl ModelList {
     pub fn new(cfg: &Config) -> Result<Self, String> {
         let mut models = Vec::new();
         for provider in &cfg.providers {
-            if !provider.model_string.is_empty() {
-                models.extend(parse_model_config(
-                    &provider.model_string,
-                    &provider.api_key,
-                    &provider.endpoint,
-                )?);
+            for toml_model in &provider.models {
+                models.push(Model {
+                    id: toml_model.id.clone(),
+                    short_name: toml_model.short_name.clone(),
+                    name: toml_model.name.clone(),
+                    api_key: provider.api_key.clone(),
+                    endpoint: provider.endpoint.clone(),
+                });
             }
         }
         if models.is_empty() {
@@ -158,117 +210,6 @@ impl ModelList {
     }
 }
 
-fn parse_model_id(i: &str) -> IResult<&str, &str> {
-    take_while1(|c: char| c != '[' && !c.is_whitespace())(i)
-}
-
-fn is_short_name_char(c: char) -> bool {
-    c.is_alphanumeric() || c == '_' || c == '-'
-}
-
-fn is_human_name_char(c: char) -> bool {
-    c != ')'
-}
-
-// Parses a single model from this syntax: <model ID>[<short name>](<human-readable name>)
-fn parse_model<'a>(i: &'a str, api_key: &str, endpoint: &str) -> IResult<&'a str, Model> {
-    map(
-        (
-            parse_model_id,
-            delimited(tag("["), take_while1(is_short_name_char), tag("]")),
-            delimited(tag("("), take_while1(is_human_name_char), tag(")")),
-        ),
-        |(id, short_name, name)| Model {
-            id: id.to_string(),
-            short_name: short_name.to_string(),
-            name: name.to_string(),
-            api_key: api_key.to_string(),
-            endpoint: endpoint.to_string(),
-        },
-    )
-    .parse(i)
-}
-
-// Parses a white-space separated list of models.
-fn parse_models<'a>(i: &'a str, api_key: &str, endpoint: &str) -> IResult<&'a str, Vec<Model>> {
-    all_consuming(separated_list0(multispace1, |i| {
-        parse_model(i, api_key, endpoint)
-    }))
-    .parse(i)
-}
-
-#[cfg(test)]
-mod parser_tests {
-    use super::*;
-
-    #[test]
-    fn test_parse_model_nom() {
-        let input = "deepseek-1[short1](Deepseek 1)";
-        let (rest, parsed) = parse_model(input, "key", "endpoint").unwrap();
-        assert_eq!(rest, "");
-        assert_eq!(
-            parsed,
-            Model {
-                id: "deepseek-1".to_string(),
-                short_name: "short1".to_string(),
-                name: "Deepseek 1".to_string(),
-                api_key: "key".to_string(),
-                endpoint: "endpoint".to_string()
-            }
-        );
-
-        let input2 = "openrouter-2[o](OpenRouter 2)";
-        let (_, parsed2) = parse_model(input2, "", "").unwrap();
-        assert_eq!(parsed2.id, "openrouter-2");
-        assert_eq!(parsed2.short_name, "o");
-        assert_eq!(parsed2.name, "OpenRouter 2");
-    }
-
-    #[test]
-    fn test_parse_model_nom_invalid() {
-        assert!(parse_model("invalidmodel", "", "").is_err());
-        assert!(parse_model("id[short](name", "", "").is_err());
-        assert!(parse_model("idshort](name)", "", "").is_err());
-    }
-
-    #[test]
-    fn test_parse_models() {
-        let input = "deepseek-1[short1](Deepseek 1) openrouter-2[o](OpenRouter 2)";
-        let (rest, parsed) = parse_models(input, "key", "endpoint").unwrap();
-        assert_eq!(
-            parsed,
-            vec![
-                Model {
-                    id: "deepseek-1".to_string(),
-                    short_name: "short1".to_string(),
-                    name: "Deepseek 1".to_string(),
-                    api_key: "key".to_string(),
-                    endpoint: "endpoint".to_string()
-                },
-                Model {
-                    id: "openrouter-2".to_string(),
-                    short_name: "o".to_string(),
-                    name: "OpenRouter 2".to_string(),
-                    api_key: "key".to_string(),
-                    endpoint: "endpoint".to_string()
-                }
-            ]
-        );
-        assert_eq!(rest, "");
-    }
-}
-
-fn parse_model_config(
-    models_list: &str,
-    api_key: &str,
-    endpoint: &str,
-) -> Result<Vec<Model>, String> {
-    match parse_models(models_list, api_key, endpoint) {
-        Ok((_, models)) => Ok(models),
-        Err(e) => Err(formatget!("Invalid model syntax: {}", e)),
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -316,8 +257,18 @@ mod tests {
                 name: "Deepseek".to_string(),
                 api_key: "key1".to_string(),
                 endpoint: DEEPSEEK_API_ENDPOINT.to_string(),
-                model_string: "deepseek-1[short1](Deepseek 1) deepseek-2[short2](Deepseek 2)"
-                    .to_string(),
+                models: vec![
+                    TomlModel {
+                        id: "deepseek-1".to_string(),
+                        short_name: "short1".to_string(),
+                        name: "Deepseek 1".to_string(),
+                    },
+                    TomlModel {
+                        id: "deepseek-2".to_string(),
+                        short_name: "short2".to_string(),
+                        name: "Deepseek 2".to_string(),
+                    },
+                ],
             }],
             default_model_id: "deepseek-1".to_string(),
         };
@@ -345,14 +296,24 @@ mod tests {
     }
 
     #[test]
-    fn test_new_parses_openrouter_env_vars() {
+    fn test_new_parses_openrouter() {
         let cfg = Config {
             providers: vec![Provider {
                 name: "OpenRouter".to_string(),
                 api_key: "key2".to_string(),
                 endpoint: OPENROUTER_API_ENDPOINT.to_string(),
-                model_string: "openrouter-1[o](OpenRouter 1) openrouter-2[p](OpenRouter 2)"
-                    .to_string(),
+                models: vec![
+                    TomlModel {
+                        id: "openrouter-1".to_string(),
+                        short_name: "o".to_string(),
+                        name: "OpenRouter 1".to_string(),
+                    },
+                    TomlModel {
+                        id: "openrouter-2".to_string(),
+                        short_name: "p".to_string(),
+                        name: "OpenRouter 2".to_string(),
+                    },
+                ],
             }],
             default_model_id: "openrouter-1".to_string(),
         };
@@ -363,29 +324,24 @@ mod tests {
     }
 
     #[test]
-    fn test_new_parses_missing_short_name() {
-        let cfg = Config {
-            providers: vec![Provider {
-                name: "OpenRouter".to_string(),
-                api_key: "key2".to_string(),
-                endpoint: OPENROUTER_API_ENDPOINT.to_string(),
-                model_string: "openrouter-1[o](OpenRouter-1) openrouter-2".to_string(),
-            }],
-            default_model_id: "openrouter-1".to_string(),
-        };
-        let err = ModelList::new(&cfg).unwrap_err();
-        assert!(err.contains("openrouter-2"), "{}", err);
-    }
-
-    #[test]
     fn test_new_unknown_default_model_fails() {
         let cfg = Config {
             providers: vec![Provider {
                 name: "OpenRouter".to_string(),
                 api_key: "key2".to_string(),
                 endpoint: OPENROUTER_API_ENDPOINT.to_string(),
-                model_string: "openrouter-1[o](OpenRouter-1) openrouter-2[p](OpenRouter-2)"
-                    .to_string(),
+                models: vec![
+                    TomlModel {
+                        id: "openrouter-1".to_string(),
+                        short_name: "o".to_string(),
+                        name: "OpenRouter-1".to_string(),
+                    },
+                    TomlModel {
+                        id: "openrouter-2".to_string(),
+                        short_name: "p".to_string(),
+                        name: "OpenRouter-2".to_string(),
+                    },
+                ],
             }],
             default_model_id: "unknown_model".to_string(),
         };

@@ -7,7 +7,8 @@ mod unicodebytelimit;
 mod weather;
 
 use crate::constants::{
-    CLEAR_MEMORY_FLAG, CLEAR_MEMORY_MESSAGE, CONFIG_FILE_NAME, MAX_LINE_LENGTH, TEMPERATURE_FLAG,
+    CLEAR_MEMORY_FLAG, CLEAR_MEMORY_MESSAGE, CONFIG_FILE_NAME, ENV_FILE_NAME, MAX_LINE_LENGTH,
+    TEMPERATURE_FLAG,
 };
 use crate::memory::{Memory, Sender};
 use crate::model::{Config, Model, ModelList};
@@ -139,7 +140,7 @@ fn locate_config_path() -> Option<PathBuf> {
 }
 
 fn load_env(path: &Path) {
-    let _ = dotenvy::from_path(path.join(CONFIG_FILE_NAME));
+    let _ = dotenvy::from_path(path.join(ENV_FILE_NAME));
 }
 
 fn textdomain_dir() -> Option<String> {
@@ -281,7 +282,7 @@ fn setup() -> Result<Input, String> {
     let sender = std::env::var("DMB_SENDER").unwrap_or_default();
     let receiver = std::env::var("DMB_RECEIVER").unwrap_or_default();
 
-    let models = ModelList::new(&Config::from_env())?;
+    let models = ModelList::new(&Config::new(&config_path)?)?;
 
     let (flags, query) = parse_command_line(
         &std::env::args().skip(1).collect::<Vec<_>>().join(" "),

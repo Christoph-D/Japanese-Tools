@@ -1,6 +1,7 @@
 use std::time::Duration;
 
-pub const CONFIG_FILE_NAME: &str = ".env";
+pub const ENV_FILE_NAME: &str = ".env";
+pub const CONFIG_FILE_NAME: &str = "config.toml";
 
 // Hardcoded limit on line length for IRC in bytes.
 pub const MAX_LINE_LENGTH: usize = 300;

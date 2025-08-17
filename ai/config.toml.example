@@ -1,0 +1,33 @@
+[general]
+default_model = "deepseek-chat"
+
+[providers.anthropic]
+models = [
+    { id = "claude-sonnet-4-20250514", short_name = "s", name = "Claude Sonnet 4" }
+]
+
+[providers.deepseek]
+models = [
+    { id = "deepseek-chat", short_name = "d", name = "Deepseek v3 0324" }
+]
+
+[providers.litellm]
+endpoint = ""
+models = [
+    { id = "deepseek/deepseek-chat", short_name = "d", name = "Deepseek v3 0324" },
+    { id = "openrouter/google/gemini-2.5-flash", short_name = "g", name = "Gemini 2.5 Flash" },
+    { id = "openrouter/openai/gpt-4o", short_name = "o", name = "GPT-4o" },
+    { id = "mistral/mistral-medium-latest", short_name = "m", name = "Mistral Medium" },
+    { id = "anthropic/claude-sonnet-4-20250514", short_name = "s", name = "Claude Sonnet 4" }
+]
+
+[providers.mistral]
+models = [
+    { id = "mistral-medium-latest", short_name = "m", name = "Mistral Medium" }
+]
+
+[providers.openrouter]
+models = [
+    { id = "google/gemini-2.5-flash", short_name = "g", name = "Gemini 2.5 Flash" },
+    { id = "openai/gpt-4o", short_name = "o", name = "GPT-4o" },
+]

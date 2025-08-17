@@ -1,3 +1,4 @@
 /ai
 /.env
+/config.toml
 ai_memory.db
