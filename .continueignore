@@ -1,2 +1,3 @@
 .env
+/ai/config.toml
 /ai/channel_prompts/

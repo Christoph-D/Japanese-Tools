@@ -1,5 +1,6 @@
 .env
 /ai/channel_prompts/
+/ai/config.toml
 /gettext/locale/
 /jmdict/JMdict*
 /jmdict/wadoku*
