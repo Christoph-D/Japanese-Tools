@@ -51,6 +51,8 @@ put at least one API key into `.env`.
 cd ai
 cp .env.example .env
 # Edit .env to add your API keys and model config
+cp config.toml.example config.toml
+# Edit config.toml to configure the available models
 cargo run -- "What's 夜空?"
 ```
 
