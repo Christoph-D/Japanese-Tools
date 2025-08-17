@@ -42,19 +42,21 @@ pub struct ModelList {
 const DEEPSEEK_API_ENDPOINT: &str = "https://api.deepseek.com/v1/chat/completions";
 const MISTRAL_API_ENDPOINT: &str = "https://api.mistral.ai/v1/chat/completions";
 const OPENROUTER_API_ENDPOINT: &str = "https://openrouter.ai/api/v1/chat/completions";
+const ANTHROPIC_API_ENDPOINT: &str = "https://api.anthropic.com/v1/chat/completions";
 
 impl Config {
     pub fn from_env() -> Self {
         let mut providers = Vec::new();
         let provider_configs = [
+            ("ANTHROPIC", "Anthropic", ANTHROPIC_API_ENDPOINT),
             ("DEEPSEEK", "Deepseek", DEEPSEEK_API_ENDPOINT),
-            ("MISTRAL", "Mistral", MISTRAL_API_ENDPOINT),
-            ("OPENROUTER", "OpenRouter", OPENROUTER_API_ENDPOINT),
             (
                 "LITELLM",
                 "LiteLLM",
                 &std::env::var("LITELLM_API_ENDPOINT").unwrap_or_default(),
             ),
+            ("MISTRAL", "Mistral", MISTRAL_API_ENDPOINT),
+            ("OPENROUTER", "OpenRouter", OPENROUTER_API_ENDPOINT),
         ];
         for (env_prefix, name, endpoint) in provider_configs.iter() {
             if endpoint.is_empty() {
