@@ -1,6 +1,7 @@
 use crate::{
     constants::{DEFAULT_SYSTEM_PROMPT, DEFAULT_SYSTEM_PROMPT_DE, MAX_LINE_LENGTH},
     memory::Memory,
+    unicodebytelimit::UnicodeByteLimit,
 };
 use serde::{Deserialize, Serialize};
 use std::path::Path;
@@ -46,6 +47,18 @@ pub fn build_prompt(
     }
 
     all_messages.sort_by_key(|(_, _, timestamp)| *timestamp);
+
+    // Limit message length to avoid making the prompt too long.
+    all_messages.iter_mut().for_each(|(_, content, _)| {
+        if content.len() > MAX_LINE_LENGTH {
+            let s = content.unicode_byte_limit(MAX_LINE_LENGTH).to_string();
+            *content = if s != *content {
+                format!("{}...", s)
+            } else {
+                s
+            };
+        }
+    });
 
     for (role, content, _) in all_messages {
         v.push(Message {

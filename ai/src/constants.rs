@@ -2,7 +2,7 @@ use std::time::Duration;
 
 pub const CONFIG_FILE_NAME: &str = ".env";
 
-// Hardcoded limit on line length for IRC
+// Hardcoded limit on line length for IRC in bytes.
 pub const MAX_LINE_LENGTH: usize = 300;
 
 // Default system prompt. See prompt::system_prompt() for how to set per-channel prompts.

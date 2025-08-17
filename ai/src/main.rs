@@ -3,6 +3,7 @@ mod gettext;
 mod memory;
 mod model;
 mod prompt;
+mod unicodebytelimit;
 mod weather;
 
 use crate::constants::{
@@ -11,6 +12,7 @@ use crate::constants::{
 use crate::memory::{Memory, Sender};
 use crate::model::{Config, Model, ModelList};
 use crate::prompt::{Message, build_prompt};
+use crate::unicodebytelimit::UnicodeByteLimit;
 
 use formatx::formatx;
 use gettextrs::{TextDomain, gettext, ngettext};
@@ -103,10 +105,11 @@ fn sanitize_output(s: &str, api_key: &Option<&str>) -> String {
         None => s.to_string(),
     };
     let s_no_newlines: String = redacted.chars().filter(|&c| c != '\n').collect();
-    if s_no_newlines.len() > MAX_LINE_LENGTH {
-        format!("{}...", &s_no_newlines[..MAX_LINE_LENGTH])
+    let truncated = s_no_newlines.unicode_byte_limit(MAX_LINE_LENGTH);
+    if truncated != s_no_newlines {
+        format!("{}...", truncated)
     } else {
-        s_no_newlines
+        truncated.to_string()
     }
 }
 
