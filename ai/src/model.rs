@@ -1,6 +1,8 @@
 use gettextrs::gettext;
 use std::collections::HashMap;
 
+use crate::constants::CONFIG_FILE_NAME;
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Provider {
     name: String,
@@ -62,11 +64,11 @@ struct TomlModel {
 
 impl Config {
     pub fn new(config_path: &std::path::Path) -> Result<Self, String> {
-        let toml_path = config_path.join("config.toml");
+        let toml_path = config_path.join(CONFIG_FILE_NAME);
         let toml_content = std::fs::read_to_string(toml_path)
-            .map_err(|e| format!("Failed to read config.toml: {}", e))?;
+            .map_err(|e| format!("Failed to read {}: {}", CONFIG_FILE_NAME, e))?;
         let toml_config: TomlConfig = toml::from_str(&toml_content)
-            .map_err(|e| format!("Failed to parse config.toml: {}", e))?;
+            .map_err(|e| format!("Failed to parse {}: {}", CONFIG_FILE_NAME, e))?;
 
         let mut providers = Vec::new();
         for (provider_name, toml_provider) in toml_config.providers {
@@ -79,21 +81,27 @@ impl Config {
                         .unwrap_or_default()
                         .is_empty()
                     {
-                        return Err("LiteLLM provider requires an endpoint.".to_string());
+                        return Err(format!(
+                            "{}: LiteLLM provider requires an endpoint.",
+                            CONFIG_FILE_NAME
+                        ));
                     }
                 }
                 "anthropic" | "deepseek" | "mistral" | "openrouter" => {
                     if toml_provider.endpoint.is_some() {
                         return Err(format!(
-                            "Provider '{}' endpoint is not configurable.",
-                            provider_name
+                            "{}: Provider '{}' endpoint is not configurable.",
+                            CONFIG_FILE_NAME, provider_name
                         ));
                     }
                 }
-                _ => return Err(format!("Unknown provider: {}", provider_name)),
+                _ => {
+                    return Err(format!(
+                        "{}: Unknown provider: {}",
+                        CONFIG_FILE_NAME, provider_name
+                    ));
+                }
             }
-
-            // API key comes from an environment variable
             if let Ok(api_key) = std::env::var(format!("{}_API_KEY", env_prefix)) {
                 if !api_key.is_empty() {
                     let endpoint = match provider_name.as_str() {
@@ -113,7 +121,6 @@ impl Config {
                 }
             }
         }
-
         Ok(Config {
             providers,
             default_model_id: toml_config.general.default_model,
@@ -152,7 +159,7 @@ impl ModelList {
         let default_model_index = models
             .iter()
             .position(|m| m.id == cfg.default_model_id)
-            .ok_or_else(|| gettext("DEFAULT_MODEL not found"))?;
+            .ok_or_else(|| gettext("Default model not found"))?;
         Ok(ModelList {
             models,
             default_model_index,
@@ -346,7 +353,7 @@ mod tests {
             default_model_id: "unknown_model".to_string(),
         };
         let err = ModelList::new(&cfg).unwrap_err();
-        assert!(err.contains("DEFAULT_MODEL"), "{}", err);
+        assert!(err.contains("Default model"), "{}", err);
     }
 
     #[test]
