@@ -5,7 +5,9 @@ mod model;
 mod prompt;
 mod weather;
 
-use crate::constants::{CLEAR_MEMORY_FLAG, CONFIG_FILE_NAME, MAX_LINE_LENGTH, TEMPERATURE_FLAG};
+use crate::constants::{
+    CLEAR_MEMORY_FLAG, CLEAR_MEMORY_MESSAGE, CONFIG_FILE_NAME, MAX_LINE_LENGTH, TEMPERATURE_FLAG,
+};
 use crate::memory::{Memory, Sender};
 use crate::model::{Config, Model, ModelList};
 use crate::prompt::{Message, build_prompt};
@@ -406,7 +408,7 @@ fn run(input: &Input) -> Result<String, String> {
     let query = input.query.trim();
     if query.is_empty() {
         if history_cleared {
-            return Ok("[📜→🔥]".to_string());
+            return Ok(format!("[{}]", CLEAR_MEMORY_MESSAGE));
         } else {
             return Ok(usage(&input.models));
         }
@@ -468,7 +470,7 @@ fn run(input: &Input) -> Result<String, String> {
     };
 
     let result = if history_cleared {
-        "[📜→🔥] ".to_string() + &result
+        format!("[{}] {}", CLEAR_MEMORY_MESSAGE, &result)
     } else {
         result
     };
