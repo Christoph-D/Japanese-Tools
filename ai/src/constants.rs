@@ -38,3 +38,5 @@ pub const CLEAR_MEMORY_MESSAGE: &str = "📜🔥";
 pub const TEMPERATURE_FLAG: &str = "temp";
 
 pub const WEATHER_API_TIMEOUT: Duration = Duration::from_secs(3);
+
+pub const MAX_TOKENS: u32 = 500;

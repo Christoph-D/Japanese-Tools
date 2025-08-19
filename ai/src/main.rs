@@ -8,7 +8,7 @@ mod weather;
 
 use crate::constants::{
     CLEAR_MEMORY_FLAG, CLEAR_MEMORY_MESSAGE, CONFIG_FILE_NAME, ENV_FILE_NAME, MAX_LINE_LENGTH,
-    TEMPERATURE_FLAG,
+    MAX_TOKENS, TEMPERATURE_FLAG,
 };
 use crate::memory::{Memory, Sender};
 use crate::model::{Config, Model, ModelList};
@@ -62,7 +62,7 @@ fn call_api(
     let payload = serde_json::json!(Payload {
         model: &model.id,
         messages: prompt,
-        max_tokens: 300,
+        max_tokens: MAX_TOKENS as i32,
         temperature,
     });
 
