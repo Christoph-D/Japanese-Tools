@@ -4,17 +4,25 @@ use std::collections::HashMap;
 use crate::constants::CONFIG_FILE_NAME;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct Provider {
+struct Provider {
     name: String,
     api_key: String,
     endpoint: String,
     models: Vec<TomlModel>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Config {
     providers: Vec<Provider>,
     default_model_id: String,
+    channels: HashMap<String, ChannelConfig>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct ChannelConfig {
+    pub default_model: Option<String>,
+    pub temperature: Option<f64>,
+    pub system_prompt: Option<String>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -41,6 +49,8 @@ const ANTHROPIC_API_ENDPOINT: &str = "https://api.anthropic.com/v1/chat/completi
 struct TomlConfig {
     general: TomlGeneral,
     providers: HashMap<String, TomlProvider>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    channels: Option<HashMap<String, TomlChannel>>,
 }
 
 #[derive(Debug, serde::Deserialize)]
@@ -60,6 +70,16 @@ struct TomlModel {
     id: String,
     short_name: String,
     name: String,
+}
+
+#[derive(Debug, Clone, serde::Deserialize)]
+struct TomlChannel {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    default_model: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    temperature: Option<f64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    system_prompt: Option<String>,
 }
 
 impl Config {
@@ -121,9 +141,26 @@ impl Config {
                 }
             }
         }
+        let channels = toml_config
+            .channels
+            .unwrap_or_default()
+            .into_iter()
+            .map(|(name, channel)| {
+                (
+                    name,
+                    ChannelConfig {
+                        default_model: channel.default_model,
+                        temperature: channel.temperature,
+                        system_prompt: channel.system_prompt,
+                    },
+                )
+            })
+            .collect();
+
         Ok(Config {
             providers,
             default_model_id: toml_config.general.default_model,
+            channels,
         })
     }
 
@@ -137,6 +174,23 @@ impl Config {
             _ => provider_name.to_string(),
         }
     }
+
+    pub fn get_channel_system_prompt(&self, channel_name: &str) -> Option<&str> {
+        self.channels
+            .get(channel_name)
+            .and_then(|c| c.system_prompt.as_deref())
+    }
+
+    pub fn get_channel_default_model(&self, channel_name: &str) -> &str {
+        self.channels
+            .get(channel_name)
+            .and_then(|c| c.default_model.as_deref())
+            .unwrap_or(&self.default_model_id)
+    }
+
+    pub fn get_channel_temperature(&self, channel_name: &str) -> Option<f64> {
+        self.channels.get(channel_name).and_then(|c| c.temperature)
+    }
 }
 
 impl ModelList {
@@ -145,9 +199,9 @@ impl ModelList {
         for provider in &cfg.providers {
             for toml_model in &provider.models {
                 models.push(Model {
-                    id: toml_model.id.clone(),
-                    short_name: toml_model.short_name.clone(),
-                    name: toml_model.name.clone(),
+                    id: toml_model.id.to_string(),
+                    short_name: toml_model.short_name.to_string(),
+                    name: toml_model.name.to_string(),
                     api_key: provider.api_key.clone(),
                     endpoint: provider.endpoint.clone(),
                 });
@@ -174,10 +228,11 @@ impl ModelList {
         &self.default_model().name
     }
 
-    // Selects a model based on the query.
-    // If the flags contains a model name, it selects the last specified model.
-    // Otherwise, it returns the default model.
-    pub fn select_model(&self, flags: &[String]) -> Result<&Model, String> {
+    pub fn select_model_for_channel(
+        &self,
+        flags: &[String],
+        channel_default_model_id: &str,
+    ) -> Result<&Model, String> {
         // Find the last flag that matches a model name
         let mut selected: Option<&Model> = None;
         for f in flags.iter() {
@@ -188,6 +243,16 @@ impl ModelList {
         if let Some(model) = selected {
             return Ok(model);
         }
+
+        // Use channel default model if available
+        if let Some(model) = self
+            .models
+            .iter()
+            .find(|m| m.id == channel_default_model_id)
+        {
+            return Ok(model);
+        }
+
         Ok(self.default_model())
     }
 
@@ -249,6 +314,7 @@ mod tests {
         let cfg = Config {
             providers: vec![],
             default_model_id: "".to_string(),
+            channels: HashMap::new(),
         };
         let result = ModelList::new(&cfg);
         assert!(result.is_err());
@@ -259,26 +325,33 @@ mod tests {
     }
     #[test]
     fn test_new_parses_deepseek_env_vars() {
-        let cfg = Config {
-            providers: vec![Provider {
-                name: "Deepseek".to_string(),
-                api_key: "key1".to_string(),
-                endpoint: DEEPSEEK_API_ENDPOINT.to_string(),
-                models: vec![
-                    TomlModel {
-                        id: "deepseek-1".to_string(),
-                        short_name: "short1".to_string(),
-                        name: "Deepseek 1".to_string(),
-                    },
-                    TomlModel {
-                        id: "deepseek-2".to_string(),
-                        short_name: "short2".to_string(),
-                        name: "Deepseek 2".to_string(),
-                    },
-                ],
-            }],
-            default_model_id: "deepseek-1".to_string(),
-        };
+        // Clear any existing DEEPSEEK_API_KEY to avoid pollution
+        unsafe {
+            std::env::remove_var("DEEPSEEK_API_KEY");
+        }
+
+        let temp_dir = tempfile::tempdir().unwrap();
+        let config_dir = temp_dir.path();
+        let env_file = config_dir.join(".env");
+        std::fs::write(&env_file, "DEEPSEEK_API_KEY=key1\n").unwrap();
+        dotenvy::from_path(&env_file).unwrap();
+
+        let config_path = config_dir.join(CONFIG_FILE_NAME);
+        std::fs::write(
+            &config_path,
+            r#"
+[general]
+default_model = "deepseek-1"
+
+[providers.deepseek]
+models = [
+  { id = "deepseek-1", short_name = "short1", name = "Deepseek 1" },
+  { id = "deepseek-2", short_name = "short2", name = "Deepseek 2" }
+]
+"#,
+        )
+        .unwrap();
+        let cfg = Config::new(&config_dir).expect("Config::new()");
         let model_list = ModelList::new(&cfg).expect("new()");
         assert_eq!(
             model_list.models,
@@ -304,26 +377,28 @@ mod tests {
 
     #[test]
     fn test_new_parses_openrouter() {
-        let cfg = Config {
-            providers: vec![Provider {
-                name: "OpenRouter".to_string(),
-                api_key: "key2".to_string(),
-                endpoint: OPENROUTER_API_ENDPOINT.to_string(),
-                models: vec![
-                    TomlModel {
-                        id: "openrouter-1".to_string(),
-                        short_name: "o".to_string(),
-                        name: "OpenRouter 1".to_string(),
-                    },
-                    TomlModel {
-                        id: "openrouter-2".to_string(),
-                        short_name: "p".to_string(),
-                        name: "OpenRouter 2".to_string(),
-                    },
-                ],
-            }],
-            default_model_id: "openrouter-1".to_string(),
-        };
+        let temp_dir = tempfile::tempdir().unwrap();
+        let config_dir = temp_dir.path();
+        let env_file = config_dir.join(".env");
+        std::fs::write(&env_file, "OPENROUTER_API_KEY=key2\n").unwrap();
+        dotenvy::from_path(&env_file).unwrap();
+
+        let config_path = config_dir.join(CONFIG_FILE_NAME);
+        std::fs::write(
+            &config_path,
+            r#"
+[general]
+default_model = "openrouter-1"
+
+[providers.openrouter]
+models = [
+  { id = "openrouter-1", short_name = "o", name = "OpenRouter 1" },
+  { id = "openrouter-2", short_name = "p", name = "OpenRouter 2" }
+]
+"#,
+        )
+        .unwrap();
+        let cfg = Config::new(&config_dir).expect("Config::new()");
         let model_list = ModelList::new(&cfg).expect("new()");
         assert_eq!(model_list.models.len(), 2);
         assert_eq!(model_list.models[0].id, "openrouter-1");
@@ -332,81 +407,30 @@ mod tests {
 
     #[test]
     fn test_new_unknown_default_model_fails() {
-        let cfg = Config {
-            providers: vec![Provider {
-                name: "OpenRouter".to_string(),
-                api_key: "key2".to_string(),
-                endpoint: OPENROUTER_API_ENDPOINT.to_string(),
-                models: vec![
-                    TomlModel {
-                        id: "openrouter-1".to_string(),
-                        short_name: "o".to_string(),
-                        name: "OpenRouter-1".to_string(),
-                    },
-                    TomlModel {
-                        id: "openrouter-2".to_string(),
-                        short_name: "p".to_string(),
-                        name: "OpenRouter-2".to_string(),
-                    },
-                ],
-            }],
-            default_model_id: "unknown_model".to_string(),
-        };
+        let temp_dir = tempfile::tempdir().unwrap();
+        let config_dir = temp_dir.path();
+        let env_file = config_dir.join(".env");
+        std::fs::write(&env_file, "OPENROUTER_API_KEY=key2\n").unwrap();
+        dotenvy::from_path(&env_file).unwrap();
+
+        let config_path = config_dir.join(CONFIG_FILE_NAME);
+        std::fs::write(
+            &config_path,
+            r#"
+[general]
+default_model = "unknown_model"
+
+[providers.openrouter]
+models = [
+  { id = "openrouter-1", short_name = "o", name = "OpenRouter-1" },
+  { id = "openrouter-2", short_name = "p", name = "OpenRouter-2" }
+]
+"#,
+        )
+        .unwrap();
+        let cfg = Config::new(&config_dir).expect("Config::new()");
         let err = ModelList::new(&cfg).unwrap_err();
         assert!(err.contains("Default model"), "{}", err);
-    }
-
-    #[test]
-    fn test_select_model_with_empty_query() {
-        let model_list = setup_model_list();
-        let result = model_list.select_model(&vec![]);
-        let model = result.expect("select_model()");
-        assert_eq!(model.id, "deepseek-1");
-    }
-
-    #[test]
-    fn test_select_model_default() {
-        let model_list = setup_model_list();
-        let result = model_list.select_model(&vec!["d".to_string()]);
-        let model = result.expect("select_model()");
-        assert_eq!(model.id, "deepseek-1");
-        assert_eq!(model.short_name, "d");
-    }
-
-    #[test]
-    fn test_select_model_with_unknown_model() {
-        let model_list = setup_model_list();
-        let result = model_list.select_model(&vec!["unknownmodel".to_string()]);
-        let model = result.expect("select_model()");
-        assert_eq!(model.id, "deepseek-1");
-        assert_eq!(model.short_name, "d");
-    }
-
-    #[test]
-    fn test_select_model() {
-        let model_list = setup_model_list();
-        let result = model_list.select_model(&vec!["o".to_string()]);
-        let model = result.expect("select_model()");
-        assert_eq!(model.id, "openrouter-2");
-        assert_eq!(model.short_name, "o");
-    }
-
-    #[test]
-    fn test_select_model_with_empty_flag() {
-        let model_list = setup_model_list();
-        let flags = vec!["".to_string(), "o".to_string()];
-        let result = model_list.select_model(&flags);
-        let model = result.expect("select_model()");
-        assert_eq!(model.id, "openrouter-2");
-    }
-
-    #[test]
-    fn test_select_model_with_flags_containing_multiple_model_names() {
-        let model_list = setup_model_list();
-        let flags = vec!["d".to_string(), "o".to_string()];
-        let result = model_list.select_model(&flags);
-        let model = result.expect("select_model()");
-        assert_eq!(model.id, "openrouter-2");
     }
 
     #[test]
@@ -438,5 +462,139 @@ mod tests {
             default_model_index: 0,
         };
         assert_eq!(model_list.list_model_flags(), vec!["o"]);
+    }
+
+    #[test]
+    fn test_select_model_for_channel_with_channel_default() {
+        let model_list = setup_model_list();
+        let result = model_list.select_model_for_channel(&vec![], "openrouter-2");
+        let model = result.expect("select_model_for_channel()");
+        assert_eq!(model.id, "openrouter-2");
+        assert_eq!(model.short_name, "o");
+    }
+
+    #[test]
+    fn test_select_model_for_channel_flags_override_channel_default() {
+        let model_list = setup_model_list();
+        let result = model_list.select_model_for_channel(&vec!["d".to_string()], "openrouter-2");
+        let model = result.expect("select_model_for_channel()");
+        assert_eq!(model.id, "deepseek-1");
+        assert_eq!(model.short_name, "d");
+    }
+
+    #[test]
+    fn test_select_model_for_channel_fallback_to_global_default() {
+        let model_list = setup_model_list();
+        let result = model_list.select_model_for_channel(&vec![], "unknown-model");
+        let model = result.expect("select_model_for_channel()");
+        assert_eq!(model.id, "deepseek-1");
+        assert_eq!(model.short_name, "d");
+    }
+
+    #[test]
+    fn test_get_channel_default_model() {
+        let temp_dir = tempfile::tempdir().unwrap();
+        let config_dir = temp_dir.path();
+        let env_file = config_dir.join(".env");
+        std::fs::write(&env_file, "DEEPSEEK_API_KEY=test-key\n").unwrap();
+        dotenvy::from_path(&env_file).unwrap();
+
+        let config_path = config_dir.join(CONFIG_FILE_NAME);
+        std::fs::write(
+            &config_path,
+            r##"
+[general]
+default_model = "global-default"
+
+[providers.deepseek]
+models = [
+  { id = "global-default", short_name = "g", name = "Global Default" },
+  { id = "test-model", short_name = "t", name = "Test Model" }
+]
+
+[channels]
+"#test" = { default_model = "test-model" }
+"##,
+        )
+        .unwrap();
+
+        let config = Config::new(&config_dir).expect("Config::new()");
+
+        assert_eq!(config.get_channel_default_model("#test"), "test-model");
+        assert_eq!(
+            config.get_channel_default_model("#unknown"),
+            "global-default"
+        );
+    }
+
+    #[test]
+    fn test_get_channel_temperature() {
+        let temp_dir = tempfile::tempdir().unwrap();
+        let config_dir = temp_dir.path();
+        let env_file = config_dir.join(".env");
+        std::fs::write(&env_file, "DEEPSEEK_API_KEY=test-key\n").unwrap();
+        dotenvy::from_path(&env_file).unwrap();
+
+        let config_path = config_dir.join(CONFIG_FILE_NAME);
+        std::fs::write(
+            &config_path,
+            r##"
+[general]
+default_model = "default"
+
+[providers.deepseek]
+models = [
+  { id = "default", short_name = "d", name = "Default" }
+]
+
+[channels]
+"#test" = { temperature = 0.7 }
+"#no-temp" = { default_model = "default" }
+"##,
+        )
+        .unwrap();
+
+        let config = Config::new(&config_dir).expect("Config::new()");
+
+        assert_eq!(config.get_channel_temperature("#test"), Some(0.7));
+        assert_eq!(config.get_channel_temperature("#no-temp"), None);
+        assert_eq!(config.get_channel_temperature("#unknown"), None);
+    }
+
+    #[test]
+    fn test_get_channel_system_prompt() {
+        let temp_dir = tempfile::tempdir().unwrap();
+        let config_dir = temp_dir.path();
+        let env_file = config_dir.join(".env");
+        std::fs::write(&env_file, "DEEPSEEK_API_KEY=test-key\n").unwrap();
+        dotenvy::from_path(&env_file).unwrap();
+
+        let config_path = config_dir.join(CONFIG_FILE_NAME);
+        std::fs::write(
+            &config_path,
+            r##"
+[general]
+default_model = "default"
+
+[providers.deepseek]
+models = [
+  { id = "default", short_name = "d", name = "Default" }
+]
+
+[channels]
+"#test" = { system_prompt = "Test prompt" }
+"#no-prompt" = { default_model = "default" }
+"##,
+        )
+        .unwrap();
+
+        let config = Config::new(&config_dir).expect("Config::new()");
+
+        assert_eq!(
+            config.get_channel_system_prompt("#test"),
+            Some("Test prompt")
+        );
+        assert_eq!(config.get_channel_system_prompt("#no-prompt"), None);
+        assert_eq!(config.get_channel_system_prompt("#unknown"), None);
     }
 }

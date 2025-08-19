@@ -239,6 +239,7 @@ fn parse_command_line(query: &str, models: &ModelList) -> Result<(Vec<String>, S
 
 struct Input {
     config_path: PathBuf,
+    config: Config,
     flags: Vec<String>,
     models: ModelList,
     model: Model,
@@ -282,14 +283,18 @@ fn setup() -> Result<Input, String> {
     let sender = std::env::var("DMB_SENDER").unwrap_or_default();
     let receiver = std::env::var("DMB_RECEIVER").unwrap_or_default();
 
-    let models = ModelList::new(&Config::new(&config_path)?)?;
+    let config = Config::new(&config_path)?;
+    let models = ModelList::new(&config)?;
 
     let (flags, query) = parse_command_line(
         &std::env::args().skip(1).collect::<Vec<_>>().join(" "),
         &models,
     )?;
 
-    let model = models.select_model(&flags)?.clone();
+    let channel_default_model = config.get_channel_default_model(&receiver);
+    let model = models
+        .select_model_for_channel(&flags, channel_default_model)?
+        .clone();
 
     Ok(Input {
         query,
@@ -298,6 +303,7 @@ fn setup() -> Result<Input, String> {
         flags,
         models,
         model,
+        config,
         config_path,
         irc_plugin: std::env::var("IRC_PLUGIN").ok().as_deref() == Some("1"),
     })
@@ -438,7 +444,7 @@ fn run(input: &Input) -> Result<String, String> {
         &input.sender,
         &input.receiver,
         &memory,
-        &input.config_path,
+        &input.config,
     );
     memory
         .add_to_history(&input.sender, Sender::User, &input.receiver, &query)
@@ -449,7 +455,8 @@ fn run(input: &Input) -> Result<String, String> {
         .iter()
         .find(|f| f.starts_with(&(TEMPERATURE_FLAG.to_string() + "=")) || f.starts_with("t="))
         .and_then(|f| f.split('=').nth(1))
-        .and_then(|s| s.parse::<f64>().ok().map(|t| t.clamp(0.0, 2.0)));
+        .and_then(|s| s.parse::<f64>().ok().map(|t| t.clamp(0.0, 2.0)))
+        .or_else(|| input.config.get_channel_temperature(&input.receiver));
 
     let result = &call_api(&input.model, &prompt, &temperature)?;
 
@@ -569,5 +576,161 @@ mod tests {
 
         let result = process_command("unknown", "args", "bob", "receiver1", &mut memory).unwrap();
         assert_eq!(result, CommandResult::NotACommand);
+    }
+
+    #[test]
+    fn test_channel_configuration_integration() {
+        use crate::constants::CONFIG_FILE_NAME;
+        use crate::model::{Config, ModelList};
+
+        let temp_dir = tempfile::tempdir().unwrap();
+        let config_dir = temp_dir.path();
+        let env_file = config_dir.join(".env");
+        std::fs::write(&env_file, "LITELLM_API_KEY=test-key\n").unwrap();
+        dotenvy::from_path(&env_file).unwrap();
+
+        let config_path = config_dir.join(CONFIG_FILE_NAME);
+        std::fs::write(&config_path, r##"
+[general]
+default_model = "default-model"
+
+[providers.litellm]
+endpoint = "http://test.example.com"
+models = [
+  { id = "test-model", short_name = "t", name = "Test Model" },
+  { id = "default-model", short_name = "d", name = "Default Model" }
+]
+
+[channels]
+"#test-channel" = { default_model = "test-model", temperature = 0.8, system_prompt = "Test channel prompt" }
+"##).unwrap();
+
+        let config = Config::new(&config_dir).expect("Config::new()");
+        let models = ModelList::new(&config).unwrap();
+
+        // Test channel-specific model selection
+        let channel_default = config.get_channel_default_model("#test-channel");
+        assert_eq!(channel_default, "test-model");
+
+        let selected_model = models
+            .select_model_for_channel(&vec![], channel_default)
+            .unwrap();
+        assert_eq!(selected_model.id, "test-model");
+
+        // Test channel-specific temperature
+        let channel_temp = config.get_channel_temperature("#test-channel");
+        assert_eq!(channel_temp, Some(0.8));
+
+        // Test channel-specific system prompt
+        let channel_prompt = config.get_channel_system_prompt("#test-channel");
+        assert_eq!(channel_prompt, Some("Test channel prompt"));
+
+        // Test fallback for unconfigured channel
+        let unconfigured_default = config.get_channel_default_model("#unknown");
+        assert_eq!(unconfigured_default, "default-model");
+
+        let unconfigured_temp = config.get_channel_temperature("#unknown");
+        assert_eq!(unconfigured_temp, None);
+
+        let unconfigured_prompt = config.get_channel_system_prompt("#unknown");
+        assert_eq!(unconfigured_prompt, None);
+    }
+
+    #[test]
+    fn test_temperature_extraction_with_channel_config() {
+        use crate::constants::CONFIG_FILE_NAME;
+        use crate::model::Config;
+
+        let temp_dir = tempfile::tempdir().unwrap();
+        let config_dir = temp_dir.path();
+        let env_file = config_dir.join(".env");
+        std::fs::write(&env_file, "LITELLM_API_KEY=test-key\n").unwrap();
+        dotenvy::from_path(&env_file).unwrap();
+
+        std::fs::create_dir_all(&config_dir).unwrap();
+        let config_path = config_dir.join(CONFIG_FILE_NAME);
+        std::fs::write(
+            &config_path,
+            r##"
+[general]
+default_model = "default-model"
+
+[providers.deepseek]
+models = [
+  { id = "default-model", short_name = "d", name = "Default Model" }
+]
+
+[channels]
+"#test" = { default_model = "test-model", temperature = 0.5, system_prompt = "Test prompt" }
+"##,
+        )
+        .unwrap();
+
+        let config = Config::new(&config_dir).expect("Config::new()");
+
+        // Test channel-specific temperature fallback (simulating the logic from run())
+        let flags: Vec<String> = vec![];
+        let temperature = flags
+            .iter()
+            .find(|f| f.starts_with("temperature=") || f.starts_with("t="))
+            .and_then(|f| f.split('=').nth(1))
+            .and_then(|s| s.parse::<f64>().ok().map(|t| t.clamp(0.0, 2.0)))
+            .or_else(|| config.get_channel_temperature("#test"));
+
+        assert_eq!(temperature, Some(0.5));
+
+        // Test for unconfigured channel
+        let temperature_unconfigured = flags
+            .iter()
+            .find(|f| f.starts_with("temperature=") || f.starts_with("t="))
+            .and_then(|f| f.split('=').nth(1))
+            .and_then(|s| s.parse::<f64>().ok().map(|t| t.clamp(0.0, 2.0)))
+            .or_else(|| config.get_channel_temperature("#unknown"));
+
+        assert_eq!(temperature_unconfigured, None);
+    }
+
+    #[test]
+    fn test_temperature_flag_overrides_channel() {
+        use crate::constants::CONFIG_FILE_NAME;
+        use crate::model::Config;
+
+        let temp_dir = tempfile::tempdir().unwrap();
+        let config_dir = temp_dir.path();
+        let env_file = config_dir.join(".env");
+        std::fs::write(&env_file, "DEEPSEEK_API_KEY=test-key\n").unwrap();
+        dotenvy::from_path(&env_file).unwrap();
+
+        std::fs::create_dir_all(&config_dir).unwrap();
+        let config_path = config_dir.join(CONFIG_FILE_NAME);
+        std::fs::write(
+            &config_path,
+            r##"
+[general]
+default_model = "default-model"
+
+[providers.deepseek]
+models = [
+  { id = "default-model", short_name = "d", name = "Default Model" }
+]
+
+[channels]
+"#test" = { temperature = 0.5 }
+"##,
+        )
+        .unwrap();
+
+        let config = Config::new(&config_dir).expect("Config::new()");
+
+        // Temperature flag should override channel temperature (simulating the logic from run())
+        let flags = vec!["t=0.9".to_string()];
+        let temperature = flags
+            .iter()
+            .find(|f| f.starts_with("temperature=") || f.starts_with("t="))
+            .and_then(|f| f.split('=').nth(1))
+            .and_then(|s| s.parse::<f64>().ok().map(|t| t.clamp(0.0, 2.0)))
+            .or_else(|| config.get_channel_temperature("#test"));
+
+        assert_eq!(temperature, Some(0.9));
     }
 }

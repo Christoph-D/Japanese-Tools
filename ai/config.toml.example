@@ -31,3 +31,10 @@ models = [
     { id = "google/gemini-2.5-flash", short_name = "g", name = "Gemini 2.5 Flash" },
     { id = "openai/gpt-4o", short_name = "o", name = "GPT-4o" },
 ]
+
+[channels."#example"]
+default_model = "mistral/mistral-medium-latest"
+temperature = 0.4
+system_prompt = """You are a technical AI assistant in the #example channel.
+Focus on practical, accurate solutions for Linux system administration and development.
+Be concise and precise. Limit responses to {MAX_LINE_LENGTH} characters."""

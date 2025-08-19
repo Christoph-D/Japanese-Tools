@@ -1,12 +1,10 @@
 use crate::{
     constants::{DEFAULT_SYSTEM_PROMPT, DEFAULT_SYSTEM_PROMPT_DE, MAX_LINE_LENGTH},
     memory::Memory,
+    model::Config,
     unicodebytelimit::UnicodeByteLimit,
 };
 use serde::{Deserialize, Serialize};
-use std::path::Path;
-
-const CHANNEL_PROMPTS_DIR: &str = "channel_prompts";
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Message {
@@ -32,11 +30,11 @@ pub fn build_prompt(
     sender: &str,
     receiver: &str,
     memory: &Memory,
-    config_path: &Path,
+    config: &Config,
 ) -> Vec<Message> {
     let mut v = vec![Message {
         role: "system".to_string(),
-        content: format_prompt(&per_channel_prompt(receiver, config_path)),
+        content: format_prompt(&get_system_prompt(receiver, config)),
     }];
 
     let joined_users = memory.get_joined_users(sender, receiver);
@@ -74,49 +72,88 @@ pub fn build_prompt(
     v
 }
 
-fn load_prompt_file(config_path: &Path, receiver: &str) -> Option<String> {
-    let prompt_path = config_path.join(CHANNEL_PROMPTS_DIR).join(receiver);
-    std::fs::read_to_string(prompt_path).ok()
-}
-
-// Loads a per-channel system prompt if one exists.
-// If receiver matches a channel name, tries to load a prompt from {prompt_path}/<channel>.
-fn per_channel_prompt(receiver: &str, config_path: &Path) -> String {
-    // Only allow channel names starting with '#' and without '.' or '/'
-    if !receiver.starts_with('#') || receiver.contains('.') || receiver.contains('/') {
+// Gets the system prompt for a channel, falling back to default if not configured.
+fn get_system_prompt(receiver: &str, config: &Config) -> String {
+    // Only allow channel names starting with '#'
+    if !receiver.starts_with('#') {
         return default_prompt().to_string();
     }
-    load_prompt_file(config_path, receiver).unwrap_or_else(|| default_prompt().to_string())
+    config
+        .get_channel_system_prompt(receiver)
+        .map(|s| s.to_string())
+        .unwrap_or_else(|| default_prompt().to_string())
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::constants::CONFIG_FILE_NAME;
     use crate::memory::Sender;
-    use std::fs;
-    use std::io::Write;
+    use crate::model::Config;
     use tempfile::tempdir;
 
+    fn create_test_config_with_channel(
+        channel_name: &str,
+        system_prompt: Option<String>,
+    ) -> Config {
+        let temp_dir = tempfile::tempdir().unwrap();
+        let config_dir = temp_dir.path();
+        let env_file = config_dir.join(".env");
+        std::fs::write(&env_file, "DEEPSEEK_API_KEY=test-key\n").unwrap();
+        dotenvy::from_path(&env_file).unwrap();
+
+        let config_path = config_dir.join(CONFIG_FILE_NAME);
+
+        let channel_config = if let Some(prompt) = system_prompt {
+            format!(
+                r##""{}" = {{ system_prompt = "{}" }}"##,
+                channel_name, prompt
+            )
+        } else {
+            "".to_string()
+        };
+
+        let toml_content = format!(
+            r##"
+[general]
+default_model = "default"
+
+[providers.deepseek]
+models = [
+  {{ id = "default", short_name = "d", name = "Default" }}
+]
+
+[channels]
+{}
+"##,
+            channel_config
+        );
+
+        std::fs::write(&config_path, toml_content).unwrap();
+        Config::new(&config_dir).expect("Config::new()")
+    }
+
     #[test]
-    fn test_per_channel_prompt_with_valid_channel() {
-        let dir = tempdir().unwrap();
-        let prompt_path = dir.path();
+    fn test_get_system_prompt_with_valid_channel() {
         let channel = "#test_channel";
         let prompt_content = "This is a test prompt.";
+        let config = create_test_config_with_channel(channel, Some(prompt_content.to_string()));
 
-        fs::create_dir_all(prompt_path.join(CHANNEL_PROMPTS_DIR)).unwrap();
-        let mut file =
-            fs::File::create(prompt_path.join(CHANNEL_PROMPTS_DIR).join(channel)).unwrap();
-        file.write_all(prompt_content.as_bytes()).unwrap();
-
-        let result = per_channel_prompt(channel, prompt_path);
+        let result = get_system_prompt(channel, &config);
         assert_eq!(result, prompt_content);
     }
 
     #[test]
-    fn test_per_channel_prompt_with_invalid_channel() {
-        let dir = tempdir().unwrap();
-        let result = per_channel_prompt("not_a_channel", dir.path());
+    fn test_get_system_prompt_with_invalid_channel() {
+        let config = create_test_config_with_channel("#other", None);
+        let result = get_system_prompt("not_a_channel", &config);
+        assert_eq!(result, default_prompt());
+    }
+
+    #[test]
+    fn test_get_system_prompt_with_unconfigured_channel() {
+        let config = create_test_config_with_channel("#other", None);
+        let result = get_system_prompt("#test_channel", &config);
         assert_eq!(result, default_prompt());
     }
     #[test]
@@ -135,6 +172,7 @@ mod tests {
         let query = "Test query";
         let sender = "user1";
         let receiver = "#test_channel";
+        let config = create_test_config_with_channel(receiver, None);
 
         let mut memory = Memory::new_from_path(config_path).unwrap();
         memory
@@ -144,7 +182,7 @@ mod tests {
             .add_to_history(sender, Sender::Assistant, receiver, "Hi there!")
             .unwrap();
 
-        let result = build_prompt(query, sender, receiver, &memory, config_path);
+        let result = build_prompt(query, sender, receiver, &memory, &config);
 
         assert_eq!(result.len(), 4);
         assert_eq!(result[0].role, "system");
@@ -164,14 +202,10 @@ mod tests {
         let channel = "#test_channel";
         let prompt_content = "This is a test prompt.";
         let query = "Test query";
+        let config = create_test_config_with_channel(channel, Some(prompt_content.to_string()));
         let memory = Memory::new_from_path(&config_path).unwrap();
 
-        fs::create_dir_all(config_path.join(CHANNEL_PROMPTS_DIR)).unwrap();
-        let mut file =
-            fs::File::create(config_path.join(CHANNEL_PROMPTS_DIR).join(channel)).unwrap();
-        file.write_all(prompt_content.as_bytes()).unwrap();
-
-        let result = build_prompt(query, "user1", channel, &memory, config_path);
+        let result = build_prompt(query, "user1", channel, &memory, &config);
 
         assert_eq!(result.len(), 2);
         assert_eq!(result[0].role, "system");
@@ -186,6 +220,7 @@ mod tests {
         let config_path = dir.path();
         let query = "Test query";
         let receiver = "#test_channel";
+        let config = create_test_config_with_channel(receiver, None);
 
         let mut memory = Memory::new_from_path(config_path).unwrap();
 
@@ -212,7 +247,7 @@ mod tests {
 
         memory.join_users("user1", "user2", receiver).unwrap();
 
-        let result = build_prompt(query, "user1", receiver, &memory, config_path);
+        let result = build_prompt(query, "user1", receiver, &memory, &config);
 
         assert_eq!(result.len(), 6);
         assert_eq!(result[0].role, "system");
