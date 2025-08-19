@@ -17,6 +17,7 @@ use crate::unicodebytelimit::UnicodeByteLimit;
 
 use formatx::formatx;
 use gettextrs::{TextDomain, gettext, ngettext};
+use std::collections::HashMap;
 use std::io::Read;
 use std::path::{Path, PathBuf};
 use std::time::Duration;
@@ -139,8 +140,27 @@ fn locate_config_path() -> Option<PathBuf> {
     None
 }
 
-fn load_env(path: &Path) {
-    let _ = dotenvy::from_path(path.join(ENV_FILE_NAME));
+#[derive(Debug)]
+struct EnvVars {
+    vars: HashMap<String, String>,
+}
+
+impl EnvVars {
+    fn from_file(path: &Path) -> Result<Self, Box<dyn std::error::Error>> {
+        let env_file_path = path.join(ENV_FILE_NAME);
+        let mut vars = HashMap::new();
+
+        for item in dotenvy::from_path_iter(&env_file_path)? {
+            let (key, value) = item?;
+            vars.insert(key, value);
+        }
+
+        Ok(EnvVars { vars })
+    }
+
+    fn get(&self, key: &str) -> Option<&String> {
+        self.vars.get(key)
+    }
 }
 
 fn textdomain_dir() -> Option<String> {
@@ -278,12 +298,14 @@ fn setup() -> Result<Input, String> {
         Some(path) => path,
         None => return Err(gettext("Config file not found.")),
     };
-    load_env(&config_path);
+    let env_vars = EnvVars::from_file(&config_path).unwrap_or_else(|_| EnvVars {
+        vars: HashMap::new(),
+    });
 
     let sender = std::env::var("DMB_SENDER").unwrap_or_default();
     let receiver = std::env::var("DMB_RECEIVER").unwrap_or_default();
 
-    let config = Config::new(&config_path)?;
+    let config = Config::new(&config_path, &env_vars)?;
     let models = ModelList::new(&config)?;
 
     let (flags, query) = parse_command_line(
@@ -305,7 +327,7 @@ fn setup() -> Result<Input, String> {
         model,
         config,
         config_path,
-        irc_plugin: std::env::var("IRC_PLUGIN").ok().as_deref() == Some("1"),
+        irc_plugin: std::env::var("IRC_PLUGIN").as_deref() == Ok("1"),
     })
 }
 
@@ -587,7 +609,7 @@ mod tests {
         let config_dir = temp_dir.path();
         let env_file = config_dir.join(".env");
         std::fs::write(&env_file, "LITELLM_API_KEY=test-key\n").unwrap();
-        dotenvy::from_path(&env_file).unwrap();
+        let env_vars = EnvVars::from_file(&config_dir).unwrap();
 
         let config_path = config_dir.join(CONFIG_FILE_NAME);
         std::fs::write(&config_path, r##"
@@ -605,7 +627,7 @@ models = [
 "#test-channel" = { default_model = "test-model", temperature = 0.8, system_prompt = "Test channel prompt" }
 "##).unwrap();
 
-        let config = Config::new(&config_dir).expect("Config::new()");
+        let config = Config::new(&config_dir, &env_vars).expect("Config::new()");
         let models = ModelList::new(&config).unwrap();
 
         // Test channel-specific model selection
@@ -645,7 +667,7 @@ models = [
         let config_dir = temp_dir.path();
         let env_file = config_dir.join(".env");
         std::fs::write(&env_file, "LITELLM_API_KEY=test-key\n").unwrap();
-        dotenvy::from_path(&env_file).unwrap();
+        let env_vars = EnvVars::from_file(&config_dir).unwrap();
 
         std::fs::create_dir_all(&config_dir).unwrap();
         let config_path = config_dir.join(CONFIG_FILE_NAME);
@@ -666,7 +688,7 @@ models = [
         )
         .unwrap();
 
-        let config = Config::new(&config_dir).expect("Config::new()");
+        let config = Config::new(&config_dir, &env_vars).expect("Config::new()");
 
         // Test channel-specific temperature fallback (simulating the logic from run())
         let flags: Vec<String> = vec![];
@@ -699,7 +721,7 @@ models = [
         let config_dir = temp_dir.path();
         let env_file = config_dir.join(".env");
         std::fs::write(&env_file, "DEEPSEEK_API_KEY=test-key\n").unwrap();
-        dotenvy::from_path(&env_file).unwrap();
+        let env_vars = EnvVars::from_file(&config_dir).unwrap();
 
         std::fs::create_dir_all(&config_dir).unwrap();
         let config_path = config_dir.join(CONFIG_FILE_NAME);
@@ -720,7 +742,7 @@ models = [
         )
         .unwrap();
 
-        let config = Config::new(&config_dir).expect("Config::new()");
+        let config = Config::new(&config_dir, &env_vars).expect("Config::new()");
 
         // Temperature flag should override channel temperature (simulating the logic from run())
         let flags = vec!["t=0.9".to_string()];

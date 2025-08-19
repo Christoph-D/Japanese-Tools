@@ -98,9 +98,6 @@ mod tests {
     ) -> Config {
         let temp_dir = tempfile::tempdir().unwrap();
         let config_dir = temp_dir.path();
-        let env_file = config_dir.join(".env");
-        std::fs::write(&env_file, "DEEPSEEK_API_KEY=test-key\n").unwrap();
-        dotenvy::from_path(&env_file).unwrap();
 
         let config_path = config_dir.join(CONFIG_FILE_NAME);
 
@@ -130,7 +127,10 @@ models = [
         );
 
         std::fs::write(&config_path, toml_content).unwrap();
-        Config::new(&config_dir).expect("Config::new()")
+        let env_vars = crate::EnvVars {
+            vars: std::collections::HashMap::new(),
+        };
+        Config::new(&config_dir, &env_vars).expect("Config::new()")
     }
 
     #[test]

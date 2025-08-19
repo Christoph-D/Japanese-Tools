@@ -1,6 +1,7 @@
 use gettextrs::gettext;
 use std::collections::HashMap;
 
+use crate::EnvVars;
 use crate::constants::CONFIG_FILE_NAME;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -83,7 +84,7 @@ struct TomlChannel {
 }
 
 impl Config {
-    pub fn new(config_path: &std::path::Path) -> Result<Self, String> {
+    pub fn new(config_path: &std::path::Path, env_vars: &EnvVars) -> Result<Self, String> {
         let toml_path = config_path.join(CONFIG_FILE_NAME);
         let toml_content = std::fs::read_to_string(toml_path)
             .map_err(|e| format!("Failed to read {}: {}", CONFIG_FILE_NAME, e))?;
@@ -122,7 +123,7 @@ impl Config {
                     ));
                 }
             }
-            if let Ok(api_key) = std::env::var(format!("{}_API_KEY", env_prefix)) {
+            if let Some(api_key) = env_vars.get(&format!("{}_API_KEY", env_prefix)) {
                 if !api_key.is_empty() {
                     let endpoint = match provider_name.as_str() {
                         "anthropic" => ANTHROPIC_API_ENDPOINT.to_string(),
@@ -134,7 +135,7 @@ impl Config {
                     };
                     providers.push(Provider {
                         name: Self::provider_display_name(&provider_name),
-                        api_key,
+                        api_key: api_key.clone(),
                         endpoint,
                         models: toml_provider.models,
                     });
@@ -334,7 +335,6 @@ mod tests {
         let config_dir = temp_dir.path();
         let env_file = config_dir.join(".env");
         std::fs::write(&env_file, "DEEPSEEK_API_KEY=key1\n").unwrap();
-        dotenvy::from_path(&env_file).unwrap();
 
         let config_path = config_dir.join(CONFIG_FILE_NAME);
         std::fs::write(
@@ -351,7 +351,8 @@ models = [
 "#,
         )
         .unwrap();
-        let cfg = Config::new(&config_dir).expect("Config::new()");
+        let env_vars = EnvVars::from_file(&config_dir).unwrap();
+        let cfg = Config::new(&config_dir, &env_vars).expect("Config::new()");
         let model_list = ModelList::new(&cfg).expect("new()");
         assert_eq!(
             model_list.models,
@@ -381,7 +382,6 @@ models = [
         let config_dir = temp_dir.path();
         let env_file = config_dir.join(".env");
         std::fs::write(&env_file, "OPENROUTER_API_KEY=key2\n").unwrap();
-        dotenvy::from_path(&env_file).unwrap();
 
         let config_path = config_dir.join(CONFIG_FILE_NAME);
         std::fs::write(
@@ -398,7 +398,8 @@ models = [
 "#,
         )
         .unwrap();
-        let cfg = Config::new(&config_dir).expect("Config::new()");
+        let env_vars = EnvVars::from_file(&config_dir).unwrap();
+        let cfg = Config::new(&config_dir, &env_vars).expect("Config::new()");
         let model_list = ModelList::new(&cfg).expect("new()");
         assert_eq!(model_list.models.len(), 2);
         assert_eq!(model_list.models[0].id, "openrouter-1");
@@ -411,7 +412,6 @@ models = [
         let config_dir = temp_dir.path();
         let env_file = config_dir.join(".env");
         std::fs::write(&env_file, "OPENROUTER_API_KEY=key2\n").unwrap();
-        dotenvy::from_path(&env_file).unwrap();
 
         let config_path = config_dir.join(CONFIG_FILE_NAME);
         std::fs::write(
@@ -428,7 +428,8 @@ models = [
 "#,
         )
         .unwrap();
-        let cfg = Config::new(&config_dir).expect("Config::new()");
+        let env_vars = EnvVars::from_file(&config_dir).unwrap();
+        let cfg = Config::new(&config_dir, &env_vars).expect("Config::new()");
         let err = ModelList::new(&cfg).unwrap_err();
         assert!(err.contains("Default model"), "{}", err);
     }
@@ -497,7 +498,6 @@ models = [
         let config_dir = temp_dir.path();
         let env_file = config_dir.join(".env");
         std::fs::write(&env_file, "DEEPSEEK_API_KEY=test-key\n").unwrap();
-        dotenvy::from_path(&env_file).unwrap();
 
         let config_path = config_dir.join(CONFIG_FILE_NAME);
         std::fs::write(
@@ -518,7 +518,10 @@ models = [
         )
         .unwrap();
 
-        let config = Config::new(&config_dir).expect("Config::new()");
+        let env_vars = EnvVars {
+            vars: HashMap::new(),
+        };
+        let config = Config::new(&config_dir, &env_vars).expect("Config::new()");
 
         assert_eq!(config.get_channel_default_model("#test"), "test-model");
         assert_eq!(
@@ -533,7 +536,6 @@ models = [
         let config_dir = temp_dir.path();
         let env_file = config_dir.join(".env");
         std::fs::write(&env_file, "DEEPSEEK_API_KEY=test-key\n").unwrap();
-        dotenvy::from_path(&env_file).unwrap();
 
         let config_path = config_dir.join(CONFIG_FILE_NAME);
         std::fs::write(
@@ -554,7 +556,10 @@ models = [
         )
         .unwrap();
 
-        let config = Config::new(&config_dir).expect("Config::new()");
+        let env_vars = EnvVars {
+            vars: HashMap::new(),
+        };
+        let config = Config::new(&config_dir, &env_vars).expect("Config::new()");
 
         assert_eq!(config.get_channel_temperature("#test"), Some(0.7));
         assert_eq!(config.get_channel_temperature("#no-temp"), None);
@@ -567,7 +572,6 @@ models = [
         let config_dir = temp_dir.path();
         let env_file = config_dir.join(".env");
         std::fs::write(&env_file, "DEEPSEEK_API_KEY=test-key\n").unwrap();
-        dotenvy::from_path(&env_file).unwrap();
 
         let config_path = config_dir.join(CONFIG_FILE_NAME);
         std::fs::write(
@@ -588,7 +592,10 @@ models = [
         )
         .unwrap();
 
-        let config = Config::new(&config_dir).expect("Config::new()");
+        let env_vars = EnvVars {
+            vars: HashMap::new(),
+        };
+        let config = Config::new(&config_dir, &env_vars).expect("Config::new()");
 
         assert_eq!(
             config.get_channel_system_prompt("#test"),
