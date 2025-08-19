@@ -488,12 +488,26 @@ fn run(input: &Input) -> Result<String, String> {
 
     let flag_state = {
         let mut flag_state: Vec<String> = Vec::new();
-        if input.model.name != input.models.default_model_name() {
+
+        // Only show model prefix if user explicitly used a model flag
+        let user_model_flag = input
+            .flags
+            .iter()
+            .any(|flag| input.models.list_model_flags().contains(&flag.to_string()));
+        if user_model_flag && input.model.name != input.models.default_model_name() {
             flag_state.push(input.model.short_name.clone());
         }
-        if let Some(t) = temperature {
-            flag_state.push(format!("t={}", t));
+
+        // Only show temperature prefix if user explicitly used -t or -temperature flag
+        let user_temperature_flag = input.flags.iter().any(|flag| {
+            flag.starts_with(&(TEMPERATURE_FLAG.to_string() + "=")) || flag.starts_with("t=")
+        });
+        if user_temperature_flag {
+            if let Some(t) = temperature {
+                flag_state.push(format!("t={}", t));
+            }
         }
+
         flag_state.join(" ")
     };
     let result = if flag_state.is_empty() {
