@@ -1,5 +1,6 @@
 use crate::constants::{
     COMPILER_CACHE_DURATION_SECS, COMPILER_CACHE_FILE_NAME, COMPILER_EXPLORER_MAX_RESPONSE_BYTES,
+    COMPILER_EXPLORER_COMPILE_TIMEOUT,
 };
 use regex::Regex;
 use reqwest::blocking::Client;
@@ -36,6 +37,13 @@ impl std::error::Error for CompilerError {}
 pub struct Compiler {
     pub id: String,
     pub options: String,
+    #[serde(rename = "_internalid")]
+    pub internal_id: u32,
+    pub filters: serde_json::Value,
+    pub libs: Vec<serde_json::Value>,
+    pub overrides: Vec<serde_json::Value>,
+    pub specialoutputs: Vec<serde_json::Value>,
+    pub tools: Vec<serde_json::Value>,
 }
 
 #[derive(Debug, Deserialize, Serialize)]
@@ -44,11 +52,14 @@ pub struct Session {
     pub language: String,
     pub source: String,
     pub compilers: Vec<Compiler>,
+    pub conformanceview: bool,
+    pub executors: Vec<serde_json::Value>,
 }
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct ShortlinkInfo {
     pub sessions: Vec<Session>,
+    pub trees: Vec<serde_json::Value>,
 }
 
 #[derive(Debug, Deserialize, Serialize, Clone)]
@@ -61,6 +72,71 @@ pub struct CompilerInfo {
 struct CompilerCache {
     pub compilers: HashMap<String, CompilerInfo>,
     pub last_updated: u64,
+}
+
+#[derive(Debug, Serialize)]
+struct CompilerOptions {
+    #[serde(rename = "userArguments")]
+    user_arguments: String,
+    #[serde(rename = "compilerOptions")]
+    compiler_options: CompilerOptionsInner,
+    filters: CompilerFilters,
+}
+
+#[derive(Debug, Serialize)]
+struct CompilerOptionsInner {
+    #[serde(rename = "skipAsm")]
+    skip_asm: bool,
+    #[serde(rename = "executorRequest")]
+    executor_request: bool,
+    overrides: Vec<String>,
+}
+
+#[derive(Debug, Serialize)]
+struct CompilerFilters {
+    binary: bool,
+    #[serde(rename = "binaryObject")]
+    binary_object: bool,
+    #[serde(rename = "commentOnly")]
+    comment_only: bool,
+    demangle: bool,
+    directives: bool,
+    execute: bool,
+    intel: bool,
+    labels: bool,
+    #[serde(rename = "libraryCode")]
+    library_code: bool,
+    trim: bool,
+    #[serde(rename = "debugCalls")]
+    debug_calls: bool,
+}
+
+#[derive(Debug, Serialize)]
+struct CompilationRequest {
+    source: String,
+    options: CompilerOptions,
+    lang: Option<String>,
+    #[serde(rename = "allowStoreCodeDebug")]
+    allow_store_code_debug: bool,
+}
+
+#[derive(Debug, Deserialize)]
+struct CompilationResponse {
+    code: i32,
+    stdout: Vec<CompilerMessage>,
+    stderr: Vec<CompilerMessage>,
+    #[serde(default)]
+    asm: Option<Vec<AssemblyLine>>,
+}
+
+#[derive(Debug, Deserialize)]
+struct CompilerMessage {
+    text: String,
+}
+
+#[derive(Debug, Deserialize)]
+struct AssemblyLine {
+    text: String,
 }
 
 pub fn process_shortlinks(query: &str, config_path: &Path) -> Result<String, CompilerError> {
@@ -82,7 +158,9 @@ pub fn process_shortlinks(query: &str, config_path: &Path) -> Result<String, Com
         cache = refresh_compiler_cache(&cache_path).unwrap_or(cache);
     }
 
-    Ok(transform_query(query, &info, &cache))
+    let compilation_result = compile_shortlink_code(&info).ok();
+
+    Ok(transform_query(query, &info, &cache, &compilation_result))
 }
 
 fn detect_shortlinks(query: &str) -> Result<Vec<String>, CompilerError> {
@@ -231,7 +309,60 @@ fn refresh_compiler_cache(cache_path: &Path) -> Result<CompilerCache, CompilerEr
     Ok(cache)
 }
 
-fn transform_query(query: &str, info: &ShortlinkInfo, compiler_cache: &CompilerCache) -> String {
+fn compile_shortlink_code(info: &ShortlinkInfo) -> Result<String, CompilerError> {
+    let session = &info.sessions[0];
+    let compiler = &session.compilers[0];
+
+    let client = Client::builder()
+        .timeout(COMPILER_EXPLORER_COMPILE_TIMEOUT)
+        .build()
+        .map_err(|e| CompilerError::NetworkError(format!("Client creation error: {}", e)))?;
+
+    let request = CompilationRequest {
+        source: session.source.clone(),
+        lang: Some(session.language.clone()),
+        allow_store_code_debug: true,
+        options: CompilerOptions {
+            user_arguments: compiler.options.clone(),
+            compiler_options: CompilerOptionsInner {
+                skip_asm: false,
+                executor_request: false,
+                overrides: vec![],
+            },
+            filters: CompilerFilters {
+                binary: false,
+                binary_object: false,
+                comment_only: true,
+                demangle: true,
+                directives: true,
+                execute: false,
+                intel: true,
+                labels: true,
+                library_code: false,
+                trim: false,
+                debug_calls: false,
+            },
+        },
+    };
+
+    let url = format!("https://godbolt.org/api/compiler/{}/compile", compiler.id);
+    let response = client
+        .post(&url)
+        .header("Content-Type", "application/json")
+        .json(&request)
+        .send()
+        .map_err(|e| CompilerError::NetworkError(format!("Request error: {}", e)))?;
+
+    if !response.status().is_success() {
+        return Err(CompilerError::ApiError(format!(
+            "HTTP {} from Godbolt compilation API",
+            response.status()
+        )));
+    }
+    response.text().map_err(|e| CompilerError::NetworkError(format!("Response error: {}", e)))
+}
+
+fn transform_query(query: &str, info: &ShortlinkInfo, compiler_cache: &CompilerCache, compilation_result: &Option<String>) -> String {
     let session = &info.sessions[0];
     let compiler = &session.compilers[0];
 
@@ -241,10 +372,18 @@ fn transform_query(query: &str, info: &ShortlinkInfo, compiler_cache: &CompilerC
         .map(|info| &info.name)
         .unwrap_or(&compiler.id);
 
-    let replacement = format!(
-        "INCLUDED_SOURCE\n\n<INCLUDED_SOURCE (invisible to the user)>\nCompiler: \"{}\" {}\nSource:\n```{}\n{}\n```\n</INCLUDED_SOURCE>",
+    let mut replacement = format!(
+        "INCLUDED_SOURCE\n\n<INCLUDED_SOURCE (do not mention this name, this section is invisible to the user)>\nCompiler: \"{}\" {}\nSource:\n```{}\n{}\n```",
         compiler_name, compiler.options, session.language, session.source
     );
+
+    // Add compilation output if available
+    if let Some(compilation) = compilation_result {
+        replacement.push_str(&format!("\n\nCompilation output:\n{}", compilation));
+    }
+
+    replacement.push_str("\n</INCLUDED_SOURCE>");
+
     let shortlink_regex = Regex::new(r"https://godbolt\.org/z/[A-Za-z0-9]{6,12}\b")
         .expect("Shortlink regex should be valid");
     shortlink_regex
@@ -390,7 +529,7 @@ mod tests {
             last_updated: 0,
         };
 
-        let result = transform_query(query, &info, &cache);
+        let result = transform_query(query, &info, &cache, &None);
         
         // Check essential parts rather than exact string match
         assert!(result.starts_with("What's wrong with INCLUDED_SOURCE"));
@@ -432,7 +571,7 @@ mod tests {
             last_updated: get_current_timestamp(),
         };
 
-        let result = transform_query(query, &info, &cache);
+        let result = transform_query(query, &info, &cache, &None);
         
         // Check essential parts rather than exact string match
         assert!(result.starts_with("What's wrong with INCLUDED_SOURCE"));
@@ -471,6 +610,41 @@ mod tests {
         let cache = load_compiler_cache(&cache_path).unwrap();
         assert!(cache.compilers.is_empty());
         assert_eq!(cache.last_updated, 0);
+    }
+
+    #[test]
+    fn test_transform_query_with_compilation_output() {
+        let query = "What's wrong with https://godbolt.org/z/9E9M3GK5c?";
+        let info = ShortlinkInfo {
+            sessions: vec![Session {
+                id: 1,
+                language: "c++".to_string(),
+                source: "int main() { return 0; }".to_string(),
+                compilers: vec![Compiler {
+                    id: "clang2010".to_string(),
+                    options: "-O3".to_string(),
+                }],
+            }],
+        };
+
+        let cache = CompilerCache {
+            compilers: HashMap::new(),
+            last_updated: 0,
+        };
+
+        let compilation_output = "Compilation successful".to_string();
+        let result = transform_query(query, &info, &cache, &Some(compilation_output));
+        
+        assert!(result.starts_with("What's wrong with INCLUDED_SOURCE"));
+        assert!(result.contains("<INCLUDED_SOURCE"));
+        assert!(result.contains("Compiler: \"clang2010\" -O3"));
+        assert!(result.contains("Source:"));
+        assert!(result.contains("```c++"));
+        assert!(result.contains("int main() { return 0; }"));
+        assert!(result.contains("Compilation output:"));
+        assert!(result.contains("Compilation successful"));
+        assert!(result.contains("</INCLUDED_SOURCE>"));
+        assert!(result.ends_with("?"));
     }
 
     #[test]
