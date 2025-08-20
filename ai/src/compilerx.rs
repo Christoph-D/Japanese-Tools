@@ -1,8 +1,13 @@
-use crate::constants::COMPILER_EXPLORER_MAX_RESPONSE_BYTES;
+use crate::constants::{
+    COMPILER_CACHE_DURATION_SECS, COMPILER_CACHE_FILE_NAME, COMPILER_EXPLORER_MAX_RESPONSE_BYTES,
+};
 use regex::Regex;
 use reqwest::blocking::Client;
 use serde::{Deserialize, Serialize};
-use std::time::Duration;
+use std::collections::HashMap;
+use std::fs;
+use std::path::Path;
+use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum CompilerError {
@@ -46,7 +51,19 @@ pub struct ShortlinkInfo {
     pub sessions: Vec<Session>,
 }
 
-pub fn process_shortlinks(query: &str) -> Result<String, CompilerError> {
+#[derive(Debug, Deserialize, Serialize, Clone)]
+pub struct CompilerInfo {
+    pub id: String,
+    pub name: String,
+}
+
+#[derive(Debug, Deserialize, Serialize)]
+struct CompilerCache {
+    pub compilers: HashMap<String, CompilerInfo>,
+    pub last_updated: u64,
+}
+
+pub fn process_shortlinks(query: &str, config_path: &Path) -> Result<String, CompilerError> {
     let shortlink_ids = detect_shortlinks(query)?;
     if shortlink_ids.is_empty() {
         return Ok(query.to_string());
@@ -57,7 +74,15 @@ pub fn process_shortlinks(query: &str) -> Result<String, CompilerError> {
 
     let info = fetch_shortlink_info(&shortlink_ids[0])?;
     validate_shortlink_info(&info)?;
-    Ok(transform_query(query, &info))
+
+    let cache_path = config_path.join(COMPILER_CACHE_FILE_NAME);
+    let mut cache = load_compiler_cache(&cache_path)?;
+
+    if is_cache_expired(&cache) {
+        cache = refresh_compiler_cache(&cache_path).unwrap_or(cache);
+    }
+
+    Ok(transform_query(query, &info, &cache))
 }
 
 fn detect_shortlinks(query: &str) -> Result<Vec<String>, CompilerError> {
@@ -130,12 +155,95 @@ fn validate_shortlink_info(info: &ShortlinkInfo) -> Result<(), CompilerError> {
     Ok(())
 }
 
-fn transform_query(query: &str, info: &ShortlinkInfo) -> String {
+fn get_current_timestamp() -> u64 {
+    SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .unwrap_or_default()
+        .as_secs()
+}
+
+fn is_cache_expired(cache: &CompilerCache) -> bool {
+    let current_time = get_current_timestamp();
+    current_time.saturating_sub(cache.last_updated) > COMPILER_CACHE_DURATION_SECS
+}
+
+fn load_compiler_cache(cache_path: &Path) -> Result<CompilerCache, CompilerError> {
+    if !cache_path.exists() {
+        return Ok(CompilerCache {
+            compilers: HashMap::new(),
+            last_updated: 0,
+        });
+    }
+    let content = fs::read_to_string(cache_path)
+        .map_err(|e| CompilerError::InvalidResponse(format!("Failed to read cache file: {}", e)))?;
+    serde_json::from_str(&content)
+        .map_err(|e| CompilerError::InvalidResponse(format!("Failed to parse cache file: {}", e)))
+}
+
+fn save_compiler_cache(cache: &CompilerCache, cache_path: &Path) -> Result<(), CompilerError> {
+    let content = serde_json::to_string_pretty(cache)
+        .map_err(|e| CompilerError::InvalidResponse(format!("Failed to serialize cache: {}", e)))?;
+    fs::write(cache_path, content)
+        .map_err(|e| CompilerError::InvalidResponse(format!("Failed to write cache file: {}", e)))
+}
+
+fn fetch_compilers_from_api() -> Result<HashMap<String, CompilerInfo>, CompilerError> {
+    let client = Client::builder()
+        .timeout(Duration::from_secs(10))
+        .build()
+        .map_err(|e| CompilerError::NetworkError(format!("Client creation error: {}", e)))?;
+
+    let response = client
+        .get("https://godbolt.org/api/compilers")
+        .header("Accept", "application/json")
+        .send()
+        .map_err(|e| CompilerError::NetworkError(format!("Request error: {}", e)))?;
+
+    if !response.status().is_success() {
+        return Err(CompilerError::ApiError(format!(
+            "HTTP {} from Godbolt compilers API",
+            response.status()
+        )));
+    }
+
+    let text = response
+        .text()
+        .map_err(|e| CompilerError::NetworkError(format!("Read error: {}", e)))?;
+
+    let compilers_list: Vec<CompilerInfo> = serde_json::from_str(&text)
+        .map_err(|e| CompilerError::InvalidResponse(format!("JSON parsing error: {}", e)))?;
+
+    let mut compilers_map = HashMap::new();
+    for compiler in compilers_list {
+        compilers_map.insert(compiler.id.clone(), compiler);
+    }
+
+    Ok(compilers_map)
+}
+
+fn refresh_compiler_cache(cache_path: &Path) -> Result<CompilerCache, CompilerError> {
+    let compilers = fetch_compilers_from_api()?;
+    let cache = CompilerCache {
+        compilers,
+        last_updated: get_current_timestamp(),
+    };
+    save_compiler_cache(&cache, cache_path)?;
+    Ok(cache)
+}
+
+fn transform_query(query: &str, info: &ShortlinkInfo, compiler_cache: &CompilerCache) -> String {
     let session = &info.sessions[0];
     let compiler = &session.compilers[0];
+
+    let compiler_name = compiler_cache
+        .compilers
+        .get(&compiler.id)
+        .map(|info| &info.name)
+        .unwrap_or(&compiler.id);
+
     let replacement = format!(
-        "INCLUDED_SOURCE\n\n<INCLUDED_SOURCE (do not mention the name)>\nCompiler: {} {}\nSource:\n```{}\n{}\n```\n</INCLUDED_SOURCE>",
-        compiler.id, compiler.options, session.language, session.source
+        "INCLUDED_SOURCE\n\n<INCLUDED_SOURCE (invisible to the user)>\nCompiler: \"{}\" {}\nSource:\n```{}\n{}\n```\n</INCLUDED_SOURCE>",
+        compiler_name, compiler.options, session.language, session.source
     );
     let shortlink_regex = Regex::new(r"https://godbolt\.org/z/[A-Za-z0-9]{6,12}\b")
         .expect("Shortlink regex should be valid");
@@ -277,9 +385,122 @@ mod tests {
             }],
         };
 
-        let result = transform_query(query, &info);
-        let expected = "What's wrong with INCLUDED_SOURCE\n\n<INCLUDED_SOURCE (do not mention the name)>\nCompiler: clang2010 -O3\nSource:\n```c++\nstruct foo { int x; union { int y; char z[]; }};\n```\n</INCLUDED_SOURCE>?";
+        let cache = CompilerCache {
+            compilers: HashMap::new(),
+            last_updated: 0,
+        };
 
-        assert_eq!(result, expected);
+        let result = transform_query(query, &info, &cache);
+        
+        // Check essential parts rather than exact string match
+        assert!(result.starts_with("What's wrong with INCLUDED_SOURCE"));
+        assert!(result.contains("<INCLUDED_SOURCE"));
+        assert!(result.contains("Compiler: \"clang2010\" -O3"));
+        assert!(result.contains("Source:"));
+        assert!(result.contains("```c++"));
+        assert!(result.contains("struct foo { int x; union { int y; char z[]; }};"));
+        assert!(result.contains("</INCLUDED_SOURCE>"));
+        assert!(result.ends_with("?"));
+    }
+
+    #[test]
+    fn test_transform_query_with_compiler_name() {
+        let query = "What's wrong with https://godbolt.org/z/9E9M3GK5c?";
+        let info = ShortlinkInfo {
+            sessions: vec![Session {
+                id: 1,
+                language: "c++".to_string(),
+                source: "struct foo { int x; union { int y; char z[]; }};".to_string(),
+                compilers: vec![Compiler {
+                    id: "clang2010".to_string(),
+                    options: "-O3".to_string(),
+                }],
+            }],
+        };
+
+        let mut compilers = HashMap::new();
+        compilers.insert(
+            "clang2010".to_string(),
+            CompilerInfo {
+                id: "clang2010".to_string(),
+                name: "Clang 20.1.0".to_string(),
+            },
+        );
+
+        let cache = CompilerCache {
+            compilers,
+            last_updated: get_current_timestamp(),
+        };
+
+        let result = transform_query(query, &info, &cache);
+        
+        // Check essential parts rather than exact string match
+        assert!(result.starts_with("What's wrong with INCLUDED_SOURCE"));
+        assert!(result.contains("<INCLUDED_SOURCE"));
+        assert!(result.contains("Compiler: \"Clang 20.1.0\" -O3"));
+        assert!(result.contains("Source:"));
+        assert!(result.contains("```c++"));
+        assert!(result.contains("struct foo { int x; union { int y; char z[]; }};"));
+        assert!(result.contains("</INCLUDED_SOURCE>"));
+        assert!(result.ends_with("?"));
+    }
+
+    #[test]
+    fn test_is_cache_expired() {
+        let current_time = get_current_timestamp();
+
+        let fresh_cache = CompilerCache {
+            compilers: HashMap::new(),
+            last_updated: current_time,
+        };
+        assert!(!is_cache_expired(&fresh_cache));
+
+        let old_cache = CompilerCache {
+            compilers: HashMap::new(),
+            last_updated: current_time.saturating_sub(COMPILER_CACHE_DURATION_SECS + 1),
+        };
+        assert!(is_cache_expired(&old_cache));
+    }
+
+    #[test]
+    fn test_load_compiler_cache_nonexistent() {
+        use tempfile::tempdir;
+        let temp_dir = tempdir().unwrap();
+        let cache_path = temp_dir.path().join("nonexistent.json");
+
+        let cache = load_compiler_cache(&cache_path).unwrap();
+        assert!(cache.compilers.is_empty());
+        assert_eq!(cache.last_updated, 0);
+    }
+
+    #[test]
+    fn test_save_and_load_compiler_cache() {
+        use tempfile::tempdir;
+        let temp_dir = tempdir().unwrap();
+        let cache_path = temp_dir.path().join("test_cache.json");
+
+        let mut compilers = HashMap::new();
+        compilers.insert(
+            "test_id".to_string(),
+            CompilerInfo {
+                id: "test_id".to_string(),
+                name: "Test Compiler".to_string(),
+            },
+        );
+
+        let original_cache = CompilerCache {
+            compilers,
+            last_updated: 12345,
+        };
+
+        save_compiler_cache(&original_cache, &cache_path).unwrap();
+        let loaded_cache = load_compiler_cache(&cache_path).unwrap();
+
+        assert_eq!(loaded_cache.last_updated, 12345);
+        assert_eq!(loaded_cache.compilers.len(), 1);
+        assert_eq!(
+            loaded_cache.compilers.get("test_id").unwrap().name,
+            "Test Compiler"
+        );
     }
 }

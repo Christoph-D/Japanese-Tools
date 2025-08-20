@@ -1,3 +1,4 @@
 .env
+/ai/compiler_cache.json
 /ai/config.toml
 /ai/channel_prompts/

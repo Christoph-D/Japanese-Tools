@@ -1,4 +1,5 @@
 /ai
 /.env
+/compiler_cache.json
 /config.toml
 ai_memory.db

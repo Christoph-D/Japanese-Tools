@@ -463,7 +463,7 @@ fn run(input: &Input) -> Result<String, String> {
         }
     };
 
-    let query = match compilerx::process_shortlinks(&query) {
+    let query = match compilerx::process_shortlinks(&query, &input.config_path) {
         Ok(q) => q,
         Err(CompilerError::MultipleShortlinks(msg)) => msg.to_string(),
         Err(CompilerError::InvalidResponse(msg)) => msg.to_string(),

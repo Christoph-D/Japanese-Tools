@@ -1,5 +1,6 @@
 .env
 /ai/channel_prompts/
+/ai/compiler_cache.json
 /ai/config.toml
 /gettext/locale/
 /jmdict/JMdict*
