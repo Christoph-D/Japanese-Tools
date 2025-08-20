@@ -1,3 +1,4 @@
+use crate::constants::COMPILER_EXPLORER_MAX_RESPONSE_BYTES;
 use regex::Regex;
 use reqwest::blocking::Client;
 use serde::{Deserialize, Serialize};
@@ -76,9 +77,7 @@ fn fetch_shortlink_info(id: &str) -> Result<ShortlinkInfo, CompilerError> {
         .timeout(Duration::from_secs(10))
         .build()
         .map_err(|e| CompilerError::NetworkError(format!("Client creation error: {}", e)))?;
-
     let url = format!("https://godbolt.org/api/shortlinkinfo/{}", id);
-
     let response = client
         .get(&url)
         .send()
@@ -91,11 +90,25 @@ fn fetch_shortlink_info(id: &str) -> Result<ShortlinkInfo, CompilerError> {
         )));
     }
 
-    let info: ShortlinkInfo = response
-        .json()
-        .map_err(|e| CompilerError::InvalidResponse(format!("JSON parsing error: {}", e)))?;
+    let mut buffer = Vec::new();
 
-    Ok(info)
+    use std::io::Read;
+    // Limit the response size for safety
+    let mut limited_reader = response.take(COMPILER_EXPLORER_MAX_RESPONSE_BYTES);
+    limited_reader
+        .read_to_end(&mut buffer)
+        .map_err(|e| CompilerError::NetworkError(format!("Read error: {}", e)))?;
+    if buffer.len() as u64 == COMPILER_EXPLORER_MAX_RESPONSE_BYTES {
+        return Err(CompilerError::InvalidResponse(format!(
+            "Response too large (exceeded {} bytes)",
+            COMPILER_EXPLORER_MAX_RESPONSE_BYTES
+        )));
+    }
+
+    let text = String::from_utf8(buffer)
+        .map_err(|e| CompilerError::InvalidResponse(format!("UTF-8 decode error: {}", e)))?;
+    serde_json::from_str(&text)
+        .map_err(|e| CompilerError::InvalidResponse(format!("JSON parsing error: {}", e)))
 }
 
 fn validate_shortlink_info(info: &ShortlinkInfo) -> Result<(), CompilerError> {

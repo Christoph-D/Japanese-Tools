@@ -40,3 +40,5 @@ pub const TEMPERATURE_FLAG: &str = "temp";
 pub const WEATHER_API_TIMEOUT: Duration = Duration::from_secs(3);
 
 pub const MAX_TOKENS: u32 = 500;
+
+pub const COMPILER_EXPLORER_MAX_RESPONSE_BYTES: u64 = 2048;
