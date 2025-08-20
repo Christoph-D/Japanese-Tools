@@ -463,11 +463,15 @@ fn run(input: &Input) -> Result<String, String> {
         }
     };
 
-    let query = match compilerx::process_shortlinks(&query, &input.config_path) {
-        Ok(q) => q,
-        Err(CompilerError::MultipleShortlinks(msg)) => msg.to_string(),
-        Err(CompilerError::InvalidResponse(msg)) => msg.to_string(),
-        Err(e) => return Err(format!("Failed to process shortlinks: {}", e)),
+    let query = if input.config.is_compiler_explorer_enabled() {
+        match compilerx::process_shortlinks(&query, &input.config_path) {
+            Ok(q) => q,
+            Err(CompilerError::MultipleShortlinks(msg)) => msg.to_string(),
+            Err(CompilerError::InvalidResponse(msg)) => msg.to_string(),
+            Err(e) => return Err(format!("Failed to process shortlinks: {}", e)),
+        }
+    } else {
+        query
     };
 
     let prompt = build_prompt(

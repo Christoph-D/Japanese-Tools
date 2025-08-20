@@ -1,5 +1,6 @@
 [general]
 default_model = "deepseek-chat"
+enable_compiler_explorer = true
 
 [providers.anthropic]
 models = [

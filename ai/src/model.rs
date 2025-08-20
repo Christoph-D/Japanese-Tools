@@ -17,6 +17,7 @@ pub struct Config {
     providers: Vec<Provider>,
     default_model_id: String,
     channels: HashMap<String, ChannelConfig>,
+    enable_compiler_explorer: bool,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -57,6 +58,8 @@ struct TomlConfig {
 #[derive(Debug, serde::Deserialize)]
 struct TomlGeneral {
     default_model: String,
+    #[serde(default)]
+    enable_compiler_explorer: bool,
 }
 
 #[derive(Debug, serde::Deserialize)]
@@ -162,6 +165,7 @@ impl Config {
             providers,
             default_model_id: toml_config.general.default_model,
             channels,
+            enable_compiler_explorer: toml_config.general.enable_compiler_explorer,
         })
     }
 
@@ -191,6 +195,10 @@ impl Config {
 
     pub fn get_channel_temperature(&self, channel_name: &str) -> Option<f64> {
         self.channels.get(channel_name).and_then(|c| c.temperature)
+    }
+
+    pub fn is_compiler_explorer_enabled(&self) -> bool {
+        self.enable_compiler_explorer
     }
 }
 
