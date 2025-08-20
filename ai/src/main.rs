@@ -1,3 +1,4 @@
+mod compilerx;
 mod constants;
 mod gettext;
 mod memory;
@@ -6,6 +7,7 @@ mod prompt;
 mod unicodebytelimit;
 mod weather;
 
+use crate::compilerx::CompilerError;
 use crate::constants::{
     CLEAR_MEMORY_FLAG, CLEAR_MEMORY_MESSAGE, CONFIG_FILE_NAME, ENV_FILE_NAME, MAX_LINE_LENGTH,
     MAX_TOKENS, TEMPERATURE_FLAG,
@@ -459,6 +461,13 @@ fn run(input: &Input) -> Result<String, String> {
                 .map_err(|e| format!("Failed to add extra history: {}", e))?;
             query
         }
+    };
+
+    let query = match compilerx::process_shortlinks(&query) {
+        Ok(q) => q,
+        Err(CompilerError::MultipleShortlinks(msg)) => msg.to_string(),
+        Err(CompilerError::InvalidResponse(msg)) => msg.to_string(),
+        Err(e) => return Err(format!("Failed to process shortlinks: {}", e)),
     };
 
     let prompt = build_prompt(
