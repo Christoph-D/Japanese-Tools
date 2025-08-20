@@ -7,6 +7,7 @@ use reqwest::blocking::Client;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fs;
+use std::io::Read;
 use std::path::Path;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
@@ -360,9 +361,12 @@ fn compile_shortlink_code(info: &ShortlinkInfo) -> Result<String, CompilerError>
             response.status()
         )));
     }
+    let mut text = String::new();
     response
-        .text()
-        .map_err(|e| CompilerError::NetworkError(format!("Response error: {}", e)))
+        .take(COMPILER_EXPLORER_MAX_RESPONSE_BYTES)
+        .read_to_string(&mut text)
+        .map_err(|e| CompilerError::NetworkError(format!("Response error: {}", e)))?;
+    Ok(text)
 }
 
 fn transform_query(
