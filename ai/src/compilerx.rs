@@ -1,6 +1,6 @@
 use crate::constants::{
-    COMPILER_CACHE_DURATION_SECS, COMPILER_CACHE_FILE_NAME, COMPILER_EXPLORER_MAX_RESPONSE_BYTES,
-    COMPILER_EXPLORER_COMPILE_TIMEOUT,
+    COMPILER_CACHE_DURATION_SECS, COMPILER_CACHE_FILE_NAME, COMPILER_EXPLORER_COMPILE_TIMEOUT,
+    COMPILER_EXPLORER_MAX_RESPONSE_BYTES,
 };
 use regex::Regex;
 use reqwest::blocking::Client;
@@ -33,20 +33,43 @@ impl std::fmt::Display for CompilerError {
 
 impl std::error::Error for CompilerError {}
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize, Default)]
 pub struct Compiler {
     pub id: String,
     pub options: String,
-    #[serde(rename = "_internalid")]
-    pub internal_id: u32,
-    pub filters: serde_json::Value,
+    pub filters: CompilerFiltersFromApi,
     pub libs: Vec<serde_json::Value>,
-    pub overrides: Vec<serde_json::Value>,
+    pub overrides: Vec<CompilerOverride>,
     pub specialoutputs: Vec<serde_json::Value>,
     pub tools: Vec<serde_json::Value>,
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize, Clone)]
+pub struct CompilerOverride {
+    pub name: String,
+    pub value: String,
+}
+
+#[derive(Debug, Deserialize, Serialize, Default)]
+pub struct CompilerFiltersFromApi {
+    pub binary: bool,
+    #[serde(rename = "binaryObject")]
+    pub binary_object: bool,
+    #[serde(rename = "commentOnly")]
+    pub comment_only: bool,
+    pub demangle: bool,
+    pub directives: bool,
+    pub execute: bool,
+    pub intel: bool,
+    pub labels: bool,
+    #[serde(rename = "libraryCode")]
+    pub library_code: bool,
+    pub trim: bool,
+    #[serde(rename = "debugCalls")]
+    pub debug_calls: bool,
+}
+
+#[derive(Debug, Deserialize, Serialize, Default)]
 pub struct Session {
     pub id: u32,
     pub language: String,
@@ -56,7 +79,7 @@ pub struct Session {
     pub executors: Vec<serde_json::Value>,
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize, Default)]
 pub struct ShortlinkInfo {
     pub sessions: Vec<Session>,
     pub trees: Vec<serde_json::Value>,
@@ -68,7 +91,7 @@ pub struct CompilerInfo {
     pub name: String,
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize, Default)]
 struct CompilerCache {
     pub compilers: HashMap<String, CompilerInfo>,
     pub last_updated: u64,
@@ -89,7 +112,7 @@ struct CompilerOptionsInner {
     skip_asm: bool,
     #[serde(rename = "executorRequest")]
     executor_request: bool,
-    overrides: Vec<String>,
+    overrides: Vec<CompilerOverride>,
 }
 
 #[derive(Debug, Serialize)]
@@ -118,25 +141,6 @@ struct CompilationRequest {
     lang: Option<String>,
     #[serde(rename = "allowStoreCodeDebug")]
     allow_store_code_debug: bool,
-}
-
-#[derive(Debug, Deserialize)]
-struct CompilationResponse {
-    code: i32,
-    stdout: Vec<CompilerMessage>,
-    stderr: Vec<CompilerMessage>,
-    #[serde(default)]
-    asm: Option<Vec<AssemblyLine>>,
-}
-
-#[derive(Debug, Deserialize)]
-struct CompilerMessage {
-    text: String,
-}
-
-#[derive(Debug, Deserialize)]
-struct AssemblyLine {
-    text: String,
 }
 
 pub fn process_shortlinks(query: &str, config_path: &Path) -> Result<String, CompilerError> {
@@ -247,10 +251,7 @@ fn is_cache_expired(cache: &CompilerCache) -> bool {
 
 fn load_compiler_cache(cache_path: &Path) -> Result<CompilerCache, CompilerError> {
     if !cache_path.exists() {
-        return Ok(CompilerCache {
-            compilers: HashMap::new(),
-            last_updated: 0,
-        });
+        return Ok(CompilerCache::default());
     }
     let content = fs::read_to_string(cache_path)
         .map_err(|e| CompilerError::InvalidResponse(format!("Failed to read cache file: {}", e)))?;
@@ -327,20 +328,20 @@ fn compile_shortlink_code(info: &ShortlinkInfo) -> Result<String, CompilerError>
             compiler_options: CompilerOptionsInner {
                 skip_asm: false,
                 executor_request: false,
-                overrides: vec![],
+                overrides: compiler.overrides.clone(),
             },
             filters: CompilerFilters {
-                binary: false,
-                binary_object: false,
-                comment_only: true,
-                demangle: true,
-                directives: true,
-                execute: false,
-                intel: true,
-                labels: true,
-                library_code: false,
-                trim: false,
-                debug_calls: false,
+                binary: compiler.filters.binary,
+                binary_object: compiler.filters.binary_object,
+                comment_only: compiler.filters.comment_only,
+                demangle: compiler.filters.demangle,
+                directives: compiler.filters.directives,
+                execute: compiler.filters.execute,
+                intel: compiler.filters.intel,
+                labels: compiler.filters.labels,
+                library_code: compiler.filters.library_code,
+                trim: compiler.filters.trim,
+                debug_calls: compiler.filters.debug_calls,
             },
         },
     };
@@ -359,10 +360,17 @@ fn compile_shortlink_code(info: &ShortlinkInfo) -> Result<String, CompilerError>
             response.status()
         )));
     }
-    response.text().map_err(|e| CompilerError::NetworkError(format!("Response error: {}", e)))
+    response
+        .text()
+        .map_err(|e| CompilerError::NetworkError(format!("Response error: {}", e)))
 }
 
-fn transform_query(query: &str, info: &ShortlinkInfo, compiler_cache: &CompilerCache, compilation_result: &Option<String>) -> String {
+fn transform_query(
+    query: &str,
+    info: &ShortlinkInfo,
+    compiler_cache: &CompilerCache,
+    compilation_result: &Option<String>,
+) -> String {
     let session = &info.sessions[0];
     let compiler = &session.compilers[0];
 
@@ -447,8 +455,11 @@ mod tests {
                 compilers: vec![Compiler {
                     id: "clang2010".to_string(),
                     options: "-O3".to_string(),
+                    ..Default::default()
                 }],
+                ..Default::default()
             }],
+            ..Default::default()
         };
 
         assert!(validate_shortlink_info(&info).is_ok());
@@ -465,7 +476,9 @@ mod tests {
                     compilers: vec![Compiler {
                         id: "clang2010".to_string(),
                         options: "-O3".to_string(),
+                        ..Default::default()
                     }],
+                    ..Default::default()
                 },
                 Session {
                     id: 2,
@@ -474,9 +487,12 @@ mod tests {
                     compilers: vec![Compiler {
                         id: "gcc".to_string(),
                         options: "-O2".to_string(),
+                        ..Default::default()
                     }],
+                    ..Default::default()
                 },
             ],
+            ..Default::default()
         };
 
         let result = validate_shortlink_info(&info);
@@ -495,13 +511,17 @@ mod tests {
                     Compiler {
                         id: "clang2010".to_string(),
                         options: "-O3".to_string(),
+                        ..Default::default()
                     },
                     Compiler {
                         id: "gcc".to_string(),
                         options: "-O2".to_string(),
+                        ..Default::default()
                     },
                 ],
+                ..Default::default()
             }],
+            ..Default::default()
         };
 
         let result = validate_shortlink_info(&info);
@@ -520,17 +540,17 @@ mod tests {
                 compilers: vec![Compiler {
                     id: "clang2010".to_string(),
                     options: "-O3".to_string(),
+                    ..Default::default()
                 }],
+                ..Default::default()
             }],
+            ..Default::default()
         };
 
-        let cache = CompilerCache {
-            compilers: HashMap::new(),
-            last_updated: 0,
-        };
+        let cache = CompilerCache::default();
 
         let result = transform_query(query, &info, &cache, &None);
-        
+
         // Check essential parts rather than exact string match
         assert!(result.starts_with("What's wrong with INCLUDED_SOURCE"));
         assert!(result.contains("<INCLUDED_SOURCE"));
@@ -553,8 +573,11 @@ mod tests {
                 compilers: vec![Compiler {
                     id: "clang2010".to_string(),
                     options: "-O3".to_string(),
+                    ..Default::default()
                 }],
+                ..Default::default()
             }],
+            ..Default::default()
         };
 
         let mut compilers = HashMap::new();
@@ -569,10 +592,11 @@ mod tests {
         let cache = CompilerCache {
             compilers,
             last_updated: get_current_timestamp(),
+            ..Default::default()
         };
 
         let result = transform_query(query, &info, &cache, &None);
-        
+
         // Check essential parts rather than exact string match
         assert!(result.starts_with("What's wrong with INCLUDED_SOURCE"));
         assert!(result.contains("<INCLUDED_SOURCE"));
@@ -589,14 +613,14 @@ mod tests {
         let current_time = get_current_timestamp();
 
         let fresh_cache = CompilerCache {
-            compilers: HashMap::new(),
             last_updated: current_time,
+            ..Default::default()
         };
         assert!(!is_cache_expired(&fresh_cache));
 
         let old_cache = CompilerCache {
-            compilers: HashMap::new(),
             last_updated: current_time.saturating_sub(COMPILER_CACHE_DURATION_SECS + 1),
+            ..Default::default()
         };
         assert!(is_cache_expired(&old_cache));
     }
@@ -623,18 +647,18 @@ mod tests {
                 compilers: vec![Compiler {
                     id: "clang2010".to_string(),
                     options: "-O3".to_string(),
+                    ..Default::default()
                 }],
+                ..Default::default()
             }],
+            ..Default::default()
         };
 
-        let cache = CompilerCache {
-            compilers: HashMap::new(),
-            last_updated: 0,
-        };
+        let cache = CompilerCache::default();
 
         let compilation_output = "Compilation successful".to_string();
         let result = transform_query(query, &info, &cache, &Some(compilation_output));
-        
+
         assert!(result.starts_with("What's wrong with INCLUDED_SOURCE"));
         assert!(result.contains("<INCLUDED_SOURCE"));
         assert!(result.contains("Compiler: \"clang2010\" -O3"));
