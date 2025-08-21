@@ -265,20 +265,18 @@ impl ModelList {
         Ok(self.default_model())
     }
 
-    pub fn list_model_flags_human_readable(&self) -> Vec<String> {
-        let d = &self.default_model().id;
+    pub fn list_model_flags_human_readable(&self, channel_default_id: &str) -> Vec<String> {
         self.models
             .iter()
-            .filter(|m| &m.id != d)
+            .filter(|m| m.id != channel_default_id)
             .map(|m| format!("[{}]{}", m.short_name, m.name))
             .collect::<Vec<String>>()
     }
 
-    pub fn list_model_flags_without_default(&self) -> Vec<String> {
-        let d = &self.default_model().id;
+    pub fn list_model_flags_without_default(&self, channel_default_id: &str) -> Vec<String> {
         self.models
             .iter()
-            .filter(|m| &m.id != d)
+            .filter(|m| m.id != channel_default_id)
             .map(|m| m.short_name.clone())
             .collect::<Vec<String>>()
     }
@@ -324,6 +322,7 @@ mod tests {
             providers: vec![],
             default_model_id: "".to_string(),
             channels: HashMap::new(),
+            enable_compiler_explorer: false,
         };
         let result = ModelList::new(&cfg);
         assert!(result.is_err());
@@ -452,8 +451,94 @@ models = [
     fn test_list_models_human_readable_excludes_default() {
         let model_list = setup_model_list();
         assert_eq!(
-            model_list.list_model_flags_human_readable(),
+            model_list.list_model_flags_human_readable("deepseek-1"),
             vec!["[o]OpenRouter"]
+        );
+    }
+
+    #[test]
+    fn test_list_models_human_readable_for_channel_different_default() {
+        let temp_dir = tempfile::tempdir().unwrap();
+        let config_dir = temp_dir.path();
+        let env_file = config_dir.join(".env");
+        std::fs::write(&env_file, "DEEPSEEK_API_KEY=test-key\n").unwrap();
+
+        let config_path = config_dir.join(CONFIG_FILE_NAME);
+        std::fs::write(
+            &config_path,
+            r##"
+[general]
+default_model = "deepseek-1"
+
+[providers.deepseek]
+models = [
+  { id = "deepseek-1", short_name = "d", name = "Deepseek" },
+  { id = "deepseek-2", short_name = "d2", name = "Deepseek 2" }
+]
+
+[channels]
+"#test" = { default_model = "deepseek-2" }
+"##,
+        )
+        .unwrap();
+
+        let env_vars = EnvVars::from_file(&config_dir).unwrap();
+        let config = Config::new(&config_dir, &env_vars).expect("Config::new()");
+        let model_list = ModelList::new(&config).expect("ModelList::new()");
+
+        let channel_default = config.get_channel_default_model("#test");
+        assert_eq!(channel_default, "deepseek-2");
+
+        assert_eq!(
+            model_list.list_model_flags_human_readable(channel_default),
+            vec!["[d]Deepseek"]
+        );
+    }
+
+    #[test]
+    fn test_list_models_without_default_for_channel() {
+        let temp_dir = tempfile::tempdir().unwrap();
+        let config_dir = temp_dir.path();
+        let env_file = config_dir.join(".env");
+        std::fs::write(
+            &env_file,
+            "DEEPSEEK_API_KEY=test-key\nOPENROUTER_API_KEY=test-key2\n",
+        )
+        .unwrap();
+
+        let config_path = config_dir.join(CONFIG_FILE_NAME);
+        std::fs::write(
+            &config_path,
+            r##"
+[general]
+default_model = "deepseek-1"
+
+[providers.deepseek]
+models = [
+  { id = "deepseek-1", short_name = "d", name = "Deepseek" }
+]
+
+[providers.openrouter]
+models = [
+  { id = "openrouter-1", short_name = "o", name = "OpenRouter" }
+]
+
+[channels]
+"#test" = { default_model = "openrouter-1" }
+"##,
+        )
+        .unwrap();
+
+        let env_vars = EnvVars::from_file(&config_dir).unwrap();
+        let config = Config::new(&config_dir, &env_vars).expect("Config::new()");
+        let model_list = ModelList::new(&config).expect("ModelList::new()");
+
+        let channel_default = config.get_channel_default_model("#test");
+        assert_eq!(channel_default, "openrouter-1");
+
+        assert_eq!(
+            model_list.list_model_flags_without_default(channel_default),
+            vec!["d"]
         );
     }
 

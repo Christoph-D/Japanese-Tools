@@ -117,19 +117,27 @@ fn sanitize_output(s: &str, api_key: &Option<&str>) -> String {
     }
 }
 
-fn usage(models: &ModelList) -> String {
+fn usage(models: &ModelList, config: &Config, channel: &str) -> String {
+    let default_model_id = config.get_channel_default_model(channel);
+    let default_model_name = models
+        .select_model_for_channel(&[], default_model_id)
+        .map(|m| m.name.clone())
+        .unwrap_or_else(|_| default_model_id.to_string());
+
     formatget!(
         "Usage: !ai [{}] [-{}|-c] [-{}=1.0|-t=1.0] <query>.  Models: {}.  Default: {}",
         models
-            .list_model_flags_without_default()
+            .list_model_flags_without_default(default_model_id)
             .into_iter()
             .map(|f| format!("-{}", f))
             .collect::<Vec<_>>()
             .join("|"),
         CLEAR_MEMORY_FLAG,
         TEMPERATURE_FLAG,
-        models.list_model_flags_human_readable().join(" "),
-        models.default_model_name()
+        models
+            .list_model_flags_human_readable(default_model_id)
+            .join(" "),
+        default_model_name
     )
 }
 
@@ -233,7 +241,12 @@ fn extract_flags(known_flags: &[Flag], query: &str) -> Result<(Vec<String>, Stri
     Ok((flags, rest.to_string()))
 }
 
-fn parse_command_line(query: &str, models: &ModelList) -> Result<(Vec<String>, String), String> {
+fn parse_command_line(
+    query: &str,
+    models: &ModelList,
+    config: &Config,
+    channel: &str,
+) -> Result<(Vec<String>, String), String> {
     let known_flags = {
         let mut known_flags = Vec::new();
         for model_flag in models.list_model_flags() {
@@ -256,7 +269,8 @@ fn parse_command_line(query: &str, models: &ModelList) -> Result<(Vec<String>, S
             "Internal error: duplicate configured flags detected, check your model config",
         ));
     }
-    extract_flags(&known_flags, query).map_err(|err| format!("{}.  {}", err, usage(models)))
+    extract_flags(&known_flags, query)
+        .map_err(|err| format!("{}.  {}", err, usage(models, config, channel)))
 }
 
 struct Input {
@@ -313,6 +327,8 @@ fn setup() -> Result<Input, String> {
     let (flags, query) = parse_command_line(
         &std::env::args().skip(1).collect::<Vec<_>>().join(" "),
         &models,
+        &config,
+        &receiver,
     )?;
 
     let channel_default_model = config.get_channel_default_model(&receiver);
@@ -444,7 +460,7 @@ fn run(input: &Input) -> Result<String, String> {
         if history_cleared {
             return Ok(format!("[{}]", CLEAR_MEMORY_MESSAGE));
         } else {
-            return Ok(usage(&input.models));
+            return Ok(usage(&input.models, &input.config, &input.receiver));
         }
     }
 
