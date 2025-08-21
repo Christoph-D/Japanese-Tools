@@ -286,12 +286,8 @@ msgid "Missing API keys or model configuration"
 msgstr "Fehlende API keys oder Modellkonfiguration"
 
 #: ../ai/src/model.rs
-msgid "DEFAULT_MODEL not found"
-msgstr "DEFAULT_MODEL nicht gefunden"
-
-#: ../ai/src/model.rs
-msgid "Invalid model syntax: {}"
-msgstr "Ungültige Modellkonfiguration: {}"
+msgid "Default model not found"
+msgstr "Standardmodell nicht gefunden"
 
 #: ../ai/src/weather.rs
 msgid ""

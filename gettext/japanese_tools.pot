@@ -280,11 +280,7 @@ msgid "Missing API keys or model configuration"
 msgstr ""
 
 #: ../ai/src/model.rs
-msgid "DEFAULT_MODEL not found"
-msgstr ""
-
-#: ../ai/src/model.rs
-msgid "Invalid model syntax: {}"
+msgid "Default model not found"
 msgstr ""
 
 #: ../ai/src/weather.rs
