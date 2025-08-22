@@ -150,7 +150,7 @@ fn locate_config_path() -> Option<PathBuf> {
     None
 }
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 struct EnvVars {
     vars: HashMap<String, String>,
 }
@@ -314,9 +314,7 @@ fn setup() -> Result<Input, String> {
         Some(path) => path,
         None => return Err(gettext("Config file not found.")),
     };
-    let env_vars = EnvVars::from_file(&config_path).unwrap_or_else(|_| EnvVars {
-        vars: HashMap::new(),
-    });
+    let env_vars = EnvVars::from_file(&config_path).unwrap_or_default();
 
     let sender = std::env::var("DMB_SENDER").unwrap_or_default();
     let receiver = std::env::var("DMB_RECEIVER").unwrap_or_default();
