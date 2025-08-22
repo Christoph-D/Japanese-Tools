@@ -288,7 +288,7 @@ struct Input {
 fn main() {
     let input = setup().unwrap_or_else(|err| {
         println!("{}", sanitize_output(&err.to_string(), &None));
-        std::process::exit(1);
+        std::process::exit(0);
     });
     match run(&input) {
         Ok(msg) => println!("{}", sanitize_output(&msg, &Some(&input.model.api_key))),
