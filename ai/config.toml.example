@@ -9,13 +9,13 @@ models = [
 
 [providers.deepseek]
 models = [
-    { id = "deepseek-chat", short_name = "d", name = "Deepseek v3 0324" }
+    { id = "deepseek-chat", short_name = "d", name = "DeepSeek-V3.1" }
 ]
 
 [providers.litellm]
 endpoint = ""
 models = [
-    { id = "deepseek/deepseek-chat", short_name = "d", name = "Deepseek v3 0324" },
+    { id = "deepseek/deepseek-chat", short_name = "d", name = "DeepSeek-V3.1" },
     { id = "openrouter/google/gemini-2.5-flash", short_name = "g", name = "Gemini 2.5 Flash" },
     { id = "openrouter/openai/gpt-4o", short_name = "o", name = "GPT-4o" },
     { id = "mistral/mistral-medium-latest", short_name = "m", name = "Mistral Medium" },
