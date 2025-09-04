@@ -1,5 +1,7 @@
 use crate::{
-    constants::{DEFAULT_SYSTEM_PROMPT, DEFAULT_SYSTEM_PROMPT_DE, MAX_LINE_LENGTH},
+    constants::{
+        DEFAULT_SYSTEM_PROMPT, DEFAULT_SYSTEM_PROMPT_DE, MAX_LINE_LENGTH, MAX_LINE_LENGTH_CUTOFF,
+    },
     memory::Memory,
     model::Config,
     unicodebytelimit::UnicodeByteLimit,
@@ -48,8 +50,10 @@ pub fn build_prompt(
 
     // Limit message length to avoid making the prompt too long.
     all_messages.iter_mut().for_each(|(_, content, _)| {
-        if content.len() > MAX_LINE_LENGTH {
-            let s = content.unicode_byte_limit(MAX_LINE_LENGTH).to_string();
+        if content.len() > MAX_LINE_LENGTH_CUTOFF {
+            let s = content
+                .unicode_byte_limit(MAX_LINE_LENGTH_CUTOFF)
+                .to_string();
             *content = if s != *content {
                 format!("{}...", s)
             } else {

@@ -9,8 +9,8 @@ mod weather;
 
 use crate::compilerx::CompilerError;
 use crate::constants::{
-    CLEAR_MEMORY_FLAG, CLEAR_MEMORY_MESSAGE, CONFIG_FILE_NAME, ENV_FILE_NAME, MAX_LINE_LENGTH,
-    MAX_TOKENS, TEMPERATURE_FLAG,
+    CLEAR_MEMORY_FLAG, CLEAR_MEMORY_MESSAGE, CONFIG_FILE_NAME, ENV_FILE_NAME,
+    MAX_LINE_LENGTH_CUTOFF, MAX_TOKENS, TEMPERATURE_FLAG,
 };
 use crate::memory::{Memory, Sender};
 use crate::model::{Config, Model, ModelList};
@@ -109,7 +109,7 @@ fn sanitize_output(s: &str, api_key: &Option<&str>) -> String {
         None => s.to_string(),
     };
     let s_no_newlines: String = redacted.chars().filter(|&c| c != '\n').collect();
-    let truncated = s_no_newlines.unicode_byte_limit(MAX_LINE_LENGTH);
+    let truncated = s_no_newlines.unicode_byte_limit(MAX_LINE_LENGTH_CUTOFF);
     if truncated != s_no_newlines {
         format!("{}...", truncated)
     } else {

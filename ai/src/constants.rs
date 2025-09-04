@@ -3,8 +3,10 @@ use std::time::Duration;
 pub const ENV_FILE_NAME: &str = ".env";
 pub const CONFIG_FILE_NAME: &str = "config.toml";
 
-// Hardcoded limit on line length for IRC in bytes.
+// Hardcoded limit on line length for IRC in bytes to be used in the prompt.
 pub const MAX_LINE_LENGTH: usize = 300;
+// The actual maximum line length.
+pub const MAX_LINE_LENGTH_CUTOFF: usize = 450;
 
 // Default system prompt. See prompt::system_prompt() for how to set per-channel prompts.
 pub const DEFAULT_SYSTEM_PROMPT: &str = r#"You are a helpful AI in an IRC chatroom. You communicate with experienced software developers.
