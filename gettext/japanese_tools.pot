@@ -284,7 +284,7 @@ msgid "Default model not found"
 msgstr ""
 
 #: ../ai/src/weather.rs
-msgid "Temperature: {}°C, Cloud cover: {}%, Wind: {}km/h, Humidity: {}%, Precipitation: {}mm"
+msgid "{}, Temperature: {}°C, Cloud cover: {}%, Wind: {}km/h, Humidity: {}%, Precipitation: {}mm"
 msgstr ""
 
 #: ../ai/src/weather.rs ../ai/src/main.rs
@@ -317,6 +317,122 @@ msgstr ""
 
 #: ../ai/src/weather.rs
 msgid "Failed to parse weather API response: {}"
+msgstr ""
+
+#: ../ai/src/weather.rs
+msgid "Clear sky"
+msgstr ""
+
+#: ../ai/src/weather.rs
+msgid "Mainly clear"
+msgstr ""
+
+#: ../ai/src/weather.rs
+msgid "Partly cloudy"
+msgstr ""
+
+#: ../ai/src/weather.rs
+msgid "Overcast"
+msgstr ""
+
+#: ../ai/src/weather.rs
+msgid "Fog"
+msgstr ""
+
+#: ../ai/src/weather.rs
+msgid "Depositing rime fog"
+msgstr ""
+
+#: ../ai/src/weather.rs
+msgid "Light drizzle"
+msgstr ""
+
+#: ../ai/src/weather.rs
+msgid "Moderate drizzle"
+msgstr ""
+
+#: ../ai/src/weather.rs
+msgid "Dense drizzle"
+msgstr ""
+
+#: ../ai/src/weather.rs
+msgid "Light freezing drizzle"
+msgstr ""
+
+#: ../ai/src/weather.rs
+msgid "Dense freezing drizzle"
+msgstr ""
+
+#: ../ai/src/weather.rs
+msgid "Slight rain"
+msgstr ""
+
+#: ../ai/src/weather.rs
+msgid "Moderate rain"
+msgstr ""
+
+#: ../ai/src/weather.rs
+msgid "Heavy rain"
+msgstr ""
+
+#: ../ai/src/weather.rs
+msgid "Light freezing rain"
+msgstr ""
+
+#: ../ai/src/weather.rs
+msgid "Heavy freezing rain"
+msgstr ""
+
+#: ../ai/src/weather.rs
+msgid "Slight snow fall"
+msgstr ""
+
+#: ../ai/src/weather.rs
+msgid "Moderate snow fall"
+msgstr ""
+
+#: ../ai/src/weather.rs
+msgid "Heavy snow fall"
+msgstr ""
+
+#: ../ai/src/weather.rs
+msgid "Snow grains"
+msgstr ""
+
+#: ../ai/src/weather.rs
+msgid "Slight rain showers"
+msgstr ""
+
+#: ../ai/src/weather.rs
+msgid "Moderate rain showers"
+msgstr ""
+
+#: ../ai/src/weather.rs
+msgid "Violent rain showers"
+msgstr ""
+
+#: ../ai/src/weather.rs
+msgid "Slight snow showers"
+msgstr ""
+
+#: ../ai/src/weather.rs
+msgid "Heavy snow showers"
+msgstr ""
+
+#: ../ai/src/weather.rs
+msgid "Thunderstorm"
+msgstr ""
+
+#: ../ai/src/weather.rs
+msgid "Thunderstorm with slight hail"
+msgstr ""
+
+#: ../ai/src/weather.rs
+msgid "Thunderstorm with heavy hail"
+msgstr ""
+
+#: ../ai/src/weather.rs
+msgid "Unknown weather condition"
 msgstr ""
 
 #: ../ai/src/main.rs

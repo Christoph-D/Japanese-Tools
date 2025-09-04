@@ -1,3 +1,5 @@
+use gettextrs::gettext;
+
 use crate::constants::{DEFAULT_WEATHER_PROMPT, DEFAULT_WEATHER_PROMPT_DE, WEATHER_API_TIMEOUT};
 use crate::formatget;
 
@@ -26,6 +28,7 @@ struct WeatherCurrent {
     wind_speed_10m: f64,
     relative_humidity_2m: f64,
     precipitation: f64,
+    weather_code: i32,
 }
 
 #[derive(Debug, PartialEq)]
@@ -40,7 +43,8 @@ pub fn get_weather(city: &str) -> Result<Weather, String> {
     Ok(Weather {
         city,
         weather: formatget!(
-            "Temperature: {}°C, Cloud cover: {}%, Wind: {}km/h, Humidity: {}%, Precipitation: {}mm",
+            "{}, Temperature: {}°C, Cloud cover: {}%, Wind: {}km/h, Humidity: {}%, Precipitation: {}mm",
+            format_weather_code(weather.weather_code),
             weather.temperature_2m,
             weather.cloud_cover,
             weather.wind_speed_10m,
@@ -98,7 +102,7 @@ fn get_weather_data(lat: f64, lon: f64, base_url: &str) -> Result<WeatherCurrent
         .map_err(|e| format!("HTTP client error: {}", e))?;
 
     let url = format!(
-        "{}/v1/forecast?latitude={}&longitude={}&current=temperature_2m,cloud_cover,wind_speed_10m,relative_humidity_2m,precipitation",
+        "{}/v1/forecast?latitude={}&longitude={}&current=temperature_2m,cloud_cover,wind_speed_10m,relative_humidity_2m,precipitation,weather_code",
         base_url, lat, lon
     );
 
@@ -118,6 +122,40 @@ fn get_weather_data(lat: f64, lon: f64, base_url: &str) -> Result<WeatherCurrent
     Ok(weather_response.current)
 }
 
+fn format_weather_code(code: i32) -> String {
+    match code {
+        0 => gettext("Clear sky"),
+        1 => gettext("Mainly clear"),
+        2 => gettext("Partly cloudy"),
+        3 => gettext("Overcast"),
+        45 => gettext("Fog"),
+        48 => gettext("Depositing rime fog"),
+        51 => gettext("Light drizzle"),
+        53 => gettext("Moderate drizzle"),
+        55 => gettext("Dense drizzle"),
+        56 => gettext("Light freezing drizzle"),
+        57 => gettext("Dense freezing drizzle"),
+        61 => gettext("Slight rain"),
+        63 => gettext("Moderate rain"),
+        65 => gettext("Heavy rain"),
+        66 => gettext("Light freezing rain"),
+        67 => gettext("Heavy freezing rain"),
+        71 => gettext("Slight snow fall"),
+        73 => gettext("Moderate snow fall"),
+        75 => gettext("Heavy snow fall"),
+        77 => gettext("Snow grains"),
+        80 => gettext("Slight rain showers"),
+        81 => gettext("Moderate rain showers"),
+        82 => gettext("Violent rain showers"),
+        85 => gettext("Slight snow showers"),
+        86 => gettext("Heavy snow showers"),
+        95 => gettext("Thunderstorm"),
+        96 => gettext("Thunderstorm with slight hail"),
+        99 => gettext("Thunderstorm with heavy hail"),
+        _ => gettext("Unknown weather condition"),
+    }
+}
+
 pub fn weather_prompt() -> &'static str {
     if std::env::var("LANG").unwrap_or_default().starts_with("de") {
         DEFAULT_WEATHER_PROMPT_DE
@@ -132,7 +170,7 @@ mod tests {
     use mockito::Server;
 
     #[test]
-    fn test_get_weather_mocked() {
+    fn test_weather_functionality_mocked() {
         let mut geocoding_server = Server::new();
         let mut weather_server = Server::new();
         let geocoding_mock = geocoding_server
@@ -156,18 +194,19 @@ mod tests {
         let weather_mock = weather_server
             .mock(
                 "GET",
-                "/v1/forecast?latitude=47.3769&longitude=8.5417&current=temperature_2m,cloud_cover,wind_speed_10m,relative_humidity_2m,precipitation",
+                "/v1/forecast?latitude=47.3769&longitude=8.5417&current=temperature_2m,cloud_cover,wind_speed_10m,relative_humidity_2m,precipitation,weather_code",
             )
             .with_status(200)
             .with_header("content-type", "application/json")
             .with_body(
                 r#"{
                 "current": {
-                    "temperature_2m": 22.5,
-                    "cloud_cover": 0.0,
-                    "wind_speed_10m": 10.2,
-                    "relative_humidity_2m": 65.0,
-                    "precipitation": 0.0
+                    "temperature_2m": 18.7,
+                    "cloud_cover": 0.1,
+                    "wind_speed_10m": 5.4,
+                    "relative_humidity_2m": 72.0,
+                    "precipitation": 0.2,
+                    "weather_code": 61
                 }
             }"#,
             )
@@ -179,11 +218,13 @@ mod tests {
         assert_eq!(city, "Zürich (CH)");
 
         let weather = get_weather_data(lat, lon, &weather_server.url()).unwrap();
-        assert_eq!(weather.temperature_2m, 22.5);
-        assert_eq!(weather.cloud_cover, 0.0);
-        assert_eq!(weather.wind_speed_10m, 10.2);
-        assert_eq!(weather.relative_humidity_2m, 65.0);
-        assert_eq!(weather.precipitation, 0.0);
+        assert_eq!(weather.temperature_2m, 18.7);
+        assert_eq!(weather.cloud_cover, 0.1);
+        assert_eq!(weather.wind_speed_10m, 5.4);
+        assert_eq!(weather.relative_humidity_2m, 72.0);
+        assert_eq!(weather.precipitation, 0.2);
+        assert_eq!(weather.weather_code, 61);
+        assert_eq!(format_weather_code(weather.weather_code), "Slight rain");
 
         geocoding_mock.assert();
         weather_mock.assert();
@@ -307,75 +348,6 @@ mod tests {
         mock.assert();
     }
 
-    #[test]
-    fn test_full_weather_flow_mocked() {
-        let mut geocoding_server = Server::new();
-        let mut weather_server = Server::new();
-
-        // Mock geocoding API response for Tokyo
-        let geocoding_mock = geocoding_server
-            .mock(
-                "GET",
-                "/v1/search?name=Tokyo&count=1&language=en&format=json",
-            )
-            .with_status(200)
-            .with_header("content-type", "application/json")
-            .with_body(
-                r#"{
-                "results": [{
-                    "latitude": 35.6762,
-                    "longitude": 139.6503,
-                    "name": "Tokyo",
-                    "country_code": "JP"
-                }]
-            }"#,
-            )
-            .create();
-
-        // Mock weather API response - match coordinates but ignore current parameters
-        let weather_mock = weather_server
-            .mock("GET", "/v1/forecast")
-            .match_query(mockito::Matcher::AllOf(vec![
-                mockito::Matcher::UrlEncoded("latitude".into(), "35.6762".into()),
-                mockito::Matcher::UrlEncoded("longitude".into(), "139.6503".into()),
-            ]))
-            .with_status(200)
-            .with_header("content-type", "application/json")
-            .with_body(
-                r#"{
-                "current": {
-                    "temperature_2m": 18.7,
-                    "cloud_cover": 0.1,
-                    "wind_speed_10m": 5.4,
-                    "relative_humidity_2m": 72.0,
-                    "precipitation": 0.2
-                }
-            }"#,
-            )
-            .create();
-
-        // Test the complete flow
-        let (lat, lon, city) = get_coordinates("Tokyo", &geocoding_server.url()).unwrap();
-        assert_eq!(lat, 35.6762);
-        assert_eq!(lon, 139.6503);
-        assert_eq!(city, "Tokyo (JP)");
-
-        let weather = get_weather_data(lat, lon, &weather_server.url()).unwrap();
-        let result = format!(
-            "Temperature: {}°C, Cloud cover: {}%, Wind: {}km/h, Humidity: {}%, Precipitation: {}mm",
-            weather.temperature_2m,
-            weather.cloud_cover,
-            weather.wind_speed_10m,
-            weather.relative_humidity_2m,
-            weather.precipitation
-        );
-
-        assert!(result.contains("18.7°C"));
-        assert!(result.contains("72%"));
-
-        geocoding_mock.assert();
-        weather_mock.assert();
-    }
 
     // Keep the original integration test for reference, but it's now properly documented
     #[test]

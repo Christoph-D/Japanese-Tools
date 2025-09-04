@@ -291,10 +291,10 @@ msgstr "Nie znaleziono domyślnego modelu"
 
 #: ../ai/src/weather.rs
 msgid ""
-"Temperature: {}°C, Cloud cover: {}%, Wind: {}km/h, Humidity: {}%, "
+"{}, Temperature: {}°C, Cloud cover: {}%, Wind: {}km/h, Humidity: {}%, "
 "Precipitation: {}mm"
 msgstr ""
-"Temperatura: {}°C, Zachmurzenie: {}%, Wiatr: {}km/h, Wilgotność: {}%, Opady: "
+"{}, Temperatura: {}°C, Zachmurzenie: {}%, Wiatr: {}km/h, Wilgotność: {}%, Opady: "
 "{}mm"
 
 #: ../ai/src/weather.rs ../ai/src/main.rs
@@ -328,6 +328,122 @@ msgstr "Błąd API pogody: HTTP {}"
 #: ../ai/src/weather.rs
 msgid "Failed to parse weather API response: {}"
 msgstr "Nie udało się przeanalizować odpowiedzi API pogody: {}"
+
+#: ../ai/src/weather.rs
+msgid "Clear sky"
+msgstr "Czyste niebo"
+
+#: ../ai/src/weather.rs
+msgid "Mainly clear"
+msgstr "Przeważnie bezchmurnie"
+
+#: ../ai/src/weather.rs
+msgid "Partly cloudy"
+msgstr "Częściowe zachmurzenie"
+
+#: ../ai/src/weather.rs
+msgid "Overcast"
+msgstr "Pochmurno"
+
+#: ../ai/src/weather.rs
+msgid "Fog"
+msgstr "Mgła"
+
+#: ../ai/src/weather.rs
+msgid "Depositing rime fog"
+msgstr "Mgła szadziowa"
+
+#: ../ai/src/weather.rs
+msgid "Light drizzle"
+msgstr "Lekka mżawka"
+
+#: ../ai/src/weather.rs
+msgid "Moderate drizzle"
+msgstr "Umiarkowana mżawka"
+
+#: ../ai/src/weather.rs
+msgid "Dense drizzle"
+msgstr "Gęsta mżawka"
+
+#: ../ai/src/weather.rs
+msgid "Light freezing drizzle"
+msgstr "Lekka marznąca mżawka"
+
+#: ../ai/src/weather.rs
+msgid "Dense freezing drizzle"
+msgstr "Gęsta marznąca mżawka"
+
+#: ../ai/src/weather.rs
+msgid "Slight rain"
+msgstr "Lekki deszcz"
+
+#: ../ai/src/weather.rs
+msgid "Moderate rain"
+msgstr "Umiarkowany deszcz"
+
+#: ../ai/src/weather.rs
+msgid "Heavy rain"
+msgstr "Silny deszcz"
+
+#: ../ai/src/weather.rs
+msgid "Light freezing rain"
+msgstr "Lekki marznący deszcz"
+
+#: ../ai/src/weather.rs
+msgid "Heavy freezing rain"
+msgstr "Silny marznący deszcz"
+
+#: ../ai/src/weather.rs
+msgid "Slight snow fall"
+msgstr "Lekki opad śniegu"
+
+#: ../ai/src/weather.rs
+msgid "Moderate snow fall"
+msgstr "Umiarkowany opad śniegu"
+
+#: ../ai/src/weather.rs
+msgid "Heavy snow fall"
+msgstr "Silny opad śniegu"
+
+#: ../ai/src/weather.rs
+msgid "Snow grains"
+msgstr "Śnieg ziarnisty"
+
+#: ../ai/src/weather.rs
+msgid "Slight rain showers"
+msgstr "Lekkie przelotne opady deszczu"
+
+#: ../ai/src/weather.rs
+msgid "Moderate rain showers"
+msgstr "Umiarkowane przelotne opady deszczu"
+
+#: ../ai/src/weather.rs
+msgid "Violent rain showers"
+msgstr "Gwałtowne przelotne opady deszczu"
+
+#: ../ai/src/weather.rs
+msgid "Slight snow showers"
+msgstr "Lekkie przelotne opady śniegu"
+
+#: ../ai/src/weather.rs
+msgid "Heavy snow showers"
+msgstr "Silne przelotne opady śniegu"
+
+#: ../ai/src/weather.rs
+msgid "Thunderstorm"
+msgstr "Burza"
+
+#: ../ai/src/weather.rs
+msgid "Thunderstorm with slight hail"
+msgstr "Burza z lekkim gradobiciem"
+
+#: ../ai/src/weather.rs
+msgid "Thunderstorm with heavy hail"
+msgstr "Burza z silnym gradobiciem"
+
+#: ../ai/src/weather.rs
+msgid "Unknown weather condition"
+msgstr "Nieznany stan pogody"
 
 #: ../ai/src/main.rs
 msgid "API error: {}"
