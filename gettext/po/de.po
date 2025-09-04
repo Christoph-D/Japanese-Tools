@@ -520,6 +520,10 @@ msgid "The weather in {} is: {}."
 msgstr "Das Wetter in {} ist: {}."
 
 #: ../ai/src/main.rs
+msgid "The current local time is {}."
+msgstr "Die aktuelle Lokalzeit ist {}."
+
+#: ../ai/src/main.rs
 msgid "!ai is only available in channels."
 msgstr "!ai gibt es nur in Channels."
 

@@ -17,9 +17,8 @@ pub const DEFAULT_SYSTEM_PROMPT_DE: &str = r#"Du bist eine hilfreiche KI in eine
     Schreib nur eine einzige Zeile ohne Markdown. Deine Antworten sind für alle Altersstufen geeignet."#;
 
 pub const DEFAULT_WEATHER_PROMPT: &str =
-    "Describe the weather in your own words and comment on it.";
-pub const DEFAULT_WEATHER_PROMPT_DE: &str =
-    "Beschreib das Wetter in eigenen Worten und kommentiere es.";
+    "Consider the local time/season, describe the weather in your own words and comment on it.";
+pub const DEFAULT_WEATHER_PROMPT_DE: &str = "Berücksichtige die Lokalzeit/Jahreszeit, beschreib das Wetter in eigenen Worten und kommentiere es.";
 
 // MEMORY_MAX_MESSAGES divided by half is the number of remembered user queries.
 // Each invocation creates two messages, a user query and a response from the assistant.

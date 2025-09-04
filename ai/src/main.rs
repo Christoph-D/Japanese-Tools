@@ -426,7 +426,12 @@ fn process_command(
                 match weather::get_weather(city) {
                     Ok(w) => Ok(CommandResult::AskAgent {
                         query: weather::weather_prompt().to_string(),
-                        extra_history: formatget!("The weather in {} is: {}.", w.city, w.weather),
+                        extra_history: format!(
+                            "{}{}",
+                            formatget!("The weather in {} is: {}.", w.city, w.weather,),
+                            w.local_time.map_or("".to_string(), |t| " ".to_string()
+                                + &formatget!("The current local time is {}.", t))
+                        ),
                     }),
                     Err(err) => Ok(CommandResult::Message(err)),
                 }

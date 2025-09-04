@@ -1,4 +1,6 @@
+use chrono_tz::Tz;
 use gettextrs::gettext;
+use time::OffsetDateTime;
 
 use crate::constants::{DEFAULT_WEATHER_PROMPT, DEFAULT_WEATHER_PROMPT_DE, WEATHER_API_TIMEOUT};
 use crate::formatget;
@@ -14,6 +16,7 @@ struct GeocodeLocation {
     longitude: f64,
     name: String,
     country_code: String,
+    timezone: String,
 }
 
 #[derive(serde::Deserialize)]
@@ -35,13 +38,18 @@ struct WeatherCurrent {
 pub struct Weather {
     pub city: String,
     pub weather: String,
+    pub local_time: Option<String>,
 }
 
 pub fn get_weather(city: &str) -> Result<Weather, String> {
-    let (lat, lon, city) = get_coordinates(city, "https://geocoding-api.open-meteo.com")?;
+    let (lat, lon, city, timezone) = get_coordinates(city, "https://geocoding-api.open-meteo.com")?;
     let weather = get_weather_data(lat, lon, "https://api.open-meteo.com")?;
+    let utc_now = OffsetDateTime::now_utc();
+    let local_time = get_local_time(&timezone, utc_now).ok();
+
     Ok(Weather {
         city,
+        local_time: local_time.clone(),
         weather: formatget!(
             "{}, Temperature: {}°C, Cloud cover: {}%, Wind: {}km/h, Humidity: {}%, Precipitation: {}mm",
             format_weather_code(weather.weather_code),
@@ -54,7 +62,20 @@ pub fn get_weather(city: &str) -> Result<Weather, String> {
     })
 }
 
-fn get_coordinates(city: &str, base_url: &str) -> Result<(f64, f64, String), String> {
+fn get_local_time(timezone: &str, utc_now: OffsetDateTime) -> Result<String, String> {
+    let tz: Tz = timezone
+        .parse()
+        .map_err(|e| format!("Invalid timezone '{}': {}", timezone, e))?;
+    let chrono_utc = chrono::DateTime::<chrono::Utc>::from_timestamp(
+        utc_now.unix_timestamp(),
+        utc_now.nanosecond(),
+    )
+    .ok_or("Invalid timestamp".to_string())?;
+    let local_chrono = chrono_utc.with_timezone(&tz);
+    Ok(local_chrono.format("%Y-%m-%d %H:%M %z").to_string())
+}
+
+fn get_coordinates(city: &str, base_url: &str) -> Result<(f64, f64, String, String), String> {
     let client = reqwest::blocking::Client::builder()
         .timeout(WEATHER_API_TIMEOUT)
         .build()
@@ -89,6 +110,7 @@ fn get_coordinates(city: &str, base_url: &str) -> Result<(f64, f64, String), Str
                 location.latitude,
                 location.longitude,
                 format!("{} ({})", location.name, location.country_code),
+                location.timezone.clone(),
             ))
         }
         _ => Err(formatget!("Unknown location: {}", city)),
@@ -186,7 +208,8 @@ mod tests {
                     "latitude": 47.3769,
                     "longitude": 8.5417,
                     "name": "Zürich",
-                    "country_code": "CH"
+                    "country_code": "CH",
+                    "timezone": "Europe/Zurich"
                 }]
             }"#,
             )
@@ -212,10 +235,12 @@ mod tests {
             )
             .create();
 
-        let (lat, lon, city) = get_coordinates("Zurich", &geocoding_server.url()).unwrap();
+        let (lat, lon, city, timezone) =
+            get_coordinates("Zurich", &geocoding_server.url()).unwrap();
         assert_eq!(lat, 47.3769);
         assert_eq!(lon, 8.5417);
         assert_eq!(city, "Zürich (CH)");
+        assert_eq!(timezone, "Europe/Zurich");
 
         let weather = get_weather_data(lat, lon, &weather_server.url()).unwrap();
         assert_eq!(weather.temperature_2m, 18.7);
@@ -233,8 +258,6 @@ mod tests {
     #[test]
     fn test_get_coordinates_unknown_location() {
         let mut server = Server::new();
-
-        // Mock empty results for unknown location
         let mock = server
             .mock(
                 "GET",
@@ -259,8 +282,6 @@ mod tests {
     #[test]
     fn test_get_coordinates_no_results() {
         let mut server = Server::new();
-
-        // Mock null results
         let mock = server
             .mock(
                 "GET",
@@ -285,8 +306,6 @@ mod tests {
     #[test]
     fn test_geocoding_api_error() {
         let mut server = Server::new();
-
-        // Mock server error
         let mock = server
             .mock(
                 "GET",
@@ -306,8 +325,6 @@ mod tests {
     #[test]
     fn test_weather_api_error() {
         let mut server = Server::new();
-
-        // Mock server error - ignore query parameters, focus on error handling
         let mock = server
             .mock("GET", "/v1/forecast")
             .match_query(mockito::Matcher::Any)
@@ -325,8 +342,6 @@ mod tests {
     #[test]
     fn test_invalid_json_response() {
         let mut server = Server::new();
-
-        // Mock invalid JSON response
         let mock = server
             .mock(
                 "GET",
@@ -348,8 +363,6 @@ mod tests {
         mock.assert();
     }
 
-
-    // Keep the original integration test for reference, but it's now properly documented
     #[test]
     #[ignore] // Use `cargo test -- --ignored` to run this test
     fn test_get_weather_integration() {
@@ -382,5 +395,15 @@ mod tests {
             Err(msg) => assert!(msg.starts_with("Unknown location:")),
             Ok(_) => panic!("Expected error for non-existent city"),
         }
+    }
+
+    #[test]
+    fn test_get_local_time() {
+        let utc_time = OffsetDateTime::from_unix_timestamp(1757010658).unwrap(); // 2025-09-04 18:30:58 UTC
+        let result = get_local_time("Europe/Zurich", utc_time);
+
+        assert!(result.is_ok());
+        let local_time = result.unwrap();
+        assert_eq!(local_time, "2025-09-04 20:30 +0200");
     }
 }
