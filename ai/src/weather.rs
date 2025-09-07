@@ -1,8 +1,12 @@
+use chrono::NaiveDate;
 use chrono_tz::Tz;
 use gettextrs::gettext;
 use time::OffsetDateTime;
 
-use crate::constants::{DEFAULT_WEATHER_PROMPT, DEFAULT_WEATHER_PROMPT_DE, WEATHER_API_TIMEOUT};
+use crate::constants::{
+    DEFAULT_WEATHER_FORECAST_PROMPT, DEFAULT_WEATHER_FORECAST_PROMPT_DE, DEFAULT_WEATHER_PROMPT,
+    DEFAULT_WEATHER_PROMPT_DE, WEATHER_API_TIMEOUT,
+};
 use crate::formatget;
 
 #[derive(serde::Deserialize)]
@@ -19,9 +23,10 @@ struct GeocodeLocation {
     timezone: String,
 }
 
-#[derive(serde::Deserialize)]
+#[derive(serde::Deserialize, Debug, PartialEq)]
 struct WeatherResponse {
     current: WeatherCurrent,
+    daily: Daily,
 }
 
 #[derive(serde::Deserialize, Debug, PartialEq)]
@@ -34,16 +39,27 @@ struct WeatherCurrent {
     weather_code: i32,
 }
 
+#[derive(serde::Deserialize, Debug, PartialEq)]
+struct Daily {
+    time: Vec<String>,
+    weather_code: Vec<i32>,
+    temperature_2m_max: Vec<f64>,
+    temperature_2m_min: Vec<f64>,
+    precipitation_sum: Vec<f64>,
+}
+
 #[derive(Debug, PartialEq)]
 pub struct Weather {
     pub city: String,
     pub weather: String,
+    pub forecast: String,
     pub local_time: Option<String>,
 }
 
 pub fn get_weather(city: &str) -> Result<Weather, String> {
     let (lat, lon, city, timezone) = get_coordinates(city, "https://geocoding-api.open-meteo.com")?;
     let weather = get_weather_data(lat, lon, "https://api.open-meteo.com")?;
+    let current = weather.current;
     let utc_now = OffsetDateTime::now_utc();
     let local_time = get_local_time(&timezone, utc_now).ok();
 
@@ -52,14 +68,59 @@ pub fn get_weather(city: &str) -> Result<Weather, String> {
         local_time: local_time.clone(),
         weather: formatget!(
             "{}, Temperature: {}°C, Cloud cover: {}%, Wind: {}km/h, Humidity: {}%, Precipitation: {}mm",
-            format_weather_code(weather.weather_code),
-            weather.temperature_2m,
-            weather.cloud_cover,
-            weather.wind_speed_10m,
-            weather.relative_humidity_2m,
-            weather.precipitation,
+            format_weather_code(current.weather_code),
+            current.temperature_2m,
+            current.cloud_cover,
+            current.wind_speed_10m,
+            current.relative_humidity_2m,
+            current.precipitation,
         ),
+        forecast: format_forecast(&weather.daily),
     })
+}
+
+fn format_forecast(daily: &Daily) -> String {
+    if daily.weather_code.len() != daily.time.len()
+        || daily.temperature_2m_max.len() != daily.time.len()
+        || daily.temperature_2m_min.len() != daily.time.len()
+    {
+        return gettext("Forecast is unavailable.");
+    }
+    let mut forecast: Vec<String> = Vec::new();
+    // Start with 1 to skip today's entry.
+    for i in 0..daily.time.len() - 1 {
+        let day = date_to_weekday(&daily.time[i]);
+        let code = format_weather_code(daily.weather_code[i]);
+        let max_temp = daily.temperature_2m_max[i].round();
+        let min_temp = daily.temperature_2m_min[i].round();
+        let precipitation = daily.precipitation_sum[i].round();
+        if i == 0 {
+            forecast.push(format!(
+                "[{}]",
+                formatget!(
+                    "{}: {}, night: {}°C, day: {}°C, precipitation: {}mm",
+                    day,
+                    code,
+                    min_temp,
+                    max_temp,
+                    precipitation
+                )
+            ));
+        } else {
+            forecast.push(format!(
+                "[{}: {}, {}°C, {}°C, {}mm]",
+                day, code, min_temp, max_temp, precipitation
+            ));
+        }
+    }
+    forecast.join(" ")
+}
+
+fn date_to_weekday(date: &str) -> String {
+    match NaiveDate::parse_from_str(date, "%Y-%m-%d") {
+        Ok(date) => date.format("%a").to_string(),
+        Err(_) => date.to_string(),
+    }
 }
 
 fn get_local_time(timezone: &str, utc_now: OffsetDateTime) -> Result<String, String> {
@@ -72,7 +133,7 @@ fn get_local_time(timezone: &str, utc_now: OffsetDateTime) -> Result<String, Str
     )
     .ok_or("Invalid timestamp".to_string())?;
     let local_chrono = chrono_utc.with_timezone(&tz);
-    Ok(local_chrono.format("%Y-%m-%d %H:%M %z").to_string())
+    Ok(local_chrono.format("%Y-%m-%d (%a) %H:%M %z").to_string())
 }
 
 fn get_coordinates(city: &str, base_url: &str) -> Result<(f64, f64, String, String), String> {
@@ -117,14 +178,14 @@ fn get_coordinates(city: &str, base_url: &str) -> Result<(f64, f64, String, Stri
     }
 }
 
-fn get_weather_data(lat: f64, lon: f64, base_url: &str) -> Result<WeatherCurrent, String> {
+fn get_weather_data(lat: f64, lon: f64, base_url: &str) -> Result<WeatherResponse, String> {
     let client = reqwest::blocking::Client::builder()
         .timeout(WEATHER_API_TIMEOUT)
         .build()
         .map_err(|e| format!("HTTP client error: {}", e))?;
 
     let url = format!(
-        "{}/v1/forecast?latitude={}&longitude={}&current=temperature_2m,cloud_cover,wind_speed_10m,relative_humidity_2m,precipitation,weather_code",
+        "{}/v1/forecast?latitude={}&longitude={}&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_sum&current=temperature_2m,cloud_cover,wind_speed_10m,relative_humidity_2m,precipitation,weather_code",
         base_url, lat, lon
     );
 
@@ -141,7 +202,7 @@ fn get_weather_data(lat: f64, lon: f64, base_url: &str) -> Result<WeatherCurrent
         .json()
         .map_err(|e| formatget!("Failed to parse weather API response: {}", e))?;
 
-    Ok(weather_response.current)
+    Ok(weather_response)
 }
 
 fn format_weather_code(code: i32) -> String {
@@ -186,6 +247,14 @@ pub fn weather_prompt() -> &'static str {
     }
 }
 
+pub fn forecast_prompt() -> &'static str {
+    if std::env::var("LANG").unwrap_or_default().starts_with("de") {
+        DEFAULT_WEATHER_FORECAST_PROMPT_DE
+    } else {
+        DEFAULT_WEATHER_FORECAST_PROMPT
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -217,7 +286,7 @@ mod tests {
         let weather_mock = weather_server
             .mock(
                 "GET",
-                "/v1/forecast?latitude=47.3769&longitude=8.5417&current=temperature_2m,cloud_cover,wind_speed_10m,relative_humidity_2m,precipitation,weather_code",
+                "/v1/forecast?latitude=47.3769&longitude=8.5417&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_sum&current=temperature_2m,cloud_cover,wind_speed_10m,relative_humidity_2m,precipitation,weather_code",
             )
             .with_status(200)
             .with_header("content-type", "application/json")
@@ -230,6 +299,53 @@ mod tests {
                     "relative_humidity_2m": 72.0,
                     "precipitation": 0.2,
                     "weather_code": 61
+                },
+                "daily": {
+                    "time": [
+                        "2020-09-01",
+                        "2020-09-02",
+                        "2020-09-03",
+                        "2020-09-04",
+                        "2020-09-05",
+                        "2020-09-06",
+                        "2020-09-07"
+                    ],
+                    "weather_code": [
+                        45,
+                        63,
+                        95,
+                        63,
+                        61,
+                        3,
+                        80
+                    ],
+                    "temperature_2m_max": [
+                        24.8,
+                        21.3,
+                        20.3,
+                        17.3,
+                        18.6,
+                        22.7,
+                        17.8
+                    ],
+                    "temperature_2m_min": [
+                        10.7,
+                        16.9,
+                        15.2,
+                        12.9,
+                        11.2,
+                        13.5,
+                        13.8
+                    ],
+                    "precipitation_sum": [
+                        0.0,
+                        0.5,
+                        18.1,
+                        6.9,
+                        0.3,
+                        6.3,
+                        3.9
+                    ]
                 }
             }"#,
             )
@@ -243,13 +359,21 @@ mod tests {
         assert_eq!(timezone, "Europe/Zurich");
 
         let weather = get_weather_data(lat, lon, &weather_server.url()).unwrap();
-        assert_eq!(weather.temperature_2m, 18.7);
-        assert_eq!(weather.cloud_cover, 0.1);
-        assert_eq!(weather.wind_speed_10m, 5.4);
-        assert_eq!(weather.relative_humidity_2m, 72.0);
-        assert_eq!(weather.precipitation, 0.2);
-        assert_eq!(weather.weather_code, 61);
-        assert_eq!(format_weather_code(weather.weather_code), "Slight rain");
+        let current = weather.current;
+        assert_eq!(current.temperature_2m, 18.7);
+        assert_eq!(current.cloud_cover, 0.1);
+        assert_eq!(current.wind_speed_10m, 5.4);
+        assert_eq!(current.relative_humidity_2m, 72.0);
+        assert_eq!(current.precipitation, 0.2);
+        assert_eq!(current.weather_code, 61);
+        assert_eq!(format_weather_code(current.weather_code), "Slight rain");
+
+        let daily = weather.daily;
+        assert_eq!(daily.time[0], "2020-09-01");
+        assert_eq!(daily.weather_code[0], 45);
+        assert_eq!(daily.temperature_2m_max[0], 24.8);
+        assert_eq!(daily.temperature_2m_min[0], 10.7);
+        assert_eq!(daily.precipitation_sum[0], 0.0);
 
         geocoding_mock.assert();
         weather_mock.assert();
@@ -404,6 +528,6 @@ mod tests {
 
         assert!(result.is_ok());
         let local_time = result.unwrap();
-        assert_eq!(local_time, "2025-09-04 20:30 +0200");
+        assert_eq!(local_time, "2025-09-04 (Thu) 20:30 +0200");
     }
 }

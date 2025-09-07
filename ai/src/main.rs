@@ -428,7 +428,28 @@ fn process_command(
                         query: weather::weather_prompt().to_string(),
                         extra_history: format!(
                             "{}{}",
-                            formatget!("The weather in {} is: {}.", w.city, w.weather,),
+                            formatget!("The weather in {} is: {}.", w.city, w.weather),
+                            w.local_time.map_or("".to_string(), |t| " ".to_string()
+                                + &formatget!("The current local time is {}.", t))
+                        ),
+                    }),
+                    Err(err) => Ok(CommandResult::Message(err)),
+                }
+            } else if command == gettext("forecast").to_lowercase() {
+                let city = args.trim();
+                if city.is_empty() {
+                    return Ok(CommandResult::Message(format!(
+                        "{}  ({})",
+                        gettext("Usage: forecast <city>"),
+                        gettext("Weather data by https://open-meteo.com")
+                    )));
+                }
+                match weather::get_weather(city) {
+                    Ok(w) => Ok(CommandResult::AskAgent {
+                        query: weather::forecast_prompt().to_string(),
+                        extra_history: format!(
+                            "{}{}",
+                            formatget!("Weather forecast for {}: {}.", w.city, w.forecast),
                             w.local_time.map_or("".to_string(), |t| " ".to_string()
                                 + &formatget!("The current local time is {}.", t))
                         ),

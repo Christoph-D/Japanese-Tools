@@ -287,6 +287,14 @@ msgstr ""
 msgid "{}, Temperature: {}°C, Cloud cover: {}%, Wind: {}km/h, Humidity: {}%, Precipitation: {}mm"
 msgstr ""
 
+#: ../ai/src/weather.rs
+msgid "Forecast is unavailable."
+msgstr ""
+
+#: ../ai/src/weather.rs
+msgid "{}: {}, night: {}°C, day: {}°C, precipitation: {}mm"
+msgstr ""
+
 #: ../ai/src/weather.rs ../ai/src/main.rs
 msgid "HTTP client error: {}"
 msgstr ""
@@ -497,7 +505,7 @@ msgstr ""
 msgid "Usage: weather <city>"
 msgstr ""
 
-#: ../ai/src/main.rs
+#: ../ai/src/main.rs ../ai/src/main.rs
 msgid "Weather data by https://open-meteo.com"
 msgstr ""
 
@@ -505,8 +513,20 @@ msgstr ""
 msgid "The weather in {} is: {}."
 msgstr ""
 
-#: ../ai/src/main.rs
+#: ../ai/src/main.rs ../ai/src/main.rs
 msgid "The current local time is {}."
+msgstr ""
+
+#: ../ai/src/main.rs
+msgid "forecast"
+msgstr ""
+
+#: ../ai/src/main.rs
+msgid "Usage: forecast <city>"
+msgstr ""
+
+#: ../ai/src/main.rs
+msgid "Weather forecast for {}: {}."
 msgstr ""
 
 #: ../ai/src/main.rs

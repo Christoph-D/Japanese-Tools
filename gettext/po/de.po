@@ -297,6 +297,14 @@ msgstr ""
 "{}, Temperatur: {}°C, Bewölkung: {}%, Wind: {}km/h, Luftfeuchtigkeit: {}%, "
 "Niederschlag: {}mm"
 
+#: ../ai/src/weather.rs
+msgid "Forecast is unavailable."
+msgstr "Wettervorhersage nicht gefunden."
+
+#: ../ai/src/weather.rs
+msgid "{}: {}, night: {}°C, day: {}°C, precipitation: {}mm"
+msgstr "{}: {}, Nacht: {}°C, Tag: {}°C, Niederschlag: {}mm"
+
 #: ../ai/src/weather.rs ../ai/src/main.rs
 msgid "HTTP client error: {}"
 msgstr "HTTP-Client-Fehler: {}"
@@ -522,6 +530,18 @@ msgstr "Das Wetter in {} ist: {}."
 #: ../ai/src/main.rs
 msgid "The current local time is {}."
 msgstr "Die aktuelle Lokalzeit ist {}."
+
+#: ../ai/src/main.rs
+msgid "forecast"
+msgstr "Vorhersage"
+
+#: ../ai/src/main.rs
+msgid "Usage: forecast <city>"
+msgstr "Aufruf: Vorhersage <Stadt>"
+
+#: ../ai/src/main.rs
+msgid "Weather forecast for {}: {}."
+msgstr "Wettervorhersage für {}: {}."
 
 #: ../ai/src/main.rs
 msgid "!ai is only available in channels."

@@ -22,6 +22,10 @@ pub const DEFAULT_WEATHER_PROMPT: &str =
     "Consider the local time/season, describe the weather in your own words and comment on it.";
 pub const DEFAULT_WEATHER_PROMPT_DE: &str = "Berücksichtige die Lokalzeit/Jahreszeit, beschreib das Wetter in eigenen Worten und kommentiere es.";
 
+pub const DEFAULT_WEATHER_FORECAST_PROMPT: &str =
+    "Consider the current season, describe the forecast in your own words and comment on it.";
+pub const DEFAULT_WEATHER_FORECAST_PROMPT_DE: &str = "Berücksichtige die Jahreszeit, beschreib die Vorhersage in eigenen Worten und kommentiere sie.";
+
 // MEMORY_MAX_MESSAGES divided by half is the number of remembered user queries.
 // Each invocation creates two messages, a user query and a response from the assistant.
 pub const MEMORY_MAX_MESSAGES: usize = 20;
