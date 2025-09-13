@@ -9,8 +9,8 @@ mod weather;
 
 use crate::compilerx::CompilerError;
 use crate::constants::{
-    CLEAR_MEMORY_FLAG, CLEAR_MEMORY_MESSAGE, CONFIG_FILE_NAME, ENV_FILE_NAME,
-    MAX_LINE_LENGTH_CUTOFF, MAX_TOKENS, TEMPERATURE_FLAG,
+    CLEAR_MEMORY_MESSAGE, CONFIG_FILE_NAME, ENV_FILE_NAME, MAX_LINE_LENGTH_CUTOFF, MAX_TOKENS,
+    MEMORY_RETENTION,
 };
 use crate::memory::{Memory, Sender};
 use crate::model::{Config, Model, ModelList};
@@ -117,28 +117,47 @@ fn sanitize_output(s: &str, api_key: &Option<&str>) -> String {
     }
 }
 
-fn usage(models: &ModelList, config: &Config, channel: &str) -> String {
+fn usage(models: &ModelList, config: &Config, channel: &str) -> Output {
     let default_model_id = config.get_channel_default_model(channel);
     let default_model_name = models
         .select_model_for_channel(&[], default_model_id)
         .map(|m| m.name.clone())
         .unwrap_or_else(|_| default_model_id.to_string());
 
-    formatget!(
-        "Usage: !ai [{}] [-{}|-c] [-{}=1.0|-t=1.0] <query>.  Models: {}.  Default: {}",
+    Output::RawMessage(formatget!(
+        "Usage: !ai [flags...] [command] <query>.  Flags: -c (clear history), -t=<val> (temp), {} (select model).\nCommands: join <user...>, solo [user], joined, weather <city>, forecast <city>.  Models: {}, Default: {}\nBy default, history is split by user and deleted after {} minutes. The bot does not have access to a full chat log, it sees only your history.",
         models
             .list_model_flags_without_default(default_model_id)
             .into_iter()
             .map(|f| format!("-{}", f))
             .collect::<Vec<_>>()
             .join("|"),
-        CLEAR_MEMORY_FLAG,
-        TEMPERATURE_FLAG,
         models
             .list_model_flags_human_readable(default_model_id)
             .join(" "),
-        default_model_name
-    )
+        default_model_name,
+        MEMORY_RETENTION.whole_minutes(),
+    ))
+}
+
+fn usage_for_command(command: &CommandForHelp) -> String {
+    match command {
+        CommandForHelp::Join => {
+            gettext("Usage: !ai join <user>  (Join your chat history with another user's history.)")
+        }
+        CommandForHelp::Solo => gettext(
+            "Usage: !ai solo [user]  (Disable the shared history for yourself or the given user.)",
+        ),
+        CommandForHelp::Joined => {
+            gettext("Usage: !ai joined  (List the users with whom you share the chat history.)")
+        }
+        CommandForHelp::Weather => gettext(
+            "Usage: !ai weather <city>  (Tell the AI the current weather. Weather data by https://open-meteo.com.)",
+        ),
+        CommandForHelp::Forecast => gettext(
+            "Usage: !ai forecast <city>  (Tell the AI this week's weather forecast. Weather data by https://open-meteo.com.)",
+        ),
+    }
 }
 
 fn locate_config_path() -> Option<PathBuf> {
@@ -252,10 +271,8 @@ fn parse_command_line(
         for model_flag in models.list_model_flags() {
             known_flags.push(Flag::new(model_flag, false));
         }
-        known_flags.push(Flag::new(CLEAR_MEMORY_FLAG.to_string(), false));
-        known_flags.push(Flag::new("c".to_string(), false)); // Short for CLEAR_MEMORY_FLAG
-        known_flags.push(Flag::new(TEMPERATURE_FLAG.to_string(), true));
-        known_flags.push(Flag::new("t".to_string(), true)); // Short for TEMPERATURE_FLAG
+        known_flags.push(Flag::new("c".to_string(), false)); // clear history
+        known_flags.push(Flag::new("t".to_string(), true)); // temperature
         known_flags
     };
     let flag_names: Vec<&String> = known_flags.iter().map(|f| &f.name).collect();
@@ -285,13 +302,33 @@ struct Input {
     irc_plugin: bool,
 }
 
+#[derive(Debug)]
+enum Output {
+    // A message which needs to be sanitized before displaying it.
+    AgentMessage(String),
+    // A trusted message safe to display as-is.
+    RawMessage(String),
+}
+
+impl std::fmt::Display for Output {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Output::AgentMessage(msg) => write!(f, "{}", msg),
+            Output::RawMessage(msg) => write!(f, "{}", msg),
+        }
+    }
+}
+
 fn main() {
     let input = setup().unwrap_or_else(|err| {
         println!("{}", sanitize_output(&err.to_string(), &None));
         std::process::exit(0);
     });
     match run(&input) {
-        Ok(msg) => println!("{}", sanitize_output(&msg, &Some(&input.model.api_key))),
+        Ok(Output::AgentMessage(msg)) => {
+            println!("{}", sanitize_output(&msg, &Some(&input.model.api_key)))
+        }
+        Ok(Output::RawMessage(msg)) => println!("{}", msg),
         Err(err) => {
             println!(
                 "{}",
@@ -348,6 +385,26 @@ fn setup() -> Result<Input, String> {
 }
 
 #[derive(Debug, PartialEq)]
+enum CommandForHelp {
+    Join,
+    Solo,
+    Joined,
+    Weather,
+    Forecast,
+}
+
+#[derive(Debug, PartialEq)]
+enum Command {
+    None,
+    Join { user_a: String, user_b: String },
+    Solo { user: String },
+    Joined { user: String },
+    Help { command: Option<CommandForHelp> },
+    Weather { city: String },
+    Forecast { city: String },
+}
+
+#[derive(Debug, PartialEq)]
 enum CommandResult {
     NotACommand,
     Message(String),
@@ -355,124 +412,165 @@ enum CommandResult {
         extra_history: String,
         query: String,
     },
+    ShowUsage,
+    ShowCustomUsage(String),
 }
 
-fn process_command(
-    command: &str,
-    args: &str,
-    sender: &str,
-    receiver: &str,
-    memory: &mut Memory,
-) -> Result<CommandResult, String> {
+fn parse_command(command: &str, args: &str, sender: &str) -> Result<Command, String> {
     let command = command.to_lowercase();
     match command.as_ref() {
         "join" => {
             let target_user = args.trim();
             if target_user.is_empty() || target_user == sender {
-                return Ok(CommandResult::Message(
-                    gettext("Usage: join <username>").to_string(),
-                ));
+                return Ok(Command::Help {
+                    command: Some(CommandForHelp::Join),
+                });
             }
-
-            memory
-                .join_users(sender, target_user, receiver)
-                .map_err(|e| format!("Failed to join users: {}", e))?;
-
-            Ok(CommandResult::Message(formatget!(
-                "{} joined memory with the group: {}",
-                sender,
-                memory
-                    .get_joined_users_excluding_self(sender, receiver)
-                    .join(", ")
-            )))
+            Ok(Command::Join {
+                user_a: sender.to_string(),
+                user_b: target_user.to_string(),
+            })
         }
         "solo" => {
             let arg = args.trim();
             let target = if arg.is_empty() { sender } else { arg };
-
-            memory
-                .make_user_solo(target, receiver)
-                .map_err(|e| format!("Failed to make user solo: {}", e))?;
-
-            Ok(CommandResult::Message(formatget!(
-                "{} is now solo.",
-                target
-            )))
+            Ok(Command::Solo {
+                user: target.to_string(),
+            })
         }
-        "joined" => {
-            let other_users = memory.get_joined_users_excluding_self(sender, receiver);
-            if other_users.is_empty() {
-                return Ok(CommandResult::Message(formatget!(
-                    "{} is not sharing memory with anyone.",
-                    sender
-                )));
+        "joined" => Ok(Command::Joined {
+            user: sender.to_string(),
+        }),
+        "help" => {
+            let command = args.split_whitespace().next().unwrap_or("").to_lowercase();
+            match command.as_ref() {
+                "join" => Ok(Command::Help {
+                    command: Some(CommandForHelp::Join),
+                }),
+                "joined" => Ok(Command::Help {
+                    command: Some(CommandForHelp::Joined),
+                }),
+                "solo" => Ok(Command::Help {
+                    command: Some(CommandForHelp::Solo),
+                }),
+                "weather" => Ok(Command::Help {
+                    command: Some(CommandForHelp::Weather),
+                }),
+                "forecast" => Ok(Command::Help {
+                    command: Some(CommandForHelp::Forecast),
+                }),
+                _ => Ok(Command::Help { command: None }),
             }
-            Ok(CommandResult::Message(formatget!(
-                "{} is sharing memory with: {}",
-                sender,
-                other_users.join(", ")
-            )))
         }
         _ => {
             if command == gettext("weather").to_lowercase() {
                 let city = args.trim();
                 if city.is_empty() {
-                    return Ok(CommandResult::Message(format!(
-                        "{}  ({})",
-                        gettext("Usage: weather <city>"),
-                        gettext("Weather data by https://open-meteo.com")
-                    )));
+                    return Ok(Command::Help {
+                        command: Some(CommandForHelp::Weather),
+                    });
                 }
-                match weather::get_weather(city) {
-                    Ok(w) => Ok(CommandResult::AskAgent {
-                        query: weather::weather_prompt().to_string(),
-                        extra_history: format!(
-                            "{}{}",
-                            formatget!("The weather in {} is: {}.", w.city, w.weather),
-                            w.local_time.map_or("".to_string(), |t| " ".to_string()
-                                + &formatget!("The current local time is {}.", t))
-                        ),
-                    }),
-                    Err(err) => Ok(CommandResult::Message(err)),
-                }
+                Ok(Command::Weather {
+                    city: city.to_string(),
+                })
             } else if command == gettext("forecast").to_lowercase() {
                 let city = args.trim();
                 if city.is_empty() {
-                    return Ok(CommandResult::Message(format!(
-                        "{}  ({})",
-                        gettext("Usage: forecast <city>"),
-                        gettext("Weather data by https://open-meteo.com")
-                    )));
+                    return Ok(Command::Help {
+                        command: Some(CommandForHelp::Forecast),
+                    });
                 }
-                match weather::get_weather(city) {
-                    Ok(w) => Ok(CommandResult::AskAgent {
-                        query: weather::forecast_prompt().to_string(),
-                        extra_history: format!(
-                            "{}{}",
-                            formatget!("Weather forecast for {}: {}.", w.city, w.forecast),
-                            w.local_time.map_or("".to_string(), |t| " ".to_string()
-                                + &formatget!("The current local time is {}.", t))
-                        ),
-                    }),
-                    Err(err) => Ok(CommandResult::Message(err)),
-                }
+                Ok(Command::Forecast {
+                    city: city.to_string(),
+                })
             } else {
-                Ok(CommandResult::NotACommand)
+                Ok(Command::None)
             }
         }
     }
 }
 
-fn run(input: &Input) -> Result<String, String> {
+fn process_command(
+    command: &Command,
+    receiver: &str,
+    memory: &mut Memory,
+) -> Result<CommandResult, String> {
+    match command {
+        Command::Join { user_a, user_b } => {
+            memory
+                .join_users(user_a, user_b, receiver)
+                .map_err(|e| format!("Failed to join users: {}", e))?;
+            Ok(CommandResult::Message(formatget!(
+                "{} joined memory with the group: {}",
+                user_a,
+                memory
+                    .get_joined_users_excluding_self(user_a, receiver)
+                    .join(", ")
+            )))
+        }
+        Command::Solo { user } => {
+            memory
+                .make_user_solo(user, receiver)
+                .map_err(|e| format!("Failed to make user solo: {}", e))?;
+            Ok(CommandResult::Message(formatget!("{} is now solo.", user)))
+        }
+        Command::Joined { user } => {
+            let other_users = memory.get_joined_users_excluding_self(user, receiver);
+            if other_users.is_empty() {
+                return Ok(CommandResult::Message(formatget!(
+                    "{} is not sharing memory with anyone.",
+                    user
+                )));
+            }
+            Ok(CommandResult::Message(formatget!(
+                "{} is sharing memory with: {}",
+                user,
+                other_users.join(", ")
+            )))
+        }
+        Command::Help { command: None } => Ok(CommandResult::ShowUsage),
+        Command::Help {
+            command: Some(command),
+        } => Ok(CommandResult::ShowCustomUsage(usage_for_command(command))),
+        Command::Weather { city } => match weather::get_weather(city) {
+            Ok(w) => Ok(CommandResult::AskAgent {
+                query: weather::weather_prompt().to_string(),
+                extra_history: format!(
+                    "{}{}",
+                    formatget!("The weather in {} is: {}.", w.city, w.weather),
+                    w.local_time.map_or("".to_string(), |t| " ".to_string()
+                        + &formatget!("The current local time is {}.", t))
+                ),
+            }),
+            Err(err) => Ok(CommandResult::Message(err)),
+        },
+        Command::Forecast { city } => match weather::get_weather(city) {
+            Ok(w) => Ok(CommandResult::AskAgent {
+                query: weather::forecast_prompt().to_string(),
+                extra_history: format!(
+                    "{}{}",
+                    formatget!("Weather forecast for {}: {}.", w.city, w.forecast),
+                    w.local_time.map_or("".to_string(), |t| " ".to_string()
+                        + &formatget!("The current local time is {}.", t))
+                ),
+            }),
+            Err(err) => Ok(CommandResult::Message(err)),
+        },
+        Command::None => Ok(CommandResult::NotACommand),
+    }
+}
+
+fn run(input: &Input) -> Result<Output, String> {
     // Prevent usage in private messages
     if input.irc_plugin && !input.receiver.starts_with('#') {
-        return Ok(gettext("!ai is only available in channels."));
+        return Ok(Output::RawMessage(gettext(
+            "!ai is only available in channels.",
+        )));
     }
 
     let mut memory = Memory::new_from_path(&input.config_path)?;
 
-    let history_cleared = input.flags.contains(&CLEAR_MEMORY_FLAG.to_string())
-        || input.flags.contains(&"c".to_string());
+    let history_cleared = input.flags.contains(&"c".to_string());
     if history_cleared {
         memory
             .clear_history(&input.sender, &input.receiver)
@@ -482,15 +580,16 @@ fn run(input: &Input) -> Result<String, String> {
     let query = input.query.trim();
     if query.is_empty() {
         if history_cleared {
-            return Ok(format!("[{}]", CLEAR_MEMORY_MESSAGE));
+            return Ok(Output::RawMessage(format!("[{}]", CLEAR_MEMORY_MESSAGE)));
         } else {
             return Ok(usage(&input.models, &input.config, &input.receiver));
         }
     }
 
     let (command, args) = query.split_once(' ').unwrap_or((query, ""));
-    let query = match process_command(command, args, &input.sender, &input.receiver, &mut memory)? {
-        CommandResult::Message(result) => return Ok(result),
+    let parsed_command = parse_command(command, args, &input.sender)?;
+    let query = match process_command(&parsed_command, &input.receiver, &mut memory)? {
+        CommandResult::Message(result) => return Ok(Output::RawMessage(result)),
         CommandResult::NotACommand => query.to_string(),
         CommandResult::AskAgent {
             query,
@@ -501,6 +600,10 @@ fn run(input: &Input) -> Result<String, String> {
                 .map_err(|e| format!("Failed to add extra history: {}", e))?;
             query
         }
+        CommandResult::ShowUsage => {
+            return Ok(usage(&input.models, &input.config, &input.receiver));
+        }
+        CommandResult::ShowCustomUsage(usage) => return Ok(Output::RawMessage(usage)),
     };
 
     let query = if input.config.is_compiler_explorer_enabled() {
@@ -528,7 +631,7 @@ fn run(input: &Input) -> Result<String, String> {
     let temperature = input
         .flags
         .iter()
-        .find(|f| f.starts_with(&(TEMPERATURE_FLAG.to_string() + "=")) || f.starts_with("t="))
+        .find(|f| f.starts_with("t="))
         .and_then(|f| f.split('=').nth(1))
         .and_then(|s| s.parse::<f64>().ok().map(|t| t.clamp(0.0, 2.0)))
         .or_else(|| input.config.get_channel_temperature(&input.receiver));
@@ -551,10 +654,8 @@ fn run(input: &Input) -> Result<String, String> {
             flag_state.push(input.model.short_name.clone());
         }
 
-        // Only show temperature prefix if user explicitly used -t or -temperature flag
-        let user_temperature_flag = input.flags.iter().any(|flag| {
-            flag.starts_with(&(TEMPERATURE_FLAG.to_string() + "=")) || flag.starts_with("t=")
-        });
+        // Only show temperature prefix if user explicitly used -t flag
+        let user_temperature_flag = input.flags.iter().any(|flag| flag.starts_with("t="));
         if user_temperature_flag {
             if let Some(t) = temperature {
                 flag_state.push(format!("t={}", t));
@@ -580,7 +681,7 @@ fn run(input: &Input) -> Result<String, String> {
         Some('!') => " ".to_string() + &result,
         _ => result,
     };
-    Ok(result)
+    Ok(Output::AgentMessage(result))
 }
 
 #[cfg(test)]
@@ -615,11 +716,178 @@ mod tests {
     }
 
     #[test]
+    fn test_parse_command_join_valid() {
+        let command = parse_command("join", "alice", "bob").unwrap();
+        assert_eq!(
+            command,
+            Command::Join {
+                user_a: "bob".to_string(),
+                user_b: "alice".to_string()
+            }
+        );
+    }
+
+    #[test]
+    fn test_parse_command_join_empty_user() {
+        let command = parse_command("join", "", "bob").unwrap();
+        assert_eq!(
+            command,
+            Command::Help {
+                command: Some(CommandForHelp::Join)
+            }
+        );
+    }
+
+    #[test]
+    fn test_parse_command_join_self() {
+        let command = parse_command("join", "bob", "bob").unwrap();
+        assert_eq!(
+            command,
+            Command::Help {
+                command: Some(CommandForHelp::Join)
+            }
+        );
+    }
+
+    #[test]
+    fn test_parse_command_solo_with_user() {
+        let command = parse_command("solo", "alice", "bob").unwrap();
+        assert_eq!(
+            command,
+            Command::Solo {
+                user: "alice".to_string()
+            }
+        );
+    }
+
+    #[test]
+    fn test_parse_command_solo_without_user() {
+        let command = parse_command("solo", "", "bob").unwrap();
+        assert_eq!(
+            command,
+            Command::Solo {
+                user: "bob".to_string()
+            }
+        );
+    }
+
+    #[test]
+    fn test_parse_command_joined() {
+        let command = parse_command("joined", "", "bob").unwrap();
+        assert_eq!(
+            command,
+            Command::Joined {
+                user: "bob".to_string()
+            }
+        );
+    }
+
+    #[test]
+    fn test_parse_command_help_variants() {
+        let command = parse_command("help", "", "bob").unwrap();
+        assert_eq!(command, Command::Help { command: None });
+
+        let command = parse_command("help", "join", "bob").unwrap();
+        assert_eq!(
+            command,
+            Command::Help {
+                command: Some(CommandForHelp::Join)
+            }
+        );
+
+        let command = parse_command("help", "solo", "bob").unwrap();
+        assert_eq!(
+            command,
+            Command::Help {
+                command: Some(CommandForHelp::Solo)
+            }
+        );
+
+        let command = parse_command("help", "joined", "bob").unwrap();
+        assert_eq!(
+            command,
+            Command::Help {
+                command: Some(CommandForHelp::Joined)
+            }
+        );
+
+        let command = parse_command("help", "weather", "bob").unwrap();
+        assert_eq!(
+            command,
+            Command::Help {
+                command: Some(CommandForHelp::Weather)
+            }
+        );
+
+        let command = parse_command("help", "forecast", "bob").unwrap();
+        assert_eq!(
+            command,
+            Command::Help {
+                command: Some(CommandForHelp::Forecast)
+            }
+        );
+    }
+
+    #[test]
+    fn test_parse_command_weather_valid() {
+        let command = parse_command("weather", "Tokyo", "bob").unwrap();
+        assert_eq!(
+            command,
+            Command::Weather {
+                city: "Tokyo".to_string()
+            }
+        );
+    }
+
+    #[test]
+    fn test_parse_command_weather_empty() {
+        let command = parse_command("weather", "", "bob").unwrap();
+        assert_eq!(
+            command,
+            Command::Help {
+                command: Some(CommandForHelp::Weather)
+            }
+        );
+    }
+
+    #[test]
+    fn test_parse_command_forecast_valid() {
+        let command = parse_command("forecast", "New York", "bob").unwrap();
+        assert_eq!(
+            command,
+            Command::Forecast {
+                city: "New York".to_string()
+            }
+        );
+    }
+
+    #[test]
+    fn test_parse_command_forecast_empty() {
+        let command = parse_command("forecast", "", "bob").unwrap();
+        assert_eq!(
+            command,
+            Command::Help {
+                command: Some(CommandForHelp::Forecast)
+            }
+        );
+    }
+
+    #[test]
+    fn test_parse_command_unknown() {
+        let command = parse_command("unknown", "args", "bob").unwrap();
+        assert_eq!(command, Command::None);
+    }
+
+    #[test]
     fn test_process_command_join() {
         let dir = tempdir().unwrap();
         let mut memory = Memory::new_from_path(dir.path()).unwrap();
 
-        let result = process_command("join", "alice", "bob", "receiver1", &mut memory).unwrap();
+        let command = Command::Join {
+            user_a: "bob".to_string(),
+            user_b: "alice".to_string(),
+        };
+        let result = process_command(&command, "receiver1", &mut memory).unwrap();
         assert_eq!(
             result,
             CommandResult::Message("bob joined memory with the group: alice".to_string())
@@ -633,37 +901,61 @@ mod tests {
     }
 
     #[test]
-    fn test_process_command_join_empty_user() {
+    fn test_process_command_solo() {
         let dir = tempdir().unwrap();
         let mut memory = Memory::new_from_path(dir.path()).unwrap();
 
-        let result = process_command("join", "", "bob", "receiver1", &mut memory);
-        assert!(result.is_ok());
+        let command = Command::Solo {
+            user: "alice".to_string(),
+        };
+        let result = process_command(&command, "receiver1", &mut memory).unwrap();
         assert_eq!(
-            result.unwrap(),
-            CommandResult::Message("Usage: join <username>".to_string())
+            result,
+            CommandResult::Message("alice is now solo.".to_string())
         );
     }
 
     #[test]
-    fn test_process_command_join_self() {
+    fn test_process_command_joined() {
         let dir = tempdir().unwrap();
         let mut memory = Memory::new_from_path(dir.path()).unwrap();
 
-        let result = process_command("join", "bob", "bob", "receiver1", &mut memory);
-        assert!(result.is_ok());
+        let command = Command::Joined {
+            user: "alice".to_string(),
+        };
+        let result = process_command(&command, "receiver1", &mut memory).unwrap();
         assert_eq!(
-            result.unwrap(),
-            CommandResult::Message("Usage: join <username>".to_string())
+            result,
+            CommandResult::Message("alice is not sharing memory with anyone.".to_string())
         );
     }
 
     #[test]
-    fn test_process_command_unknown() {
+    fn test_process_command_help() {
         let dir = tempdir().unwrap();
         let mut memory = Memory::new_from_path(dir.path()).unwrap();
 
-        let result = process_command("unknown", "args", "bob", "receiver1", &mut memory).unwrap();
+        let command = Command::Help { command: None };
+        let result = process_command(&command, "receiver1", &mut memory).unwrap();
+        assert_eq!(result, CommandResult::ShowUsage);
+
+        let command = Command::Help {
+            command: Some(CommandForHelp::Join),
+        };
+        let result = process_command(&command, "receiver1", &mut memory).unwrap();
+        assert_eq!(
+            result,
+            CommandResult::ShowCustomUsage(usage_for_command(&CommandForHelp::Join))
+        );
+    }
+
+    #[test]
+    fn test_process_command_none() {
+        let dir = tempdir().unwrap();
+        let mut memory = Memory::new_from_path(dir.path()).unwrap();
+
+        let command = Command::None;
+        let result = process_command(&command, "receiver1", &mut memory).unwrap();
         assert_eq!(result, CommandResult::NotACommand);
     }
 

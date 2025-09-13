@@ -35,12 +35,8 @@ pub const MEMORY_RETENTION: time::Duration = time::Duration::minutes(10);
 // isolating the contained users' memories from each other.
 pub const USER_GROUP_RETENTION: time::Duration = time::Duration::hours(16);
 
-pub const CLEAR_MEMORY_FLAG: &str = "clear_history";
-
 // Message prefix to indicate to the user that memory was cleared.
 pub const CLEAR_MEMORY_MESSAGE: &str = "📜🔥";
-
-pub const TEMPERATURE_FLAG: &str = "temp";
 
 pub const WEATHER_API_TIMEOUT: Duration = Duration::from_secs(3);
 

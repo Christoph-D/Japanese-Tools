@@ -467,10 +467,53 @@ msgstr "Ungültige Antwort: {}"
 
 #: ../ai/src/main.rs
 msgid ""
-"Usage: !ai [{}] [-{}|-c] [-{}=1.0|-t=1.0] <query>.  Models: {}.  Default: {}"
+"Usage: !ai [flags...] [command] <query>.  Flags: -c (clear history), -"
+"t=<val> (temp), {} (select model).\n"
+"Commands: join <user...>, solo [user], joined, weather <city>, forecast "
+"<city>.  Models: {}, Default: {}\n"
+"By default, history is split by user and deleted after {} minutes. The bot "
+"does not have access to a full chat log, it sees only your history."
 msgstr ""
-"Aufruf: !ai [{}] [-{}|-c] [-{}=1.0|-t=1.0] <Anfrage>.  Modelle: {}.  "
-"Standardmodell: {}"
+"Aufruf: !ai [Flags...] [Befehl] <Anfrage>.  Optionen: -c (Verlauf "
+"löschen), -t=<Wert> (Temperatur), {} (Modell wählen).\n"
+"Befehle: join <Nutzer...>, solo [Nutzer], joined, Wetter <Stadt>, Vorhersage "
+"<Stadt>. Modelle: {}, Standardmodell: {}\n"
+"Standardmäßig wird der Verlauf nach Nutzer getrennt und nach {} Minuten "
+"gelöscht. Der Bot hat keinen Zugriff auf den vollständigen Chat-Verlauf, "
+"sondern sieht nur deinen Verlauf."
+
+#: ../ai/src/main.rs
+msgid ""
+"Usage: !ai join <user>  (Join your chat history with another user's history.)"
+msgstr ""
+"Aufruf: !ai join <Nutzer>  (Verbinde deinen Chat-Verlauf mit dem eines anderen Nutzers.)"
+
+#: ../ai/src/main.rs
+msgid ""
+"Usage: !ai solo [user]  (Disable the shared history for yourself or the "
+"given user.)"
+msgstr ""
+"Aufruf: !ai solo [Nutzer]  (Deaktiviere den geteilten Verlauf für dich oder den angegebenen Nutzer.)"
+
+#: ../ai/src/main.rs
+msgid ""
+"Usage: !ai joined  (List the users with whom you share the chat history.)"
+msgstr ""
+"Aufruf: !ai joined  (Liste die Nutzer auf, mit denen du den Chat-Verlauf teilst.)"
+
+#: ../ai/src/main.rs
+msgid ""
+"Usage: !ai weather <city>  (Tell the AI the current weather. Weather data by "
+"https://open-meteo.com.)"
+msgstr ""
+"Aufruf: !ai weather <Stadt>  (Teile der KI das aktuelle Wetter mit. Wetterdaten von https://open-meteo.com.)"
+
+#: ../ai/src/main.rs
+msgid ""
+"Usage: !ai forecast <city>  (Tell the AI this week's weather forecast. "
+"Weather data by https://open-meteo.com.)"
+msgstr ""
+"Aufruf: !ai forecast <Stadt>  (Teile der KI die Wettervorhersage dieser Woche mit. Wetterdaten von https://open-meteo.com.)"
 
 #: ../ai/src/main.rs
 msgid "Flag -{} requires a value (e.g., -{}=1.0)"
@@ -492,8 +535,12 @@ msgid "Config file not found."
 msgstr "Konfigurationsdatei nicht gefunden."
 
 #: ../ai/src/main.rs
-msgid "Usage: join <username>"
-msgstr "Aufruf: join <username>"
+msgid "weather"
+msgstr "Wetter"
+
+#: ../ai/src/main.rs
+msgid "forecast"
+msgstr "Vorhersage"
 
 #: ../ai/src/main.rs
 msgid "{} joined memory with the group: {}"
@@ -512,32 +559,12 @@ msgid "{} is sharing memory with: {}"
 msgstr "{} teilt seinen Speicher mit: {}"
 
 #: ../ai/src/main.rs
-msgid "weather"
-msgstr "Wetter"
-
-#: ../ai/src/main.rs
-msgid "Usage: weather <city>"
-msgstr "Aufruf: Wetter <Stadt>"
-
-#: ../ai/src/main.rs
-msgid "Weather data by https://open-meteo.com"
-msgstr "Wetterdaten von https://open-meteo.com"
-
-#: ../ai/src/main.rs
 msgid "The weather in {} is: {}."
 msgstr "Das Wetter in {} ist: {}."
 
 #: ../ai/src/main.rs
 msgid "The current local time is {}."
 msgstr "Die aktuelle Lokalzeit ist {}."
-
-#: ../ai/src/main.rs
-msgid "forecast"
-msgstr "Vorhersage"
-
-#: ../ai/src/main.rs
-msgid "Usage: forecast <city>"
-msgstr "Aufruf: Vorhersage <Stadt>"
 
 #: ../ai/src/main.rs
 msgid "Weather forecast for {}: {}."

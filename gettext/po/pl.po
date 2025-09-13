@@ -185,8 +185,8 @@ msgid ""
 "In the last 2 months, %s answered %s/%s (%s%%) questions correctly and "
 "skipped %s/%s (%s%%)."
 msgstr ""
-"Przez ostatnie 2 miesiące, %s odpowiedział poprawnie na %s/%s pytań, to jest "
-"%s%%."
+"Przez ostatnie 2 miesiące, %s odpowiedział poprawnie na %s/%s (%s%%) pytań i "
+"pominął %s/%s (%s%%)."
 
 # msgstr "Najtrudniejsze słowo dla %s (liczba błędów): %s"
 #: kumitate_quiz/kuiz.sh reading_quiz/quiz.sh
@@ -467,10 +467,52 @@ msgstr "Nieprawidłowa odpowiedź: {}"
 
 #: ../ai/src/main.rs
 msgid ""
-"Usage: !ai [{}] [-{}|-c] [-{}=1.0|-t=1.0] <query>.  Models: {}.  Default: {}"
+"Usage: !ai [flags...] [command] <query>.  Flags: -c (clear history), -"
+"t=<val> (temp), {} (select model).\n"
+"Commands: join <user...>, solo [user], joined, weather <city>, forecast "
+"<city>.  Models: {}, Default: {}\n"
+"By default, history is split by user and deleted after {} minutes. The bot "
+"does not have access to a full chat log, it sees only your history."
 msgstr ""
-"Sposób użycia: !ai [{}] [-{}|-c] [-{}=1.0|-t=1.0] <zapytanie>.  Znane "
-"modele: {}.  Domyślny: {}"
+"Sposób użycia: !ai [flagi...] [komenda] <zapytanie>. Flagi: -c (wyczyść "
+"historię), -t=<wartość> (temperatura), {} (wybierz model).\n"
+"Komendy: join <użytkownik...>, solo [użytkownik], joined, weather <miasto>, "
+"forecast <miasto>. Modele: {}, Domyślny: {}\n"
+"Domyślnie historia jest dzielona według użytkownika i usuwana po {} "
+"minutach. Bot nie ma dostępu do pełnego logu czatu, widzi tylko twoją historię."
+
+#: ../ai/src/main.rs
+msgid ""
+"Usage: !ai join <user>  (Join your chat history with another user's history.)"
+msgstr ""
+"Sposób użycia: !ai join <użytkownik>  (Połącz swoją historię czatu z historią innego użytkownika.)"
+
+#: ../ai/src/main.rs
+msgid ""
+"Usage: !ai solo [user]  (Disable the shared history for yourself or the "
+"given user.)"
+msgstr ""
+"Sposób użycia: !ai solo [użytkownik]  (Wyłącz współdzieloną historię dla siebie lub podanego użytkownika.)"
+
+#: ../ai/src/main.rs
+msgid ""
+"Usage: !ai joined  (List the users with whom you share the chat history.)"
+msgstr ""
+"Sposób użycia: !ai joined  (Wyświetl użytkowników, z którymi współdzielisz historię czatu.)"
+
+#: ../ai/src/main.rs
+msgid ""
+"Usage: !ai weather <city>  (Tell the AI the current weather. Weather data by "
+"https://open-meteo.com.)"
+msgstr ""
+"Sposób użycia: !ai pogoda <miasto>  (Przekaż AI aktualną pogodę. Dane pogodowe z https://open-meteo.com.)"
+
+#: ../ai/src/main.rs
+msgid ""
+"Usage: !ai forecast <city>  (Tell the AI this week's weather forecast. "
+"Weather data by https://open-meteo.com.)"
+msgstr ""
+"Sposób użycia: !ai prognoza <miasto>  (Przekaż AI prognozę pogody na ten tydzień. Dane pogodowe z https://open-meteo.com.)"
 
 #: ../ai/src/main.rs
 msgid "Flag -{} requires a value (e.g., -{}=1.0)"
@@ -495,8 +537,12 @@ msgid "Config file not found."
 msgstr "Nie znaleziono pliku konfiguracyjnego."
 
 #: ../ai/src/main.rs
-msgid "Usage: join <username>"
-msgstr "Użycie: join <użytkownika>"
+msgid "weather"
+msgstr "pogoda"
+
+#: ../ai/src/main.rs
+msgid "forecast"
+msgstr "prognoza"
 
 #: ../ai/src/main.rs
 msgid "{} joined memory with the group: {}"
@@ -515,32 +561,12 @@ msgid "{} is sharing memory with: {}"
 msgstr "{} współdzieli pamięć z: {}"
 
 #: ../ai/src/main.rs
-msgid "weather"
-msgstr "pogoda"
-
-#: ../ai/src/main.rs
-msgid "Usage: weather <city>"
-msgstr "Użycie: pogoda <miasto>"
-
-#: ../ai/src/main.rs
-msgid "Weather data by https://open-meteo.com"
-msgstr "Dane pogodowe dostarczone przez https://open-meteo.com"
-
-#: ../ai/src/main.rs
 msgid "The weather in {} is: {}."
 msgstr "Pogoda w {} jest: {}."
 
 #: ../ai/src/main.rs
 msgid "The current local time is {}."
 msgstr "Aktualna lokalna godzina to {}."
-
-#: ../ai/src/main.rs
-msgid "forecast"
-msgstr "prognoza"
-
-#: ../ai/src/main.rs
-msgid "Usage: forecast <city>"
-msgstr "Użycie: prognoza <miasto>"
 
 #: ../ai/src/main.rs
 msgid "Weather forecast for {}: {}."
