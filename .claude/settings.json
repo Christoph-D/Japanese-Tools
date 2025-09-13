@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(cargo check:*)",
+      "Bash(cargo test:*)",
+      "Bash(cargo build:*)",
+      "Bash(cargo clippy:*)",
+      "Bash(gettext/extract_strings.sh)"
+    ],
+    "deny": [
+      "Read(.env)"
+    ],
+    "ask": []
+  }
+}

@@ -16,11 +16,22 @@ lookups, quizzes, and an IRC bot.
 
 ## Installation
 
+### Development Container
+
+For the quickest setup, use the provided devcontainer which includes all
+dependencies pre-installed:
+
+1. Open in VS Code with the Dev Containers extension
+2. Select "Reopen in Container" when prompted
+3. Run `./build.sh` to build binaries, translations, and dictionaries
+
+### Manual Installation
+
 These tools have been tested on Ubuntu 24.04 and later. Install required
 dependencies:
 
 ```bash
-sudo apt install mecab-jumandic-utf8 mecab kakasi xmlstarlet xsltproc python-irclib sqlite3 bc liburi-perl tesseract-ocr imagemagick
+sudo apt install mecab-jumandic-utf8 mecab kakasi xmlstarlet xsltproc sqlite3 libsqlite3-dev bc liburi-perl tesseract-ocr imagemagick
 cargo install xtr  # development dependency
 ```
 
