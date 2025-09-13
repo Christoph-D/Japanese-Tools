@@ -143,7 +143,7 @@ fn usage(models: &ModelList, config: &Config, channel: &str) -> Output {
 fn usage_for_command(command: &CommandForHelp) -> String {
     match command {
         CommandForHelp::Join => {
-            gettext("Usage: !ai join <user>  (Join your chat history with another user's history.)")
+            gettext("Usage: !ai join <user...>  (Join your chat history with other users' histories.)")
         }
         CommandForHelp::Solo => gettext(
             "Usage: !ai solo [user]  (Disable the shared history for yourself or the given user.)",
@@ -396,7 +396,7 @@ enum CommandForHelp {
 #[derive(Debug, PartialEq)]
 enum Command {
     None,
-    Join { user_a: String, user_b: String },
+    Join { sender: String, users: Vec<String> },
     Solo { user: String },
     Joined { user: String },
     Help { command: Option<CommandForHelp> },
@@ -420,15 +420,19 @@ fn parse_command(command: &str, args: &str, sender: &str) -> Result<Command, Str
     let command = command.to_lowercase();
     match command.as_ref() {
         "join" => {
-            let target_user = args.trim();
-            if target_user.is_empty() || target_user == sender {
+            let users: Vec<String> = args
+                .split_whitespace()
+                .filter(|u| !u.is_empty() && *u != sender)
+                .map(|u| u.to_string())
+                .collect();
+            if users.is_empty() {
                 return Ok(Command::Help {
                     command: Some(CommandForHelp::Join),
                 });
             }
             Ok(Command::Join {
-                user_a: sender.to_string(),
-                user_b: target_user.to_string(),
+                sender: sender.to_string(),
+                users,
             })
         }
         "solo" => {
@@ -496,15 +500,17 @@ fn process_command(
     memory: &mut Memory,
 ) -> Result<CommandResult, String> {
     match command {
-        Command::Join { user_a, user_b } => {
-            memory
-                .join_users(user_a, user_b, receiver)
-                .map_err(|e| format!("Failed to join users: {}", e))?;
+        Command::Join { sender, users } => {
+            for user in users {
+                memory
+                    .join_users(sender, user, receiver)
+                    .map_err(|e| format!("Failed to join users: {}", e))?;
+            }
             Ok(CommandResult::Message(formatget!(
                 "{} joined memory with the group: {}",
-                user_a,
+                sender,
                 memory
-                    .get_joined_users_excluding_self(user_a, receiver)
+                    .get_joined_users_excluding_self(sender, receiver)
                     .join(", ")
             )))
         }
@@ -721,8 +727,8 @@ mod tests {
         assert_eq!(
             command,
             Command::Join {
-                user_a: "bob".to_string(),
-                user_b: "alice".to_string()
+                sender: "bob".to_string(),
+                users: vec!["alice".to_string()]
             }
         );
     }
@@ -884,8 +890,8 @@ mod tests {
         let mut memory = Memory::new_from_path(dir.path()).unwrap();
 
         let command = Command::Join {
-            user_a: "bob".to_string(),
-            user_b: "alice".to_string(),
+            sender: "bob".to_string(),
+            users: vec!["alice".to_string()],
         };
         let result = process_command(&command, "receiver1", &mut memory).unwrap();
         assert_eq!(
@@ -898,6 +904,37 @@ mod tests {
         assert!(joined_users.contains(&"alice".to_string()));
         assert!(joined_users.contains(&"bob".to_string()));
         assert_eq!(joined_users.len(), 2);
+    }
+
+    #[test]
+    fn test_parse_command_join_multiple_users() {
+        let command = parse_command("join", "alice charlie david", "bob").unwrap();
+        assert_eq!(
+            command,
+            Command::Join {
+                sender: "bob".to_string(),
+                users: vec!["alice".to_string(), "charlie".to_string(), "david".to_string()]
+            }
+        );
+    }
+
+    #[test]
+    fn test_process_command_join_multiple_users() {
+        let dir = tempdir().unwrap();
+        let mut memory = Memory::new_from_path(dir.path()).unwrap();
+
+        let command = Command::Join {
+            sender: "bob".to_string(),
+            users: vec!["alice".to_string(), "charlie".to_string()],
+        };
+        let _result = process_command(&command, "receiver1", &mut memory).unwrap();
+
+        // Verify the users are actually joined
+        let joined_users = memory.get_joined_users("bob", "receiver1");
+        assert!(joined_users.contains(&"alice".to_string()));
+        assert!(joined_users.contains(&"charlie".to_string()));
+        assert!(joined_users.contains(&"bob".to_string()));
+        assert_eq!(joined_users.len(), 3);
     }
 
     #[test]

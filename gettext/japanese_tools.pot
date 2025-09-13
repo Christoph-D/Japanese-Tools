@@ -462,7 +462,7 @@ msgid "Usage: !ai [flags...] [command] <query>.  Flags: -c (clear history), -t=<
 msgstr ""
 
 #: ../ai/src/main.rs
-msgid "Usage: !ai join <user>  (Join your chat history with another user's history.)"
+msgid "Usage: !ai join <user...>  (Join your chat history with other users' histories.)"
 msgstr ""
 
 #: ../ai/src/main.rs

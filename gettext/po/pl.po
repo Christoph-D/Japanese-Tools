@@ -479,40 +479,47 @@ msgstr ""
 "Komendy: join <użytkownik...>, solo [użytkownik], joined, weather <miasto>, "
 "forecast <miasto>. Modele: {}, Domyślny: {}\n"
 "Domyślnie historia jest dzielona według użytkownika i usuwana po {} "
-"minutach. Bot nie ma dostępu do pełnego logu czatu, widzi tylko twoją historię."
+"minutach. Bot nie ma dostępu do pełnego logu czatu, widzi tylko twoją "
+"historię."
 
 #: ../ai/src/main.rs
 msgid ""
-"Usage: !ai join <user>  (Join your chat history with another user's history.)"
+"Usage: !ai join <user...>  (Join your chat history with other users' "
+"histories.)"
 msgstr ""
-"Sposób użycia: !ai join <użytkownik>  (Połącz swoją historię czatu z historią innego użytkownika.)"
+"Sposób użycia: !ai join <użytkownik...>  (Połącz swoją historię czatu z "
+"historiami innych użytkowników.)"
 
 #: ../ai/src/main.rs
 msgid ""
 "Usage: !ai solo [user]  (Disable the shared history for yourself or the "
 "given user.)"
 msgstr ""
-"Sposób użycia: !ai solo [użytkownik]  (Wyłącz współdzieloną historię dla siebie lub podanego użytkownika.)"
+"Sposób użycia: !ai solo [użytkownik]  (Wyłącz współdzieloną historię dla "
+"siebie lub podanego użytkownika.)"
 
 #: ../ai/src/main.rs
 msgid ""
 "Usage: !ai joined  (List the users with whom you share the chat history.)"
 msgstr ""
-"Sposób użycia: !ai joined  (Wyświetl użytkowników, z którymi współdzielisz historię czatu.)"
+"Sposób użycia: !ai joined  (Wyświetl użytkowników, z którymi współdzielisz "
+"historię czatu.)"
 
 #: ../ai/src/main.rs
 msgid ""
 "Usage: !ai weather <city>  (Tell the AI the current weather. Weather data by "
 "https://open-meteo.com.)"
 msgstr ""
-"Sposób użycia: !ai pogoda <miasto>  (Przekaż AI aktualną pogodę. Dane pogodowe z https://open-meteo.com.)"
+"Sposób użycia: !ai pogoda <miasto>  (Przekaż AI aktualną pogodę. Dane "
+"pogodowe z https://open-meteo.com.)"
 
 #: ../ai/src/main.rs
 msgid ""
 "Usage: !ai forecast <city>  (Tell the AI this week's weather forecast. "
 "Weather data by https://open-meteo.com.)"
 msgstr ""
-"Sposób użycia: !ai prognoza <miasto>  (Przekaż AI prognozę pogody na ten tydzień. Dane pogodowe z https://open-meteo.com.)"
+"Sposób użycia: !ai prognoza <miasto>  (Przekaż AI prognozę pogody na ten "
+"tydzień. Dane pogodowe z https://open-meteo.com.)"
 
 #: ../ai/src/main.rs
 msgid "Flag -{} requires a value (e.g., -{}=1.0)"
