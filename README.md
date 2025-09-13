@@ -31,7 +31,7 @@ These tools have been tested on Ubuntu 24.04 and later. Install required
 dependencies:
 
 ```bash
-sudo apt install mecab-jumandic-utf8 mecab kakasi xmlstarlet xsltproc sqlite3 libsqlite3-dev bc liburi-perl tesseract-ocr imagemagick
+sudo apt install gettext mecab-jumandic-utf8 mecab libssl-dev kakasi xmlstarlet xsltproc sqlite3 libsqlite3-dev bc liburi-perl tesseract-ocr imagemagick build-essential pkg-config
 cargo install xtr  # development dependency
 ```
 
