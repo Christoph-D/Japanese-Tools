@@ -515,28 +515,28 @@ impl Bot {
 
     pub fn daily_jobs(&mut self) -> Result<(), BotError> {
         let marker = "Wort des Tages: ";
-        if let Some(ref topic) = self.main_channel_topic {
-            if let Some(pos) = topic.find(marker) {
-                let prefix = &topic[..pos];
-                let old_word_part = &topic[pos + marker.len()..];
+        if let Some(ref topic) = self.main_channel_topic
+            && let Some(pos) = topic.find(marker)
+        {
+            let prefix = &topic[..pos];
+            let old_word_part = &topic[pos + marker.len()..];
 
-                let (old_word, suffix) = if let Some(space_pos) = old_word_part.find(' ') {
-                    let (word, suf) = old_word_part.split_at(space_pos);
-                    (word, " ".to_string() + suf)
-                } else {
-                    (old_word_part, String::new())
-                };
+            let (old_word, suffix) = if let Some(space_pos) = old_word_part.find(' ') {
+                let (word, suf) = old_word_part.split_at(space_pos);
+                (word, " ".to_string() + suf)
+            } else {
+                (old_word_part, String::new())
+            };
 
-                let new_word = match self.next_word_of_the_day(old_word) {
-                    Ok(Some(new_word)) => new_word,
-                    _ => return Ok(()), // Ignore errors, it's a non-essential feature
-                };
+            let new_word = match self.next_word_of_the_day(old_word) {
+                Ok(Some(new_word)) => new_word,
+                _ => return Ok(()), // Ignore errors, it's a non-essential feature
+            };
 
-                let new_topic = format!("{}{}{}{}", prefix, marker, new_word, suffix);
-                self.debug_out(&format!("New topic: [{}]", new_topic));
-                self.client
-                    .send(Command::TOPIC(self.main_channel.clone(), Some(new_topic)))?;
-            }
+            let new_topic = format!("{}{}{}{}", prefix, marker, new_word, suffix);
+            self.debug_out(&format!("New topic: [{}]", new_topic));
+            self.client
+                .send(Command::TOPIC(self.main_channel.clone(), Some(new_topic)))?;
         }
         Ok(())
     }

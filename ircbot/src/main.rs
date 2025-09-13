@@ -31,10 +31,10 @@ struct Args {
 }
 
 fn parse_server_address(server: &str) -> (String, u16) {
-    if let Some((host, port_str)) = server.split_once(':') {
-        if let Ok(port) = u16::from_str(port_str) {
-            return (host.to_string(), port);
-        }
+    if let Some((host, port_str)) = server.split_once(':')
+        && let Ok(port) = u16::from_str(port_str)
+    {
+        return (host.to_string(), port);
     }
     (server.to_string(), 6667)
 }

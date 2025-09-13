@@ -126,23 +126,23 @@ impl Config {
                     ));
                 }
             }
-            if let Some(api_key) = env_vars.get(&format!("{}_API_KEY", env_prefix)) {
-                if !api_key.is_empty() {
-                    let endpoint = match provider_name.as_str() {
-                        "anthropic" => ANTHROPIC_API_ENDPOINT.to_string(),
-                        "deepseek" => DEEPSEEK_API_ENDPOINT.to_string(),
-                        "mistral" => MISTRAL_API_ENDPOINT.to_string(),
-                        "openrouter" => OPENROUTER_API_ENDPOINT.to_string(),
-                        "litellm" => toml_provider.endpoint.unwrap(), // we validated above
-                        _ => unreachable!(),                          // validated above
-                    };
-                    providers.push(Provider {
-                        name: Self::provider_display_name(&provider_name),
-                        api_key: api_key.clone(),
-                        endpoint,
-                        models: toml_provider.models,
-                    });
-                }
+            if let Some(api_key) = env_vars.get(&format!("{}_API_KEY", env_prefix))
+                && !api_key.is_empty()
+            {
+                let endpoint = match provider_name.as_str() {
+                    "anthropic" => ANTHROPIC_API_ENDPOINT.to_string(),
+                    "deepseek" => DEEPSEEK_API_ENDPOINT.to_string(),
+                    "mistral" => MISTRAL_API_ENDPOINT.to_string(),
+                    "openrouter" => OPENROUTER_API_ENDPOINT.to_string(),
+                    "litellm" => toml_provider.endpoint.unwrap(), // we validated above
+                    _ => unreachable!(),                          // validated above
+                };
+                providers.push(Provider {
+                    name: Self::provider_display_name(&provider_name),
+                    api_key: api_key.clone(),
+                    endpoint,
+                    models: toml_provider.models,
+                });
             }
         }
         let channels = toml_config

@@ -3,6 +3,7 @@ name = "ircbot"
 version = "0.1.0"
 edition = "2024"
 authors = ["Christoph Dittmann <github@yozora.eu>"]
+rust-version = "1.89"
 
 [dependencies]
 irc = "1.1.0"

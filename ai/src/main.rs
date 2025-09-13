@@ -142,9 +142,9 @@ fn usage(models: &ModelList, config: &Config, channel: &str) -> Output {
 
 fn usage_for_command(command: &CommandForHelp) -> String {
     match command {
-        CommandForHelp::Join => {
-            gettext("Usage: !ai join <user...>  (Join your chat history with other users' histories.)")
-        }
+        CommandForHelp::Join => gettext(
+            "Usage: !ai join <user...>  (Join your chat history with other users' histories.)",
+        ),
         CommandForHelp::Solo => gettext(
             "Usage: !ai solo [user]  (Disable the shared history for yourself or the given user.)",
         ),
@@ -662,10 +662,8 @@ fn run(input: &Input) -> Result<Output, String> {
 
         // Only show temperature prefix if user explicitly used -t flag
         let user_temperature_flag = input.flags.iter().any(|flag| flag.starts_with("t="));
-        if user_temperature_flag {
-            if let Some(t) = temperature {
-                flag_state.push(format!("t={}", t));
-            }
+        if user_temperature_flag && let Some(t) = temperature {
+            flag_state.push(format!("t={}", t));
         }
 
         flag_state.join(" ")
@@ -913,7 +911,11 @@ mod tests {
             command,
             Command::Join {
                 sender: "bob".to_string(),
-                users: vec!["alice".to_string(), "charlie".to_string(), "david".to_string()]
+                users: vec![
+                    "alice".to_string(),
+                    "charlie".to_string(),
+                    "david".to_string()
+                ]
             }
         );
     }
