@@ -1,5 +1,7 @@
 # Japanese learning tools / IRC bot
 
+[![CI](https://github.com/Christoph-D/Japanese-Tools/actions/workflows/ci.yml/badge.svg)](https://github.com/Christoph-D/Japanese-Tools/actions/workflows/ci.yml)
+
 A collection of scripts and tools to help learn Japanese, including dictionary
 lookups, quizzes, and an IRC bot.
 
