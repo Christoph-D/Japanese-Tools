@@ -24,16 +24,29 @@ dependencies pre-installed:
 1. Open in VS Code with the Dev Containers extension
 2. Select "Reopen in Container" when prompted
 3. Run `./build.sh` to build binaries, translations, and dictionaries
+4. [optional, slow] Run `./install_mueval.sh` to install the `mueval` tool
 
 ### Manual Installation
 
-These tools have been tested on Ubuntu 24.04 and later. Install required
-dependencies:
+These tools have been tested on Ubuntu 24.04 and later. Install dependencies:
 
 ```bash
-sudo apt install gettext mecab-jumandic-utf8 mecab libssl-dev kakasi xmlstarlet xsltproc sqlite3 libsqlite3-dev bc liburi-perl tesseract-ocr imagemagick build-essential pkg-config
-cargo install xtr  # development dependency
+# Required dependencies
+sudo apt install gettext mecab-jumandic-utf8 mecab libssl-dev kakasi xmlstarlet xsltproc sqlite3 libsqlite3-dev bc liburi-perl build-essential pkg-config python3 wget
+cargo install xtr
+# Optional, required only for lhc
+sudo apt install tesseract-ocr imagemagick
+# Optional, required only for cdecl
+sudo apt install cdecl
+# Optional, required only for mueval
+sudo apt install libffi-dev libffi8ubuntu1 libgmp-dev libgmp10 libncurses-dev
+./install_mueval.sh
 ```
+
+The last command installs [GHCup](https://www.haskell.org/ghcup/install/) and
+[mueval](https://hackage.haskell.org/package/mueval). If you don't use the
+devcontainer, you need to run `source ~/.ghcup/env` to set up `PATH`, for
+example in `.bashrc`.
 
 To build binaries, translations, and dictionaries:
 

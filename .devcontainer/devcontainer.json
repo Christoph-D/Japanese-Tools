@@ -12,6 +12,7 @@
                 "eamodio.gitlens",
                 "esbenp.prettier-vscode",
                 "mkhl.shfmt",
+                "ms-python.python",
                 "rust-lang.rust-analyzer",
                 "saoudrizwan.claude-dev"
             ],
