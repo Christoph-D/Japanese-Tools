@@ -70,24 +70,29 @@ alias rtk="$JAPANESE_TOOLS/rtk/rtk.sh"
 ## AI assistant
 
 Query an LLM for Japanese language help or any other question. Supports
-different providers, including OpenRouter, Mistral, Deepseek, LiteLLM. You need
-put at least one API key into `.env`.
+different providers, including OpenRouter, Mistral, Deepseek, LiteLLM,
+Anthropic. You need put at least one API key into `.env`.
 
 ```bash
 cd ai
 cp .env.example .env
-# Edit .env to add your API keys and model config
+# Edit .env to add your API keys
 cp config.toml.example config.toml
-# Edit config.toml to configure the available models
+# Edit config.toml to configure the available models and prompts
 cargo run -- "What's 夜空?"
 ```
 
 ```text
 $ cd ai
 $ cargo run
-Usage: !ai [-g|-o|-p|-m] [-clear_history|-c] [-temp=1.0|-t=1.0] <query>.  Models: [g]Gemini 2.5 Flash [o]GPT-4o mini [p]GPT-4.1 [m]Mistral Medium.  Default: Deepseek v3 0324
+Usage: !ai [flags...] [command] <query>.  Flags: -c (clear history), -t=<val> (temp), -r|-g|-m|-s|-k (select model).
+Commands: join <user...>, solo [user], joined, weather <city>, forecast <city>.  Models: [r]DeepSeek-V3.1 (reasoning) [g]Gemini 2.5 Flash [m]Mistral Medium [s]Claude Sonnet 4 [k]Kimi K2, Default: DeepSeek-V3.1
+By default, history is split by user and deleted after 10 minutes. The bot does not have access to a full chat log, it sees only your history.
+
 $ cargo run -- "What's 夜空?"
 "夜空" means "night sky" in English. It refers to the sky as seen at night, often with stars and the moon.
+
+# Selecting a different model
 $ cargo run -- "-g What's 夜空? Also give me a Japanese example sentence."
 [g] Yozora (夜空) means night sky. 今夜は夜空が綺麗ですね。(The night sky is beautiful tonight.)
 ```
@@ -96,11 +101,11 @@ $ cargo run -- "-g What's 夜空? Also give me a Japanese example sentence."
 
 ```text
 <Christoph>  !ai What is 夜空?
-<nihongobot> 夜空 means "night sky" in Japanese, referring to the sky as seen after sunset.
+<nihongobot> 夜空 (yozora) means "night sky" in Japanese.
 <Christoph>  !ai Do you know any other words like this?
-<nihongobot> Yes! 星空 (hoshi-zora) means "starry sky" and 夕空 (yuu-zora) means "evening sky."
+<nihongobot> Yes! For example: 星空 (hoshizora) - "starry sky", 夕空 (yūzora) - "evening sky".
 <Christoph>  !ai Something for morning?
-<nihongobot> 朝空 (asa-zora) means "morning sky" in Japanese.
+<nihongobot> 朝空 (asazora) - "morning sky" (though less common than 朝焼け/朝焼け空 for "morning glow/sky").
 ```
 
 ## Word and kanji lookup
