@@ -579,7 +579,7 @@ fn run(input: &Input) -> Result<Output, String> {
     let history_cleared = input.flags.contains(&"c".to_string());
     if history_cleared {
         memory
-            .clear_history(&input.sender, &input.receiver)
+            .clear_history_for_joined_users(&input.sender, &input.receiver)
             .map_err(|e| format!("Failed to clear history: {}", e))?;
     }
 

@@ -223,18 +223,44 @@ impl Memory {
         Ok(())
     }
 
-    // Clear the history of the given user.
-    pub fn clear_history(&mut self, user: &str, receiver: &str) -> Result<(), String> {
+    // Clear the history of all users joined with the given user.
+    pub fn clear_history_for_joined_users(
+        &mut self,
+        user: &str,
+        receiver: &str,
+    ) -> Result<(), String> {
+        let joined_users = self.get_joined_users(user, receiver);
+        self.clear_history_for_users(&joined_users, receiver)
+    }
+
+    // Clear the history for a list of users.
+    fn clear_history_for_users(&mut self, users: &[String], receiver: &str) -> Result<(), String> {
+        if users.is_empty() {
+            return Ok(());
+        }
+
+        let placeholders: Vec<String> = (0..users.len()).map(|i| format!("?{}", i + 2)).collect();
+        let sql = format!(
+            "DELETE FROM memory WHERE receiver = ?1 AND user IN ({})",
+            placeholders.join(", ")
+        );
+
+        let mut params: Vec<&dyn rusqlite::ToSql> = vec![&receiver];
+        for user in users {
+            params.push(user);
+        }
+
         self.sqlite
-            .execute(
-                "DELETE FROM memory WHERE user = ?1 AND receiver = ?2",
-                (user, receiver),
-            )
+            .execute(&sql, &params[..])
             .map_err(|e| format!("Failed to clear history from database: {}", e))?;
-        if let Some(entries) = self.entries.get_mut(user) {
-            entries.retain(|entry| entry.receiver != receiver);
-            if entries.is_empty() {
-                self.entries.remove(user);
+
+        // Update in-memory entries
+        for user in users {
+            if let Some(entries) = self.entries.get_mut(user) {
+                entries.retain(|entry| entry.receiver != receiver);
+                if entries.is_empty() {
+                    self.entries.remove(user);
+                }
             }
         }
         Ok(())
@@ -344,24 +370,6 @@ mod tests {
         assert_eq!(user1_history[0].1, "message1");
         assert_eq!(user1_history[1].1, "message2");
         assert_eq!(user2_history[0].1, "messageA");
-    }
-
-    #[test]
-    fn test_memory_clear_history() {
-        let (dir, mut memory) = setup_memory();
-
-        memory
-            .add_to_history("user1", Sender::User, "receiver1", "message1")
-            .unwrap();
-        memory
-            .add_to_history("user2", Sender::User, "receiver2", "messageA")
-            .unwrap();
-
-        memory.clear_history("user1", "receiver1").unwrap();
-
-        let loaded_memory = Memory::new_from_path(dir.path()).unwrap();
-        assert!(loaded_memory.user_history("user1", "receiver1").is_empty());
-        assert_eq!(loaded_memory.user_history("user2", "receiver2").len(), 1);
     }
 
     #[test]
@@ -500,5 +508,76 @@ mod tests {
             memory.get_joined_users("user2", "receiver1"),
             vec!["user2".to_string()]
         );
+    }
+
+    #[test]
+    fn test_clear_history_for_joined_users() {
+        let (dir, mut memory) = setup_memory();
+
+        // Add history for three users
+        memory
+            .add_to_history("user1", Sender::User, "receiver1", "message1")
+            .unwrap();
+        memory
+            .add_to_history("user2", Sender::User, "receiver1", "message2")
+            .unwrap();
+        memory
+            .add_to_history("user3", Sender::User, "receiver1", "message3")
+            .unwrap();
+
+        // Join user1 and user2
+        memory.join_users("user1", "user2", "receiver1").unwrap();
+
+        // Verify all users have history
+        assert_eq!(memory.user_history("user1", "receiver1").len(), 1);
+        assert_eq!(memory.user_history("user2", "receiver1").len(), 1);
+        assert_eq!(memory.user_history("user3", "receiver1").len(), 1);
+
+        // Clear history for joined users (user1 and user2)
+        memory
+            .clear_history_for_joined_users("user1", "receiver1")
+            .unwrap();
+
+        // Verify joined users' history is cleared but user3's is not
+        assert_eq!(memory.user_history("user1", "receiver1").len(), 0);
+        assert_eq!(memory.user_history("user2", "receiver1").len(), 0);
+        assert_eq!(memory.user_history("user3", "receiver1").len(), 1);
+
+        // Verify persistence by reloading from disk
+        let loaded_memory = Memory::new_from_path(dir.path()).unwrap();
+        assert!(loaded_memory.user_history("user1", "receiver1").is_empty());
+        assert!(loaded_memory.user_history("user2", "receiver1").is_empty());
+        assert_eq!(loaded_memory.user_history("user3", "receiver1").len(), 1);
+    }
+
+    #[test]
+    fn test_clear_history_for_joined_users_single_user() {
+        let (dir, mut memory) = setup_memory();
+
+        // Add history for a single user (not joined with anyone)
+        memory
+            .add_to_history("user1", Sender::User, "receiver1", "message1")
+            .unwrap();
+        memory
+            .add_to_history("user2", Sender::User, "receiver1", "message2")
+            .unwrap();
+
+        // Verify both users have history
+        assert_eq!(memory.user_history("user1", "receiver1").len(), 1);
+        assert_eq!(memory.user_history("user2", "receiver1").len(), 1);
+
+        // Clear history for user1 (who is not joined with anyone)
+        memory
+            .clear_history_for_joined_users("user1", "receiver1")
+            .unwrap();
+
+        // Verify only user1's history is cleared
+        assert_eq!(memory.user_history("user1", "receiver1").len(), 0);
+        assert_eq!(memory.user_history("user2", "receiver1").len(), 1);
+
+        // Verify persistence by reloading from disk
+        let loaded_memory = Memory::new_from_path(dir.path()).unwrap();
+        assert!(loaded_memory.user_history("user1", "receiver1").is_empty());
+        assert_eq!(loaded_memory.user_history("user2", "receiver1").len(), 1);
     }
 }
