@@ -44,13 +44,10 @@ fn call_api(
     prompt: &Vec<Message>,
     temperature: &Option<f64>,
 ) -> Result<String, String> {
-    let client = match reqwest::blocking::Client::builder()
+    let client = reqwest::blocking::Client::builder()
         .timeout(Duration::from_secs(20))
         .build()
-    {
-        Ok(c) => c,
-        Err(e) => return Err(formatget!("HTTP client error: {}", e)),
-    };
+        .map_err(|e| formatget!("HTTP client error: {}", e))?;
 
     #[derive(Debug, serde::Serialize)]
     struct Payload<'a> {
@@ -75,30 +72,21 @@ fn call_api(
         .json(&payload)
         .send();
 
-    let mut resp = match response {
-        Ok(r) => r,
-        Err(e) => return Err(formatget!("API error: {}", e)),
-    };
+    let mut resp = response.map_err(|e| formatget!("API error: {}", e))?;
 
     let mut body = String::new();
-    if let Err(e) = resp.read_to_string(&mut body) {
-        return Err(formatget!("Failed to read response: {}", e));
-    }
+    resp.read_to_string(&mut body)
+        .map_err(|e| formatget!("Failed to read response: {}", e))?;
 
-    let json: serde_json::Value = match serde_json::from_str(&body) {
-        Ok(j) => j,
-        Err(e) => return Err(formatget!("Invalid response: {}", e)),
-    };
+    let json: serde_json::Value =
+        serde_json::from_str(&body).map_err(|e| formatget!("Invalid response: {}", e))?;
 
     let content = json["choices"]
         .get(0)
         .and_then(|c| c["message"]["content"].as_str())
         .map(|s| s.to_string());
 
-    match content {
-        Some(text) => Ok(text),
-        None => Err(formatget!("Invalid response: {}", body)),
-    }
+    content.ok_or_else(|| formatget!("Invalid response: {}", body))
 }
 
 fn sanitize_output(s: &str, api_key: &Option<&str>) -> String {
@@ -321,7 +309,7 @@ impl std::fmt::Display for Output {
 
 fn main() {
     let input = setup().unwrap_or_else(|err| {
-        println!("{}", sanitize_output(&err.to_string(), &None));
+        println!("{}", err);
         std::process::exit(0);
     });
     match run(&input) {
@@ -347,10 +335,7 @@ fn setup() -> Result<Input, String> {
             .push(&dir)
             .init();
     }
-    let config_path = match locate_config_path() {
-        Some(path) => path,
-        None => return Err(gettext("Config file not found.")),
-    };
+    let config_path = locate_config_path().ok_or_else(|| gettext("Config file not found."))?;
     let env_vars = EnvVars::from_file(&config_path).unwrap_or_default();
 
     let sender = std::env::var("DMB_SENDER").unwrap_or_default();
