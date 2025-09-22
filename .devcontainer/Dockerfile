@@ -31,6 +31,7 @@ RUN apt-get update && apt-get install -y \
   libncurses-dev \
   # Additional development tools
   locales \
+  tzdata \
   curl \
   git \
   ripgrep \
@@ -38,7 +39,8 @@ RUN apt-get update && apt-get install -y \
   shfmt \
   && rm -rf /var/lib/apt/lists/*
 
-RUN echo 'en_US.UTF-8 UTF-8' > /etc/locale.gen && \
+RUN ln -sf /usr/share/zoneinfo/hostlocaltime /etc/localtime && \
+  echo 'en_US.UTF-8 UTF-8' > /etc/locale.gen && \
   dpkg-reconfigure locales && \
   update-locale LANG=en_US.UTF-8
 

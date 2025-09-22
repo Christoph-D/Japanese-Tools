@@ -44,6 +44,7 @@
     "remoteUser": "ubuntu",
     "mounts": [
         "source=bashhistory-Japanese,target=/commandhistory,type=volume",
-        "source=claude-code-config-Japanese,target=/home/ubuntu/claude-config,type=volume"
+        "source=claude-code-config-Japanese,target=/home/ubuntu/claude-config,type=volume",
+        "source=/etc/localtime,target=/usr/share/zoneinfo/hostlocaltime,type=bind,readonly"
     ]
 }
