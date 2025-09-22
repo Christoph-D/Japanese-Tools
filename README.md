@@ -30,7 +30,7 @@ dependencies pre-installed:
 
 ### Manual Installation
 
-These tools have been tested on Ubuntu 24.04 and later. Install dependencies:
+These tools have been tested on Ubuntu 24.04. Install dependencies:
 
 ```bash
 # Required dependencies
@@ -41,7 +41,7 @@ sudo apt install tesseract-ocr imagemagick
 # Optional, required only for cdecl
 sudo apt install cdecl
 # Optional, required only for mueval
-sudo apt install libffi-dev libffi8ubuntu1 libgmp-dev libgmp10 libncurses-dev
+sudo apt install firejail libffi-dev libffi8ubuntu1 libgmp-dev libgmp10 libncurses-dev
 ./install_mueval.sh
 ```
 
@@ -285,6 +285,34 @@ Provides internationalization support for the tools.
 1. Run `gettext/extract_strings.sh` to extract strings from the source code.
 1. Translate the strings in `gettext/po/<language>.po`.
 1. Run `gettext/regenerate_mo_files.sh` to use the translations.
+
+### Mathematical expressions (mueval)
+
+Safely evaluate Haskell expressions and mathematical calculations using mueval.
+
+```text
+$ ./mueval/run.sh 1+1
+ 2
+
+$ ./mueval/run.sh "sum [1..10]"
+ 55
+
+$ ./mueval/type.sh "1+1"
+ :: Num a => a
+```
+
+**Security:**
+
+- Runs in firejail sandbox with network disabled
+- Limited CPU time and file resources
+- No access to user files except read-only access to `$HOME/.cabal` and
+  `$HOME/.ghc`
+
+**Important:** Firejail protection is disabled when running inside Docker
+containers (such as the devcontainer), as firejail cannot run inside Docker. The
+tool will still work but without the additional sandboxing layer.
+
+**IRC:** Available as `!calc` in the IRC bot.
 
 ### Compare encoding
 

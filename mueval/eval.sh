@@ -12,7 +12,12 @@ MAX_LINE_LENGTH=200
 TIME_LIMIT_SECONDS=6
 
 if ! command -v mueval &>/dev/null; then
-    printf_ 'Please install mueval: %s' 'http://hackage.haskell.org/package/mueval'
+    echo_ "Couldn't find mueval. Please run install_mueval.sh from the project root."
+    exit 1
+fi
+
+if ! command -v firejail &>/dev/null; then
+    echo_ "Couldn't find firejail. Please install firejail."
     exit 1
 fi
 
@@ -30,7 +35,40 @@ if [[ $QUERY = 'help' ]]; then
     exit 0
 fi
 
-RESULT="$(mueval \
+RESULT="$(firejail \
+    --name=mueval \
+    --quiet \
+    --noprofile \
+    --private-tmp \
+    --private-dev \
+    --private-etc=invalid \
+    --private-cwd=/ \
+	--read-only=$HOME \
+	--noblacklist="$HOME/.cabal" \
+	--noblacklist="$HOME/.ghc" \
+    --blacklist="$HOME/*" \
+	--restrict-namespaces \
+    --disable-mnt \
+    --no3d \
+    --nodvd \
+    --nogroups \
+    --noinput \
+    --noroot \
+    --nosound \
+    --notv \
+    --nou2f \
+    --novideo \
+    --net=none \
+    --caps.drop=all \
+    --nonewprivs \
+    --seccomp \
+    --nodbus \
+    --x11=none \
+    --rlimit-cpu="$TIME_LIMIT_SECONDS" \
+    --rlimit-nofile=300 \
+    --rlimit-nproc=100 \
+    --oom=1000 \
+    mueval \
     "$([[ $MODE = 'type' ]] && echo '--inferred-type')" \
     --time-limit="$TIME_LIMIT_SECONDS" \
     --expression "$QUERY" 2>&1)"
@@ -40,18 +78,20 @@ MUEVAL_EXIT_CODE=$?
 RESULT=$(printf '%s\n' "${RESULT//$'\n'/ }" | tr --delete '\000-\037')
 
 if [[ $MUEVAL_EXIT_CODE -ne 0 ]]; then
-    if printf '%s' "$RESULT" | grep -q '^mueval\(-core\)\?: '; then
-        if printf '%s' "$RESULT" | grep -q 'memory'; then
+    if [[ -z $RESULT ]]; then
+        RESULT=$(_ 'An error occurred.')
+    elif [[ $RESULT = '*Exception: <<timeout>>' ]]; then
+        RESULT=$(_ 'Time limit exceeded.')
+    elif [[ $RESULT =~ ^mueval(-core)?:  ]]; then
+        if [[ $RESULT =~ memory ]]; then
             RESULT=$(_ 'Memory limit exceeded.')
-        else
+        elif [[ $RESULT =~ time ]]; then
             RESULT=$(_ 'Time limit exceeded.')
+        else
+            RESULT=$(_ 'An error occurred.')
         fi
     fi
     RESULT=${RESULT//<no location info>:/}
-    if printf '%s' "$RESULT" | \
-        grep -q '^No instance for (GHC\.Show\.Show (\(GHC\.IOBase\.\)\?IO '; then
-        RESULT="IO not allowed."
-    fi
     # Remove multiple spaces and other unnecessary parts.
     RESULT=$(printf '%s\n' "$RESULT" | \
         sed 's/(possibly incorrect indentation)//g' | \
@@ -69,6 +109,6 @@ fi
 if [[ ${#RESULT} -ge $MAX_LINE_LENGTH ]]; then
     RESULT="${RESULT:0:$(( MAX_LINE_LENGTH - 4 ))}..."
 fi
-printf '%s\n' " $RESULT" | iconv -f utf8 -t latin1
+printf '%s\n' " $RESULT"
 
 exit 0

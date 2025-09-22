@@ -226,8 +226,15 @@ msgid "Unknown level \"%s\". Valid levels (number of questions): %s"
 msgstr "Nieznany poziom \"%s\". Poprawne poziomy (liczba pytań): %s"
 
 #: mueval/eval.sh
-msgid "Please install mueval: %s"
-msgstr "Proszę zainstalować mueval: %s"
+msgid ""
+"Couldn't find mueval. Please run install_mueval.sh from the project root."
+msgstr ""
+"Nie znaleziono mueval. Proszę uruchomić install_mueval.sh z katalogu "
+"głównego projektu."
+
+#: mueval/eval.sh
+msgid "Couldn't find firejail. Please install firejail."
+msgstr "Nie znaleziono firejail. Proszę zainstalować firejail."
 
 #: mueval/eval.sh
 msgid "Please don't call this script directly."
@@ -237,13 +244,17 @@ msgstr "Proszę nie używać tego skryptu bezpośrednio."
 msgid "Example: !calc 1+1"
 msgstr "Przykład: !calc 1+1"
 
-#: mueval/eval.sh
-msgid "Memory limit exceeded."
-msgstr "Przekroczono limit pamięci."
+#: mueval/eval.sh ../ircbot/src/bot.rs
+msgid "An error occurred."
+msgstr "Wystąpił błąd."
 
 #: mueval/eval.sh
 msgid "Time limit exceeded."
 msgstr "Przekroczono limit czasu."
+
+#: mueval/eval.sh
+msgid "Memory limit exceeded."
+msgstr "Przekroczono limit pamięci."
 
 #: reading_quiz/quiz.sh
 msgid "Please read: %s"
@@ -582,10 +593,6 @@ msgstr "Prognoza pogody dla {}: {}."
 #: ../ai/src/main.rs
 msgid "!ai is only available in channels."
 msgstr "!ai jest dostępne tylko na kanałach."
-
-#: ../ircbot/src/bot.rs
-msgid "An error occurred."
-msgstr "Wystąpił błąd."
 
 #: ../ircbot/src/bot.rs
 msgid "A very simple bot with 日本語 support."

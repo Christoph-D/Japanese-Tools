@@ -99,7 +99,7 @@ msgstr ""
 msgid "Please fix %s."
 msgstr ""
 
-#: kana/kana.sh kana/kana.sh
+#: kana/kana.sh
 msgid "Could not create directory %s. Please fix %s."
 msgstr ""
 
@@ -220,7 +220,12 @@ msgid "Unknown level \"%s\". Valid levels (number of questions): %s"
 msgstr ""
 
 #: mueval/eval.sh
-msgid "Please install mueval: %s"
+msgid ""
+"Couldn't find mueval. Please run install_mueval.sh from the project root."
+msgstr ""
+
+#: mueval/eval.sh
+msgid "Couldn't find firejail. Please install firejail."
 msgstr ""
 
 #: mueval/eval.sh
@@ -231,12 +236,16 @@ msgstr ""
 msgid "Example: !calc 1+1"
 msgstr ""
 
-#: mueval/eval.sh
-msgid "Memory limit exceeded."
+#: mueval/eval.sh ../ircbot/src/bot.rs
+msgid "An error occurred."
 msgstr ""
 
 #: mueval/eval.sh
 msgid "Time limit exceeded."
+msgstr ""
+
+#: mueval/eval.sh
+msgid "Memory limit exceeded."
 msgstr ""
 
 #: reading_quiz/quiz.sh
@@ -284,7 +293,9 @@ msgid "Default model not found"
 msgstr ""
 
 #: ../ai/src/weather.rs
-msgid "{}, Temperature: {}°C, Cloud cover: {}%, Wind: {}km/h, Humidity: {}%, Precipitation: {}mm"
+msgid ""
+"{}, Temperature: {}°C, Cloud cover: {}%, Wind: {}km/h, Humidity: {}%, "
+"Precipitation: {}mm"
 msgstr ""
 
 #: ../ai/src/weather.rs
@@ -451,34 +462,47 @@ msgstr ""
 msgid "Failed to read response: {}"
 msgstr ""
 
-#: ../ai/src/main.rs ../ai/src/main.rs
+#: ../ai/src/main.rs
 msgid "Invalid response: {}"
 msgstr ""
 
 #: ../ai/src/main.rs
-msgid "Usage: !ai [flags...] [command] <query>.  Flags: -c (clear history), -t=<val> (temp), {} (select model).\n"
-"Commands: join <user...>, solo [user], joined, weather <city>, forecast <city>.  Models: {}, Default: {}\n"
-"By default, history is split by user and deleted after {} minutes. The bot does not have access to a full chat log, it sees only your history."
+msgid ""
+"Usage: !ai [flags...] [command] <query>.  Flags: -c (clear history), -"
+"t=<val> (temp), {} (select model).\n"
+"Commands: join <user...>, solo [user], joined, weather <city>, forecast "
+"<city>.  Models: {}, Default: {}\n"
+"By default, history is split by user and deleted after {} minutes. The bot "
+"does not have access to a full chat log, it sees only your history."
 msgstr ""
 
 #: ../ai/src/main.rs
-msgid "Usage: !ai join <user...>  (Join your chat history with other users' histories.)"
+msgid ""
+"Usage: !ai join <user...>  (Join your chat history with other users' "
+"histories.)"
 msgstr ""
 
 #: ../ai/src/main.rs
-msgid "Usage: !ai solo [user]  (Disable the shared history for yourself or the given user.)"
+msgid ""
+"Usage: !ai solo [user]  (Disable the shared history for yourself or the "
+"given user.)"
 msgstr ""
 
 #: ../ai/src/main.rs
-msgid "Usage: !ai joined  (List the users with whom you share the chat history.)"
+msgid ""
+"Usage: !ai joined  (List the users with whom you share the chat history.)"
 msgstr ""
 
 #: ../ai/src/main.rs
-msgid "Usage: !ai weather <city>  (Tell the AI the current weather. Weather data by https://open-meteo.com.)"
+msgid ""
+"Usage: !ai weather <city>  (Tell the AI the current weather. Weather data by "
+"https://open-meteo.com.)"
 msgstr ""
 
 #: ../ai/src/main.rs
-msgid "Usage: !ai forecast <city>  (Tell the AI this week's weather forecast. Weather data by https://open-meteo.com.)"
+msgid ""
+"Usage: !ai forecast <city>  (Tell the AI this week's weather forecast. "
+"Weather data by https://open-meteo.com.)"
 msgstr ""
 
 #: ../ai/src/main.rs
@@ -492,7 +516,8 @@ msgstr[0] ""
 msgstr[1] ""
 
 #: ../ai/src/main.rs
-msgid "Internal error: duplicate configured flags detected, check your model config"
+msgid ""
+"Internal error: duplicate configured flags detected, check your model config"
 msgstr ""
 
 #: ../ai/src/main.rs
@@ -527,7 +552,7 @@ msgstr ""
 msgid "The weather in {} is: {}."
 msgstr ""
 
-#: ../ai/src/main.rs ../ai/src/main.rs
+#: ../ai/src/main.rs
 msgid "The current local time is {}."
 msgstr ""
 
@@ -537,10 +562,6 @@ msgstr ""
 
 #: ../ai/src/main.rs
 msgid "!ai is only available in channels."
-msgstr ""
-
-#: ../ircbot/src/bot.rs
-msgid "An error occurred."
 msgstr ""
 
 #: ../ircbot/src/bot.rs
