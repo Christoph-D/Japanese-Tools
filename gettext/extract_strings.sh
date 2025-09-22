@@ -36,7 +36,7 @@ sed -i '1,+17s/^"Last-Translator: FULL NAME <EMAIL@ADDRESS>\\n"$/"Last-Translato
 sed -i '/^#: /s/:[0-9]\+\($\| \)/\1/g' "$POT_FILE"
 
 # Remove duplicates
-msguniq "${POT_FILE}" -o "${POT_FILE}.tmp"
+msguniq -F -o "${POT_FILE}.tmp" "${POT_FILE}"
 mv "${POT_FILE}.tmp" "${POT_FILE}"
 
 merge_messages() {

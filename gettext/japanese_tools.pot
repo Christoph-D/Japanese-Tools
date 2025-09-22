@@ -15,12 +15,300 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=INTEGER; plural=EXPRESSION;\n"
 
-#: audio/find_audio.sh
-msgid "Usage: %s word [reading]"
+#: ../ai/src/main.rs
+msgid "!ai is only available in channels."
+msgstr ""
+
+#: ../ai/src/main.rs
+msgid "API error: {}"
+msgstr ""
+
+#: ../ai/src/main.rs
+msgid "Config file not found."
+msgstr ""
+
+#: ../ai/src/main.rs
+msgid "Failed to read response: {}"
+msgstr ""
+
+#: ../ai/src/main.rs
+msgid "Flag -{} requires a value (e.g., -{}=1.0)"
+msgstr ""
+
+#: ../ai/src/main.rs ../ai/src/weather.rs
+msgid "HTTP client error: {}"
+msgstr ""
+
+#: ../ai/src/main.rs
+msgid ""
+"Internal error: duplicate configured flags detected, check your model config"
+msgstr ""
+
+#: ../ai/src/main.rs
+msgid "Invalid response: {}"
+msgstr ""
+
+#: ../ai/src/main.rs
+msgid "The current local time is {}."
+msgstr ""
+
+#: ../ai/src/main.rs
+msgid "The weather in {} is: {}."
+msgstr ""
+
+#: ../ai/src/main.rs
+msgid "Unknown flag: {}"
+msgid_plural "Unknown flags: {}"
+msgstr[0] ""
+msgstr[1] ""
+
+#: ../ai/src/main.rs
+msgid ""
+"Usage: !ai [flags...] [command] <query>.  Flags: -c (clear history), -"
+"t=<val> (temp), {} (select model).\n"
+"Commands: join <user...>, solo [user], joined, weather <city>, forecast "
+"<city>.  Models: {}, Default: {}\n"
+"By default, history is split by user and deleted after {} minutes. The bot "
+"does not have access to a full chat log, it sees only your history."
+msgstr ""
+
+#: ../ai/src/main.rs
+msgid ""
+"Usage: !ai forecast <city>  (Tell the AI this week's weather forecast. "
+"Weather data by https://open-meteo.com.)"
+msgstr ""
+
+#: ../ai/src/main.rs
+msgid ""
+"Usage: !ai join <user...>  (Join your chat history with other users' "
+"histories.)"
+msgstr ""
+
+#: ../ai/src/main.rs
+msgid ""
+"Usage: !ai joined  (List the users with whom you share the chat history.)"
+msgstr ""
+
+#: ../ai/src/main.rs
+msgid ""
+"Usage: !ai solo [user]  (Disable the shared history for yourself or the "
+"given user.)"
+msgstr ""
+
+#: ../ai/src/main.rs
+msgid ""
+"Usage: !ai weather <city>  (Tell the AI the current weather. Weather data by "
+"https://open-meteo.com.)"
+msgstr ""
+
+#: ../ai/src/main.rs
+msgid "Weather forecast for {}: {}."
+msgstr ""
+
+#: ../ai/src/main.rs
+msgid "forecast"
+msgstr ""
+
+#: ../ai/src/main.rs
+msgid "weather"
+msgstr ""
+
+#: ../ai/src/main.rs
+msgid "{} is not sharing memory with anyone."
+msgstr ""
+
+#: ../ai/src/main.rs
+msgid "{} is now solo."
+msgstr ""
+
+#: ../ai/src/main.rs
+msgid "{} is sharing memory with: {}"
+msgstr ""
+
+#: ../ai/src/main.rs
+msgid "{} joined memory with the group: {}"
+msgstr ""
+
+#: ../ai/src/model.rs
+msgid "Default model not found"
+msgstr ""
+
+#: ../ai/src/model.rs
+msgid "Missing API keys or model configuration"
+msgstr ""
+
+#: ../ai/src/weather.rs
+msgid "Clear sky"
+msgstr ""
+
+#: ../ai/src/weather.rs
+msgid "Dense drizzle"
+msgstr ""
+
+#: ../ai/src/weather.rs
+msgid "Dense freezing drizzle"
+msgstr ""
+
+#: ../ai/src/weather.rs
+msgid "Depositing rime fog"
+msgstr ""
+
+#: ../ai/src/weather.rs
+msgid "Failed to parse geocoding response: {}"
+msgstr ""
+
+#: ../ai/src/weather.rs
+msgid "Failed to parse weather API response: {}"
+msgstr ""
+
+#: ../ai/src/weather.rs
+msgid "Fog"
+msgstr ""
+
+#: ../ai/src/weather.rs
+msgid "Forecast is unavailable."
+msgstr ""
+
+#: ../ai/src/weather.rs
+msgid "Geocoding API error: HTTP {}"
+msgstr ""
+
+#: ../ai/src/weather.rs
+msgid "Geocoding API error: {}"
+msgstr ""
+
+#: ../ai/src/weather.rs
+msgid "Heavy freezing rain"
+msgstr ""
+
+#: ../ai/src/weather.rs
+msgid "Heavy rain"
+msgstr ""
+
+#: ../ai/src/weather.rs
+msgid "Heavy snow fall"
+msgstr ""
+
+#: ../ai/src/weather.rs
+msgid "Heavy snow showers"
+msgstr ""
+
+#: ../ai/src/weather.rs
+msgid "Light drizzle"
+msgstr ""
+
+#: ../ai/src/weather.rs
+msgid "Light freezing drizzle"
+msgstr ""
+
+#: ../ai/src/weather.rs
+msgid "Light freezing rain"
+msgstr ""
+
+#: ../ai/src/weather.rs
+msgid "Mainly clear"
+msgstr ""
+
+#: ../ai/src/weather.rs
+msgid "Moderate drizzle"
+msgstr ""
+
+#: ../ai/src/weather.rs
+msgid "Moderate rain"
+msgstr ""
+
+#: ../ai/src/weather.rs
+msgid "Moderate rain showers"
+msgstr ""
+
+#: ../ai/src/weather.rs
+msgid "Moderate snow fall"
+msgstr ""
+
+#: ../ai/src/weather.rs
+msgid "Overcast"
+msgstr ""
+
+#: ../ai/src/weather.rs
+msgid "Partly cloudy"
+msgstr ""
+
+#: ../ai/src/weather.rs
+msgid "Slight rain"
+msgstr ""
+
+#: ../ai/src/weather.rs
+msgid "Slight rain showers"
+msgstr ""
+
+#: ../ai/src/weather.rs
+msgid "Slight snow fall"
+msgstr ""
+
+#: ../ai/src/weather.rs
+msgid "Slight snow showers"
+msgstr ""
+
+#: ../ai/src/weather.rs
+msgid "Snow grains"
+msgstr ""
+
+#: ../ai/src/weather.rs
+msgid "Thunderstorm"
+msgstr ""
+
+#: ../ai/src/weather.rs
+msgid "Thunderstorm with heavy hail"
+msgstr ""
+
+#: ../ai/src/weather.rs
+msgid "Thunderstorm with slight hail"
+msgstr ""
+
+#: ../ai/src/weather.rs
+msgid "Unknown location: {}"
+msgstr ""
+
+#: ../ai/src/weather.rs
+msgid "Unknown weather condition"
+msgstr ""
+
+#: ../ai/src/weather.rs
+msgid "Violent rain showers"
+msgstr ""
+
+#: ../ai/src/weather.rs
+msgid "Weather API error: HTTP {}"
+msgstr ""
+
+#: ../ai/src/weather.rs
+msgid "Weather API error: {}"
+msgstr ""
+
+#: ../ai/src/weather.rs
+msgid ""
+"{}, Temperature: {}°C, Cloud cover: {}%, Wind: {}km/h, Humidity: {}%, "
+"Precipitation: {}mm"
+msgstr ""
+
+#: ../ai/src/weather.rs
+msgid "{}: {}, night: {}°C, day: {}°C, precipitation: {}mm"
+msgstr ""
+
+#: ../ircbot/src/bot.rs
+msgid "A very simple bot with 日本語 support."
+msgstr ""
+
+#: ../ircbot/src/bot.rs mueval/eval.sh
+msgid "An error occurred."
+msgstr ""
+
+#: ../ircbot/src/bot.rs
+msgid "Known commands: "
 msgstr ""
 
 #: audio/find_audio.sh
-msgid "Please provide a word."
+msgid "Audio for %s: %s"
 msgstr ""
 
 #: audio/find_audio.sh
@@ -32,7 +320,11 @@ msgid "No audio file available."
 msgstr ""
 
 #: audio/find_audio.sh
-msgid "Audio for %s: %s"
+msgid "Please provide a word."
+msgstr ""
+
+#: audio/find_audio.sh
+msgid "Usage: %s word [reading]"
 msgstr ""
 
 #: cdecl/cdecl.sh
@@ -40,11 +332,15 @@ msgid "Usage: !%s [explain|declare] <something>"
 msgstr ""
 
 #: compare_encoding/compare_encoding.sh
-msgid "Usage: %s lemma"
+msgid "Article not found on Wikipedia."
 msgstr ""
 
 #: compare_encoding/compare_encoding.sh
-msgid "Article not found on Wikipedia."
+msgid "It's a tie."
+msgstr ""
+
+#: compare_encoding/compare_encoding.sh
+msgid "UTF-16 wins by %s."
 msgstr ""
 
 #: compare_encoding/compare_encoding.sh
@@ -56,23 +352,15 @@ msgid "UTF-8 wins by %s."
 msgstr ""
 
 #: compare_encoding/compare_encoding.sh
-msgid "UTF-16 wins by %s."
-msgstr ""
-
-#: compare_encoding/compare_encoding.sh
-msgid "It's a tie."
-msgstr ""
-
-#: jmdict/ja.sh
-msgid "Please call jm.sh or wa.sh instead."
+msgid "Usage: %s lemma"
 msgstr ""
 
 #: jmdict/ja.sh
 msgid "Could not find the dictionary."
 msgstr ""
 
-#: jmdict/ja.sh kanjidic/kanjidic.sh rtk/rtk.sh
-msgid "epsilon."
+#: jmdict/ja.sh
+msgid "Please call jm.sh or wa.sh instead."
 msgstr ""
 
 #: jmdict/ja.sh
@@ -81,6 +369,10 @@ msgstr ""
 
 #: jmdict/ja.sh
 msgid "Unknown word."
+msgstr ""
+
+#: jmdict/ja.sh kanjidic/kanjidic.sh rtk/rtk.sh
+msgid "epsilon."
 msgstr ""
 
 #: jmdict/ja2.sh
@@ -92,6 +384,34 @@ msgid "Please run: %s"
 msgstr ""
 
 #: kana/kana.sh
+msgid "Correct: %s of %s, Corrections:%s."
+msgstr ""
+
+#: kana/kana.sh
+msgid "Could not create directory %s. Please fix %s."
+msgstr ""
+
+#: kana/kana.sh kumitate_quiz/kuiz.sh reading_quiz/quiz.sh
+msgid "Could not determine channel name or query sender. Please fix %s."
+msgstr ""
+
+#: kana/kana.sh kumitate_quiz/kuiz.sh reading_quiz/quiz.sh
+msgid "Could not determine nick name. Please fix %s."
+msgstr ""
+
+#: kana/kana.sh
+msgid "No diff available. :-("
+msgstr ""
+
+#: kana/kana.sh
+msgid "No statistics available for %s."
+msgstr ""
+
+#: kana/kana.sh
+msgid "Perfect! %s of %s."
+msgstr ""
+
+#: kana/kana.sh
 msgid "Please don't call this script directly, use %s or %s instead."
 msgstr ""
 
@@ -100,15 +420,7 @@ msgid "Please fix %s."
 msgstr ""
 
 #: kana/kana.sh
-msgid "Could not create directory %s. Please fix %s."
-msgstr ""
-
-#: kana/kana.sh kumitate_quiz/kuiz.sh reading_quiz/quiz.sh
-msgid "Could not determine nick name. Please fix %s."
-msgstr ""
-
-#: kana/kana.sh kumitate_quiz/kuiz.sh reading_quiz/quiz.sh
-msgid "Could not determine channel name or query sender. Please fix %s."
+msgid "Please write in romaji: %s"
 msgstr ""
 
 #: kana/kana.sh
@@ -120,43 +432,11 @@ msgid ""
 msgstr ""
 
 #: kana/kana.sh
-msgid "Please write in romaji: %s"
-msgstr ""
-
-#: kana/kana.sh
 msgid "Statistics for %s: %s%% of %s characters correct."
 msgstr ""
 
 #: kana/kana.sh
-msgid "No statistics available for %s."
-msgstr ""
-
-#: kana/kana.sh
-msgid "No diff available. :-("
-msgstr ""
-
-#: kana/kana.sh
 msgid "Unfortunately, no character was right. Solution:%s."
-msgstr ""
-
-#: kana/kana.sh
-msgid "Perfect! %s of %s."
-msgstr ""
-
-#: kana/kana.sh
-msgid "Correct: %s of %s, Corrections:%s."
-msgstr ""
-
-#: kanjidic/kanjidic.sh
-msgid "Please enter some kanji."
-msgstr ""
-
-#: kanjidic/kanjidic.sh rtk/rtk.sh
-msgid "No regular expressions, please."
-msgstr ""
-
-#: kanjidic/kanjidic.sh
-msgid ". In names: "
 msgstr ""
 
 #: kanjidic/kanjidic.sh
@@ -166,25 +446,19 @@ msgstr[0] ""
 msgstr[1] ""
 
 #: kanjidic/kanjidic.sh
+msgid ". In names: "
+msgstr ""
+
+#: kanjidic/kanjidic.sh
 msgid "No kanji found."
 msgstr ""
 
-#: kumitate_quiz/kuiz.sh
-msgid "Please choose [1-4]: %s (1: %s 2: %s 3: %s 4: %s)."
+#: kanjidic/kanjidic.sh rtk/rtk.sh
+msgid "No regular expressions, please."
 msgstr ""
 
-#: kumitate_quiz/kuiz.sh reading_quiz/quiz.sh
-msgid "Unknown user: %s"
-msgstr ""
-
-#: kumitate_quiz/kuiz.sh reading_quiz/quiz.sh
-msgid ""
-"In the last 2 months, %s answered %s/%s (%s%%) questions correctly and "
-"skipped %s/%s (%s%%)."
-msgstr ""
-
-#: kumitate_quiz/kuiz.sh reading_quiz/quiz.sh
-msgid "Please specify a level."
+#: kanjidic/kanjidic.sh
+msgid "Please enter some kanji."
 msgstr ""
 
 #: kumitate_quiz/kuiz.sh reading_quiz/quiz.sh
@@ -195,16 +469,10 @@ msgstr ""
 msgid "%s: Sadly, no."
 msgstr ""
 
-#: kumitate_quiz/kuiz.sh
-msgid "Try \"%s skm2\". With \"%s skip\" you can skip questions."
-msgstr ""
-
 #: kumitate_quiz/kuiz.sh reading_quiz/quiz.sh
-msgid "Statistics can be accessed by \"%s stats <nickname>\"."
-msgstr ""
-
-#: kumitate_quiz/kuiz.sh reading_quiz/quiz.sh
-msgid "Usage: %s stats <nickname>"
+msgid ""
+"In the last 2 months, %s answered %s/%s (%s%%) questions correctly and "
+"skipped %s/%s (%s%%)."
 msgstr ""
 
 #: kumitate_quiz/kuiz.sh reading_quiz/quiz.sh
@@ -212,11 +480,39 @@ msgid "Nothing to skip!"
 msgstr ""
 
 #: kumitate_quiz/kuiz.sh
+msgid "Please choose [1-4]: %s (1: %s 2: %s 3: %s 4: %s)."
+msgstr ""
+
+#: kumitate_quiz/kuiz.sh reading_quiz/quiz.sh
+msgid "Please specify a level."
+msgstr ""
+
+#: kumitate_quiz/kuiz.sh
 msgid "Skipping... (%s: %s)"
+msgstr ""
+
+#: kumitate_quiz/kuiz.sh reading_quiz/quiz.sh
+msgid "Statistics can be accessed by \"%s stats <nickname>\"."
+msgstr ""
+
+#: kumitate_quiz/kuiz.sh
+msgid "Try \"%s skm2\". With \"%s skip\" you can skip questions."
 msgstr ""
 
 #: kumitate_quiz/kuiz.sh
 msgid "Unknown level \"%s\". Valid levels (number of questions): %s"
+msgstr ""
+
+#: kumitate_quiz/kuiz.sh reading_quiz/quiz.sh
+msgid "Unknown user: %s"
+msgstr ""
+
+#: kumitate_quiz/kuiz.sh reading_quiz/quiz.sh
+msgid "Usage: %s stats <nickname>"
+msgstr ""
+
+#: mueval/eval.sh
+msgid "Couldn't find firejail. Please install firejail."
 msgstr ""
 
 #: mueval/eval.sh
@@ -225,7 +521,11 @@ msgid ""
 msgstr ""
 
 #: mueval/eval.sh
-msgid "Couldn't find firejail. Please install firejail."
+msgid "Example: !calc 1+1"
+msgstr ""
+
+#: mueval/eval.sh
+msgid "Memory limit exceeded."
 msgstr ""
 
 #: mueval/eval.sh
@@ -233,23 +533,7 @@ msgid "Please don't call this script directly."
 msgstr ""
 
 #: mueval/eval.sh
-msgid "Example: !calc 1+1"
-msgstr ""
-
-#: mueval/eval.sh ../ircbot/src/bot.rs
-msgid "An error occurred."
-msgstr ""
-
-#: mueval/eval.sh
 msgid "Time limit exceeded."
-msgstr ""
-
-#: mueval/eval.sh
-msgid "Memory limit exceeded."
-msgstr ""
-
-#: reading_quiz/quiz.sh
-msgid "Please read: %s"
 msgstr ""
 
 #: reading_quiz/quiz.sh
@@ -257,11 +541,15 @@ msgid "Hardest words for %s (#mistakes/#skipped): %s"
 msgstr ""
 
 #: reading_quiz/quiz.sh
-msgid "Try \"%s jlpt4\". With \"%s skip\" you can skip questions."
+msgid "Please read: %s"
 msgstr ""
 
 #: reading_quiz/quiz.sh
 msgid "Skipping %s (%s: %s)"
+msgstr ""
+
+#: reading_quiz/quiz.sh
+msgid "Try \"%s jlpt4\". With \"%s skip\" you can skip questions."
 msgstr ""
 
 #: reading_quiz/quiz.sh
@@ -277,297 +565,9 @@ msgid "Please put \"rtk.txt\" in the same directory as this script."
 msgstr ""
 
 #: rtk/rtk.sh
-msgid "Unknown keyword."
-msgstr ""
-
-#: rtk/rtk.sh
 msgid "Unknown kanji number."
 msgstr ""
 
-#: ../ai/src/model.rs
-msgid "Missing API keys or model configuration"
-msgstr ""
-
-#: ../ai/src/model.rs
-msgid "Default model not found"
-msgstr ""
-
-#: ../ai/src/weather.rs
-msgid ""
-"{}, Temperature: {}°C, Cloud cover: {}%, Wind: {}km/h, Humidity: {}%, "
-"Precipitation: {}mm"
-msgstr ""
-
-#: ../ai/src/weather.rs
-msgid "Forecast is unavailable."
-msgstr ""
-
-#: ../ai/src/weather.rs
-msgid "{}: {}, night: {}°C, day: {}°C, precipitation: {}mm"
-msgstr ""
-
-#: ../ai/src/weather.rs ../ai/src/main.rs
-msgid "HTTP client error: {}"
-msgstr ""
-
-#: ../ai/src/weather.rs
-msgid "Geocoding API error: {}"
-msgstr ""
-
-#: ../ai/src/weather.rs
-msgid "Geocoding API error: HTTP {}"
-msgstr ""
-
-#: ../ai/src/weather.rs
-msgid "Failed to parse geocoding response: {}"
-msgstr ""
-
-#: ../ai/src/weather.rs
-msgid "Unknown location: {}"
-msgstr ""
-
-#: ../ai/src/weather.rs
-msgid "Weather API error: {}"
-msgstr ""
-
-#: ../ai/src/weather.rs
-msgid "Weather API error: HTTP {}"
-msgstr ""
-
-#: ../ai/src/weather.rs
-msgid "Failed to parse weather API response: {}"
-msgstr ""
-
-#: ../ai/src/weather.rs
-msgid "Clear sky"
-msgstr ""
-
-#: ../ai/src/weather.rs
-msgid "Mainly clear"
-msgstr ""
-
-#: ../ai/src/weather.rs
-msgid "Partly cloudy"
-msgstr ""
-
-#: ../ai/src/weather.rs
-msgid "Overcast"
-msgstr ""
-
-#: ../ai/src/weather.rs
-msgid "Fog"
-msgstr ""
-
-#: ../ai/src/weather.rs
-msgid "Depositing rime fog"
-msgstr ""
-
-#: ../ai/src/weather.rs
-msgid "Light drizzle"
-msgstr ""
-
-#: ../ai/src/weather.rs
-msgid "Moderate drizzle"
-msgstr ""
-
-#: ../ai/src/weather.rs
-msgid "Dense drizzle"
-msgstr ""
-
-#: ../ai/src/weather.rs
-msgid "Light freezing drizzle"
-msgstr ""
-
-#: ../ai/src/weather.rs
-msgid "Dense freezing drizzle"
-msgstr ""
-
-#: ../ai/src/weather.rs
-msgid "Slight rain"
-msgstr ""
-
-#: ../ai/src/weather.rs
-msgid "Moderate rain"
-msgstr ""
-
-#: ../ai/src/weather.rs
-msgid "Heavy rain"
-msgstr ""
-
-#: ../ai/src/weather.rs
-msgid "Light freezing rain"
-msgstr ""
-
-#: ../ai/src/weather.rs
-msgid "Heavy freezing rain"
-msgstr ""
-
-#: ../ai/src/weather.rs
-msgid "Slight snow fall"
-msgstr ""
-
-#: ../ai/src/weather.rs
-msgid "Moderate snow fall"
-msgstr ""
-
-#: ../ai/src/weather.rs
-msgid "Heavy snow fall"
-msgstr ""
-
-#: ../ai/src/weather.rs
-msgid "Snow grains"
-msgstr ""
-
-#: ../ai/src/weather.rs
-msgid "Slight rain showers"
-msgstr ""
-
-#: ../ai/src/weather.rs
-msgid "Moderate rain showers"
-msgstr ""
-
-#: ../ai/src/weather.rs
-msgid "Violent rain showers"
-msgstr ""
-
-#: ../ai/src/weather.rs
-msgid "Slight snow showers"
-msgstr ""
-
-#: ../ai/src/weather.rs
-msgid "Heavy snow showers"
-msgstr ""
-
-#: ../ai/src/weather.rs
-msgid "Thunderstorm"
-msgstr ""
-
-#: ../ai/src/weather.rs
-msgid "Thunderstorm with slight hail"
-msgstr ""
-
-#: ../ai/src/weather.rs
-msgid "Thunderstorm with heavy hail"
-msgstr ""
-
-#: ../ai/src/weather.rs
-msgid "Unknown weather condition"
-msgstr ""
-
-#: ../ai/src/main.rs
-msgid "API error: {}"
-msgstr ""
-
-#: ../ai/src/main.rs
-msgid "Failed to read response: {}"
-msgstr ""
-
-#: ../ai/src/main.rs
-msgid "Invalid response: {}"
-msgstr ""
-
-#: ../ai/src/main.rs
-msgid ""
-"Usage: !ai [flags...] [command] <query>.  Flags: -c (clear history), -"
-"t=<val> (temp), {} (select model).\n"
-"Commands: join <user...>, solo [user], joined, weather <city>, forecast "
-"<city>.  Models: {}, Default: {}\n"
-"By default, history is split by user and deleted after {} minutes. The bot "
-"does not have access to a full chat log, it sees only your history."
-msgstr ""
-
-#: ../ai/src/main.rs
-msgid ""
-"Usage: !ai join <user...>  (Join your chat history with other users' "
-"histories.)"
-msgstr ""
-
-#: ../ai/src/main.rs
-msgid ""
-"Usage: !ai solo [user]  (Disable the shared history for yourself or the "
-"given user.)"
-msgstr ""
-
-#: ../ai/src/main.rs
-msgid ""
-"Usage: !ai joined  (List the users with whom you share the chat history.)"
-msgstr ""
-
-#: ../ai/src/main.rs
-msgid ""
-"Usage: !ai weather <city>  (Tell the AI the current weather. Weather data by "
-"https://open-meteo.com.)"
-msgstr ""
-
-#: ../ai/src/main.rs
-msgid ""
-"Usage: !ai forecast <city>  (Tell the AI this week's weather forecast. "
-"Weather data by https://open-meteo.com.)"
-msgstr ""
-
-#: ../ai/src/main.rs
-msgid "Flag -{} requires a value (e.g., -{}=1.0)"
-msgstr ""
-
-#: ../ai/src/main.rs
-msgid "Unknown flag: {}"
-msgid_plural "Unknown flags: {}"
-msgstr[0] ""
-msgstr[1] ""
-
-#: ../ai/src/main.rs
-msgid ""
-"Internal error: duplicate configured flags detected, check your model config"
-msgstr ""
-
-#: ../ai/src/main.rs
-msgid "Config file not found."
-msgstr ""
-
-#: ../ai/src/main.rs
-msgid "weather"
-msgstr ""
-
-#: ../ai/src/main.rs
-msgid "forecast"
-msgstr ""
-
-#: ../ai/src/main.rs
-msgid "{} joined memory with the group: {}"
-msgstr ""
-
-#: ../ai/src/main.rs
-msgid "{} is now solo."
-msgstr ""
-
-#: ../ai/src/main.rs
-msgid "{} is not sharing memory with anyone."
-msgstr ""
-
-#: ../ai/src/main.rs
-msgid "{} is sharing memory with: {}"
-msgstr ""
-
-#: ../ai/src/main.rs
-msgid "The weather in {} is: {}."
-msgstr ""
-
-#: ../ai/src/main.rs
-msgid "The current local time is {}."
-msgstr ""
-
-#: ../ai/src/main.rs
-msgid "Weather forecast for {}: {}."
-msgstr ""
-
-#: ../ai/src/main.rs
-msgid "!ai is only available in channels."
-msgstr ""
-
-#: ../ircbot/src/bot.rs
-msgid "A very simple bot with 日本語 support."
-msgstr ""
-
-#: ../ircbot/src/bot.rs
-msgid "Known commands: "
+#: rtk/rtk.sh
+msgid "Unknown keyword."
 msgstr ""
