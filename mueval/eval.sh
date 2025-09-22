@@ -35,6 +35,11 @@ if [[ $QUERY = 'help' ]]; then
     exit 0
 fi
 
+declare -a mueval_extra_args
+if [[ $MODE = 'type' ]]; then
+  mueval_extra_args=(--inferred-type --type-only)
+fi
+
 RESULT="$(firejail \
     --name=mueval \
     --quiet \
@@ -43,7 +48,7 @@ RESULT="$(firejail \
     --private-dev \
     --private-etc=invalid \
     --private-cwd=/ \
-	--read-only=$HOME \
+	--read-only="$HOME" \
 	--noblacklist="$HOME/.cabal" \
 	--noblacklist="$HOME/.ghc" \
     --blacklist="$HOME/*" \
@@ -69,7 +74,7 @@ RESULT="$(firejail \
     --rlimit-nproc=100 \
     --oom=1000 \
     mueval \
-    $([[ $MODE = 'type' ]] && echo '--inferred-type --type-only') \
+    "${mueval_extra_args[@]}" \
     --time-limit="$TIME_LIMIT_SECONDS" \
     --expression "$QUERY" 2>&1)"
 MUEVAL_EXIT_CODE=$?

@@ -41,11 +41,13 @@ mv "${POT_FILE}.tmp" "${POT_FILE}"
 
 merge_messages() {
     local po_file="po/$1.po"
-    local temp_backup=$(mktemp)
+    local temp_backup
+	temp_backup=$(mktemp)
     cat "$po_file" >"$temp_backup"
     msgmerge --quiet --backup=none --sort-by-file --update "$po_file" "$POT_FILE"
     if ! cmp -s "$po_file" "$temp_backup"; then
-        local current_date=$(date '+%Y-%m-%d %H:%M%z')
+        local current_date
+		current_date=$(date '+%Y-%m-%d %H:%M%z')
         sed -i "1,+17s/^\"PO-Revision-Date: .*\\\\n\"$/\"PO-Revision-Date: $current_date\\\\n\"/" "$po_file"
     fi
     rm "$temp_backup"
