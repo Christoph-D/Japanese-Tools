@@ -69,10 +69,14 @@ RESULT="$(firejail \
     --rlimit-nproc=100 \
     --oom=1000 \
     mueval \
-    "$([[ $MODE = 'type' ]] && echo '--inferred-type')" \
+    $([[ $MODE = 'type' ]] && echo '--inferred-type --type-only') \
     --time-limit="$TIME_LIMIT_SECONDS" \
     --expression "$QUERY" 2>&1)"
 MUEVAL_EXIT_CODE=$?
+
+if [[ $MODE = 'type' ]]; then
+  RESULT=$(printf '%s' "$RESULT" | tail -n +2)
+fi
 
 # Remove newlines and control characters.
 RESULT=$(printf '%s\n' "${RESULT//$'\n'/ }" | tr --delete '\000-\037')
