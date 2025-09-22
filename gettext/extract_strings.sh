@@ -36,11 +36,19 @@ sed -i '1,+17s/^"Last-Translator: FULL NAME <EMAIL@ADDRESS>\\n"$/"Last-Translato
 sed -i '/^#: /s/:[0-9]\+\($\| \)/\1/g' "$POT_FILE"
 
 # Remove duplicates
-msguniq -F -o "${POT_FILE}.tmp" "${POT_FILE}"
+msguniq --sort-by-file -o "${POT_FILE}.tmp" "${POT_FILE}"
 mv "${POT_FILE}.tmp" "${POT_FILE}"
 
 merge_messages() {
-    msgmerge --quiet --backup=none --update "po/$1.po" "$POT_FILE"
+    local po_file="po/$1.po"
+    local temp_backup=$(mktemp)
+    cat "$po_file" >"$temp_backup"
+    msgmerge --quiet --backup=none --sort-by-file --update "$po_file" "$POT_FILE"
+    if ! cmp -s "$po_file" "$temp_backup"; then
+        local current_date=$(date '+%Y-%m-%d %H:%M%z')
+        sed -i "1,+17s/^\"PO-Revision-Date: .*\\\\n\"$/\"PO-Revision-Date: $current_date\\\\n\"/" "$po_file"
+    fi
+    rm "$temp_backup"
 }
 
 while IFS= read -r -d '' LANG_CODE; do
