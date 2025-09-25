@@ -288,7 +288,7 @@ impl Bot {
         }
 
         let (command, args) = self.parse_message(message);
-        if let Some(command_handler) = self.commands.get(command.as_str()) {
+        if let Some(command_handler) = self.commands.get(command.to_lowercase().as_str()) {
             return Ok(command_handler(self, &args));
         }
 
