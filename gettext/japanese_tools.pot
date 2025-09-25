@@ -296,7 +296,9 @@ msgid "{}: {}, night: {}°C, day: {}°C, precipitation: {}mm"
 msgstr ""
 
 #: ../ircbot/src/bot.rs
-msgid "A very simple bot with 日本語 support."
+msgid ""
+"A very simple bot with 日本語 support: https://github.com/Christoph-D/"
+"Japanese-Tools/"
 msgstr ""
 
 #: ../ircbot/src/bot.rs mueval/eval.sh

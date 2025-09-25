@@ -5,7 +5,7 @@
 msgid ""
 msgstr ""
 "Report-Msgid-Bugs-To: \n"
-"PO-Revision-Date: 2025-09-22 21:17+0200\n"
+"PO-Revision-Date: 2025-09-25 22:44+0200\n"
 "Last-Translator: Christoph Dittmann <github@christoph-d.de>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -312,8 +312,12 @@ msgid "{}: {}, night: {}°C, day: {}°C, precipitation: {}mm"
 msgstr "{}: {}, Nacht: {}°C, Tag: {}°C, Niederschlag: {}mm"
 
 #: ../ircbot/src/bot.rs
-msgid "A very simple bot with 日本語 support."
-msgstr "Ein sehr einfacher Bot mit 日本語-Features."
+msgid ""
+"A very simple bot with 日本語 support: https://github.com/Christoph-D/"
+"Japanese-Tools/"
+msgstr ""
+"Ein sehr einfacher Bot mit 日本語-Features: https://github.com/Christoph-D/"
+"Japanese-Tools/"
 
 #: ../ircbot/src/bot.rs mueval/eval.sh
 msgid "An error occurred."

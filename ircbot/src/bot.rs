@@ -598,7 +598,12 @@ impl Bot {
 }
 
 fn version_command(_bot: &Bot, _args: &str) -> Response {
-    Response::Reply(gettext("A very simple bot with 日本語 support.").to_string())
+    Response::Reply(
+        gettext(
+            "A very simple bot with 日本語 support: https://github.com/Christoph-D/Japanese-Tools/",
+        )
+        .to_string(),
+    )
 }
 
 fn help_command(bot: &Bot, _args: &str) -> Response {
