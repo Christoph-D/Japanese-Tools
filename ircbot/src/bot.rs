@@ -17,6 +17,7 @@ use tokio::time::{Instant, sleep_until};
 use crate::error::BotError;
 
 const PING_INTERVAL_SECONDS: u64 = 60;
+const PING_MAX_CONSECUTIVE_FAILURES: u8 = 5;
 
 pub trait ClientInterface {
     fn send(&mut self, command: Command) -> error::Result<()>;
@@ -198,6 +199,7 @@ impl Bot {
             }
             Command::PONG(_, _) => {
                 self.waiting_for_pong = false;
+                self.failed_pings = 0;
                 Ok(())
             }
             _ => Ok(()),
@@ -386,11 +388,9 @@ impl Bot {
     pub fn send_ping(&mut self) -> Result<(), BotError> {
         if self.waiting_for_pong {
             self.failed_pings += 1;
-            if self.failed_pings >= 3 {
+            if self.failed_pings >= PING_MAX_CONSECUTIVE_FAILURES {
                 return Err(BotError::PingTimeout);
             }
-        } else {
-            self.failed_pings = 0;
         }
 
         self.waiting_for_pong = true;
