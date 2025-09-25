@@ -8,7 +8,7 @@ use irc::{
 use rand::{Rng, distr::Alphanumeric, rng};
 use std::collections::HashMap;
 use std::fs::{File, OpenOptions};
-use std::io::{self, BufRead, BufReader, Write};
+use std::io::{self, BufRead, BufReader, IsTerminal, Write};
 use std::path::Path;
 use std::time::Duration;
 use std::{env, future};
@@ -135,12 +135,20 @@ impl Bot {
 
     fn print_magic_key(&self) {
         print!("Today's magic key for admin commands: {}", self.magic_key);
-        std::io::stdout().flush().unwrap();
+        if std::io::stdout().is_terminal() {
+            std::io::stdout().flush().unwrap();
+        } else {
+            println!();
+        }
     }
 
     fn debug_out(&self, line: &str) {
-        // Overwrite magic key.
-        println!("\r{}\r{}", " ".repeat(60), line);
+        if std::io::stdout().is_terminal() {
+            // Overwrite magic key.
+            println!("\r{}\r{}", " ".repeat(60), line);
+        } else {
+            println!("{}", line);
+        }
         self.print_magic_key();
     }
 
