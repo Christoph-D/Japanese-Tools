@@ -274,8 +274,13 @@ impl Bot {
             return Ok(Response::None);
         } else {
             self.debug_out(&format!("<{}> {}", message_data.sender, message));
-            // Private message to the bot works without ! prefix
+            // Remove CTCP delimiters.
+            // Don't strip ! because a private message to the bot works without the prefix.
             message
+                .strip_prefix('\u{1}')
+                .unwrap_or(message)
+                .strip_suffix('\u{1}')
+                .unwrap_or(message)
         };
 
         if message.starts_with(&self.magic_key) {
