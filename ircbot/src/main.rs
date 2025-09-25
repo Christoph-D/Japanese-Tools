@@ -171,6 +171,7 @@ async fn run_bot(
             }
             _ = bot.next_timer() => bot.run_timed_command()?,
             _ = bot.next_background_job() => bot.run_background_job()?,
+            _ = bot.next_ping() => bot.send_ping()?,
         }
     }
 

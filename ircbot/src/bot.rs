@@ -16,6 +16,8 @@ use tokio::time::{Instant, sleep_until};
 
 use crate::error::BotError;
 
+const PING_INTERVAL_SECONDS: u64 = 60;
+
 pub trait ClientInterface {
     fn send(&mut self, command: Command) -> error::Result<()>;
     fn stream(&mut self) -> error::Result<ClientStream>;
@@ -52,6 +54,9 @@ pub struct Bot {
     scripts: Vec<Script>,
     timers: Vec<Timer>,
     next_daily_trigger: Instant,
+    next_ping_time: Instant,
+    failed_pings: u8,
+    waiting_for_pong: bool,
 }
 
 type CommandFn = fn(&Bot, &str) -> Response;
@@ -120,6 +125,9 @@ impl Bot {
             scripts,
             timers: Vec::new(),
             next_daily_trigger: next_midnight(),
+            next_ping_time: Instant::now() + Duration::from_secs(PING_INTERVAL_SECONDS),
+            failed_pings: 0,
+            waiting_for_pong: false,
         };
         bot.print_magic_key();
         bot
@@ -178,6 +186,10 @@ impl Bot {
                 if args.len() == 3 {
                     self.handle_topic_change(&args[1], &args[2]);
                 }
+                Ok(())
+            }
+            Command::PONG(_, _) => {
+                self.waiting_for_pong = false;
                 Ok(())
             }
             _ => Ok(()),
@@ -357,6 +369,25 @@ impl Bot {
             return future::pending().await;
         }
         sleep_until(self.timers[0].deadline).await;
+    }
+
+    pub async fn next_ping(&self) {
+        sleep_until(self.next_ping_time).await;
+    }
+
+    pub fn send_ping(&mut self) -> Result<(), BotError> {
+        if self.waiting_for_pong {
+            self.failed_pings += 1;
+            if self.failed_pings >= 3 {
+                return Err(BotError::ConnectionLost("Ping timeout".to_string()));
+            }
+        } else {
+            self.failed_pings = 0;
+        }
+
+        self.waiting_for_pong = true;
+        self.next_ping_time = Instant::now() + Duration::from_secs(PING_INTERVAL_SECONDS);
+        self.send(Command::PING("".to_string(), None))
     }
 
     pub fn run_timed_command(&mut self) -> Result<(), BotError> {

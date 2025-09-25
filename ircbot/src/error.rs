@@ -13,4 +13,7 @@ pub enum BotError {
 
     #[error("Invalid script path: {0}")]
     InvalidScriptPath(String),
+
+    #[error("Connection lost: {0}")]
+    ConnectionLost(String),
 }
