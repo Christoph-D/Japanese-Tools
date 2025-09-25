@@ -387,7 +387,7 @@ impl Bot {
         if self.waiting_for_pong {
             self.failed_pings += 1;
             if self.failed_pings >= 3 {
-                return Err(BotError::ConnectionLost("Ping timeout".to_string()));
+                return Err(BotError::PingTimeout);
             }
         } else {
             self.failed_pings = 0;
