@@ -144,6 +144,17 @@ impl Bot {
     }
 
     fn debug_out(&self, line: &str) {
+        // Escape control characters.
+        let line: String = line
+            .chars()
+            .map(|c| {
+                if c.is_control() {
+                    format!("\\x{:02x}", c as u32)
+                } else {
+                    c.to_string()
+                }
+            })
+            .collect();
         if std::io::stdout().is_terminal() {
             // Overwrite magic key.
             println!("\r{}\r{}", " ".repeat(60), line);
