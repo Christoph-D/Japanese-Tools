@@ -163,8 +163,7 @@ async fn run_bot(
                 match message {
                     Some(Ok(message)) => bot.handle_message(&message)?,
                     Some(Err(e)) => {
-                        eprintln!("Error: {}", e);
-                        break;
+                        return Err(Box::new(e));
                     }
                     None => break,
                 }
