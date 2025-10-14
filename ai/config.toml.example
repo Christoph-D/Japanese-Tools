@@ -33,6 +33,11 @@ models = [
     { id = "openai/gpt-4o", short_name = "o", name = "GPT-4o" },
 ]
 
+[providers.z-ai]
+models = [
+    { id = "glm-4.6", short_name = "z", name = "GLM-4.6" },
+]
+
 [channels."#example"]
 default_model = "mistral/mistral-medium-latest"
 temperature = 0.4
