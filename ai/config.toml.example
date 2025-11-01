@@ -35,7 +35,12 @@ models = [
 
 [providers.z-ai]
 models = [
-    { id = "glm-4.6", short_name = "z", name = "GLM-4.6" },
+    { id = "glm-4.5-air", short_name = "z", name = "GLM-4.5-air" },
+]
+
+[providers.z-ai-code]
+models = [
+    { id = "glm-4.5-air", short_name = "c", name = "GLM-4.5-air" },
 ]
 
 [channels."#example"]

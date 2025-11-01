@@ -47,6 +47,7 @@ const MISTRAL_API_ENDPOINT: &str = "https://api.mistral.ai/v1/chat/completions";
 const OPENROUTER_API_ENDPOINT: &str = "https://openrouter.ai/api/v1/chat/completions";
 const ANTHROPIC_API_ENDPOINT: &str = "https://api.anthropic.com/v1/chat/completions";
 const Z_AI_API_ENDPOINT: &str = "https://api.z.ai/api/paas/v4/chat/completions";
+const Z_AI_CODE_API_ENDPOINT: &str = "https://api.z.ai/api/coding/paas/v4/chat/completions";
 
 #[derive(Debug, serde::Deserialize)]
 struct TomlConfig {
@@ -112,7 +113,7 @@ impl Config {
                         ));
                     }
                 }
-                "anthropic" | "deepseek" | "mistral" | "openrouter" | "z-ai" => {
+                "anthropic" | "deepseek" | "mistral" | "openrouter" | "z-ai" | "z-ai-code" => {
                     if toml_provider.endpoint.is_some() {
                         return Err(format!(
                             "{}: Provider '{}' endpoint is not configurable.",
@@ -136,6 +137,7 @@ impl Config {
                     "mistral" => MISTRAL_API_ENDPOINT.to_string(),
                     "openrouter" => OPENROUTER_API_ENDPOINT.to_string(),
                     "z-ai" => Z_AI_API_ENDPOINT.to_string(),
+                    "z-ai-code" => Z_AI_CODE_API_ENDPOINT.to_string(),
                     "litellm" => toml_provider.endpoint.unwrap(), // we validated above
                     _ => unreachable!(),                          // validated above
                 };
@@ -179,6 +181,7 @@ impl Config {
             "mistral" => "Mistral".to_string(),
             "openrouter" => "OpenRouter".to_string(),
             "z-ai" => "Z.AI".to_string(),
+            "z-ai-code" => "Z.AI Code".to_string(),
             _ => provider_name.to_string(),
         }
     }
