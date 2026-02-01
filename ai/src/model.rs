@@ -34,6 +34,7 @@ pub struct Model {
     pub name: String,
     pub api_key: String,
     pub endpoint: String,
+    pub reasoning: bool,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -76,6 +77,8 @@ struct TomlModel {
     id: String,
     short_name: String,
     name: String,
+    #[serde(default)]
+    reasoning: bool,
 }
 
 #[derive(Debug, Clone, serde::Deserialize)]
@@ -219,6 +222,7 @@ impl ModelList {
                     name: toml_model.name.to_string(),
                     api_key: provider.api_key.clone(),
                     endpoint: provider.endpoint.clone(),
+                    reasoning: toml_model.reasoning,
                 });
             }
         }
@@ -307,6 +311,7 @@ mod tests {
                 name: "Deepseek".to_string(),
                 api_key: "key1".to_string(),
                 endpoint: DEEPSEEK_API_ENDPOINT.to_string(),
+                reasoning: false,
             },
             Model {
                 id: "openrouter-2".to_string(),
@@ -314,6 +319,7 @@ mod tests {
                 name: "OpenRouter".to_string(),
                 api_key: "key2".to_string(),
                 endpoint: OPENROUTER_API_ENDPOINT.to_string(),
+                reasoning: false,
             },
         ];
         ModelList {
@@ -376,6 +382,7 @@ models = [
                     name: "Deepseek 1".to_string(),
                     api_key: "key1".to_string(),
                     endpoint: DEEPSEEK_API_ENDPOINT.to_string(),
+                    reasoning: false,
                 },
                 Model {
                     id: "deepseek-2".to_string(),
@@ -383,6 +390,7 @@ models = [
                     name: "Deepseek 2".to_string(),
                     api_key: "key1".to_string(),
                     endpoint: DEEPSEEK_API_ENDPOINT.to_string(),
+                    reasoning: false,
                 }
             ]
         );
@@ -556,6 +564,7 @@ models = [
             name: "Only Model".to_string(),
             api_key: "key".to_string(),
             endpoint: DEEPSEEK_API_ENDPOINT.to_string(),
+            reasoning: false,
         }];
         let model_list = ModelList {
             models,

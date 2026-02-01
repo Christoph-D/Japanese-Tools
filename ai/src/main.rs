@@ -10,7 +10,7 @@ mod weather;
 use crate::compilerx::CompilerError;
 use crate::constants::{
     CLEAR_MEMORY_MESSAGE, CONFIG_FILE_NAME, ENV_FILE_NAME, MAX_LINE_LENGTH_CUTOFF, MAX_TOKENS,
-    MEMORY_RETENTION,
+    MAX_TOKENS_WITH_REASONING, MEMORY_RETENTION,
 };
 use crate::memory::{Memory, Sender};
 use crate::model::{Config, Model, ModelList};
@@ -61,7 +61,11 @@ fn call_api(
     let payload = serde_json::json!(Payload {
         model: &model.id,
         messages: prompt,
-        max_tokens: MAX_TOKENS as i32,
+        max_tokens: if model.reasoning {
+            MAX_TOKENS_WITH_REASONING as i32
+        } else {
+            MAX_TOKENS as i32
+        },
         temperature,
     });
 
