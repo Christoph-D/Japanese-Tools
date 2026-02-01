@@ -44,14 +44,11 @@ RUN ln -sf /usr/share/zoneinfo/hostlocaltime /etc/localtime && \
   dpkg-reconfigure locales && \
   update-locale LANG=en_US.UTF-8
 
-RUN SNIPPET="export PROMPT_COMMAND='history -a' && export HISTFILE=/commandhistory/.bash_history" \
-  && mkdir /commandhistory \
-  && touch /commandhistory/.bash_history \
-  && chown -R ubuntu /commandhistory \
-  && echo "$SNIPPET" >> "/home/ubuntu/.bashrc"
-
 USER ubuntu
 WORKDIR /home/ubuntu
+
+RUN SNIPPET="export PROMPT_COMMAND='history -a' && export HISTFILE=/home/ubuntu/persistent-config/.bash_history" \
+  && echo "$SNIPPET" >> "/home/ubuntu/.bashrc"
 
 ENV PATH="/home/ubuntu/.ghcup/bin:/home/ubuntu/.cabal/bin:${PATH}"
 
@@ -60,8 +57,12 @@ ENV PATH="/home/ubuntu/.cargo/bin:${PATH}"
 ENV CARGO_TARGET_DIR=/home/ubuntu/target
 RUN cargo install xtr
 
-RUN curl -fsSL https://claude.ai/install.sh | bash && \
-  mkdir -p /home/ubuntu/claude-config
-ENV CLAUDE_CONFIG_DIR=/home/ubuntu/claude-config
+ENV CLAUDE_CONFIG_DIR=/home/ubuntu/persistent-config
+RUN curl -fsSL https://claude.ai/install.sh | bash
+ENV PATH="/home/ubuntu/.local/bin:$PATH"
+
+ENV OPENCODE_CONFIG=/home/ubuntu/persistent-config/opencode.json
+RUN curl -fsSL https://opencode.ai/install | bash
+ENV PATH="/home/ubuntu/.opencode/bin:$PATH"
 
 WORKDIR /workspaces/Japanese

@@ -14,7 +14,8 @@
                 "mkhl.shfmt",
                 "ms-python.python",
                 "rust-lang.rust-analyzer",
-                "saoudrizwan.claude-dev"
+                "saoudrizwan.claude-dev",
+                "sst-dev.opencode"
             ],
             "settings": {
                 "[markdown]": {
@@ -43,8 +44,8 @@
     "workspaceMount": "source=${localWorkspaceFolder},target=/workspaces/Japanese,type=bind,consistency=cached",
     "remoteUser": "ubuntu",
     "mounts": [
-        "source=bashhistory-Japanese,target=/commandhistory,type=volume",
-        "source=claude-code-config-Japanese,target=/home/ubuntu/claude-config,type=volume",
+        "source=config-japanese-tools,target=/home/ubuntu/persistent-config,type=volume",
         "source=/etc/localtime,target=/usr/share/zoneinfo/hostlocaltime,type=bind,readonly"
-    ]
+    ],
+    "postCreateCommand": "bash .devcontainer/setup.sh"
 }
