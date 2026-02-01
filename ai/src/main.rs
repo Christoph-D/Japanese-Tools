@@ -9,8 +9,7 @@ mod weather;
 
 use crate::compilerx::CompilerError;
 use crate::constants::{
-    CLEAR_MEMORY_MESSAGE, CONFIG_FILE_NAME, ENV_FILE_NAME, MAX_LINE_LENGTH_CUTOFF, MAX_TOKENS,
-    MAX_TOKENS_WITH_REASONING, MEMORY_RETENTION,
+    CLEAR_MEMORY_MESSAGE, CONFIG_FILE_NAME, ENV_FILE_NAME, MAX_LINE_LENGTH_CUTOFF, MEMORY_RETENTION,
 };
 use crate::memory::{Memory, Sender};
 use crate::model::{Config, Model, ModelList};
@@ -43,8 +42,9 @@ fn call_api(
     model: &Model,
     prompt: &Vec<Message>,
     temperature: &Option<f64>,
-    timeout_seconds: u64,
+    config: &Config,
 ) -> Result<String, String> {
+    let timeout_seconds = config.get_timeout(model);
     let client = reqwest::blocking::Client::builder()
         .timeout(Duration::from_secs(timeout_seconds))
         .build()
@@ -62,11 +62,7 @@ fn call_api(
     let payload = serde_json::json!(Payload {
         model: &model.id,
         messages: prompt,
-        max_tokens: if model.reasoning {
-            MAX_TOKENS_WITH_REASONING as i32
-        } else {
-            MAX_TOKENS as i32
-        },
+        max_tokens: config.get_max_tokens(model) as i32,
         temperature,
     });
 
@@ -640,8 +636,7 @@ fn run(input: &Input) -> Result<Output, String> {
         .and_then(|s| s.parse::<f64>().ok().map(|t| t.clamp(0.0, 2.0)))
         .or_else(|| input.config.get_channel_temperature(&input.receiver));
 
-    let timeout_seconds = input.config.get_timeout(&input.model);
-    let result = &call_api(&input.model, &prompt, &temperature, timeout_seconds)?;
+    let result = &call_api(&input.model, &prompt, &temperature, &input.config)?;
 
     memory
         .add_to_history(&input.sender, Sender::Assistant, &input.receiver, result)

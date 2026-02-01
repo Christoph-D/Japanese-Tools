@@ -40,10 +40,10 @@ pub const CLEAR_MEMORY_MESSAGE: &str = "📜🔥";
 
 pub const WEATHER_API_TIMEOUT: Duration = Duration::from_secs(3);
 
-// Maximum tokens set in requests for non-reasoning models.
-pub const MAX_TOKENS: u32 = 500;
-// Maximum tokens set in requests for reasoning models.
-pub const MAX_TOKENS_WITH_REASONING: u32 = 4096;
+// Maximum tokens set in requests for non-reasoning models (default fallback).
+pub const DEFAULT_MAX_TOKENS: u32 = 500;
+// Maximum tokens set in requests for reasoning models (default fallback).
+pub const DEFAULT_MAX_TOKENS_WITH_REASONING: u32 = 4096;
 
 pub const DEFAULT_TIMEOUT: u64 = 20;
 pub const DEFAULT_TIMEOUT_REASONING: u64 = 40;

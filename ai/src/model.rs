@@ -2,7 +2,10 @@ use gettextrs::gettext;
 use std::collections::HashMap;
 
 use crate::EnvVars;
-use crate::constants::{CONFIG_FILE_NAME, DEFAULT_TIMEOUT, DEFAULT_TIMEOUT_REASONING};
+use crate::constants::{
+    CONFIG_FILE_NAME, DEFAULT_MAX_TOKENS, DEFAULT_MAX_TOKENS_WITH_REASONING, DEFAULT_TIMEOUT,
+    DEFAULT_TIMEOUT_REASONING,
+};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 struct Provider {
@@ -20,6 +23,8 @@ pub struct Config {
     enable_compiler_explorer: bool,
     timeout: u64,
     timeout_reasoning: u64,
+    max_tokens: Option<u32>,
+    max_tokens_with_reasoning: Option<u32>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -37,6 +42,7 @@ pub struct Model {
     pub api_key: String,
     pub endpoint: String,
     pub reasoning: bool,
+    pub max_tokens: Option<u32>,
     pub timeout: Option<u64>,
 }
 
@@ -70,6 +76,10 @@ struct TomlGeneral {
     timeout: u64,
     #[serde(default = "default_timeout_reasoning")]
     timeout_reasoning: u64,
+    #[serde(default)]
+    max_tokens: Option<u32>,
+    #[serde(default)]
+    max_tokens_with_reasoning: Option<u32>,
 }
 
 fn default_timeout() -> u64 {
@@ -94,6 +104,8 @@ struct TomlModel {
     name: String,
     #[serde(default)]
     reasoning: bool,
+    #[serde(default)]
+    max_tokens: Option<u32>,
     #[serde(skip_serializing_if = "Option::is_none")]
     timeout: Option<u64>,
 }
@@ -192,6 +204,8 @@ impl Config {
             enable_compiler_explorer: toml_config.general.enable_compiler_explorer,
             timeout: toml_config.general.timeout,
             timeout_reasoning: toml_config.general.timeout_reasoning,
+            max_tokens: toml_config.general.max_tokens,
+            max_tokens_with_reasoning: toml_config.general.max_tokens_with_reasoning,
         })
     }
 
@@ -238,6 +252,17 @@ impl Config {
             }
         })
     }
+
+    pub fn get_max_tokens(&self, model: &Model) -> u32 {
+        model.max_tokens.unwrap_or_else(|| {
+            if model.reasoning {
+                self.max_tokens_with_reasoning
+                    .unwrap_or(DEFAULT_MAX_TOKENS_WITH_REASONING)
+            } else {
+                self.max_tokens.unwrap_or(DEFAULT_MAX_TOKENS)
+            }
+        })
+    }
 }
 
 impl ModelList {
@@ -252,6 +277,7 @@ impl ModelList {
                     api_key: provider.api_key.clone(),
                     endpoint: provider.endpoint.clone(),
                     reasoning: toml_model.reasoning,
+                    max_tokens: toml_model.max_tokens,
                     timeout: toml_model.timeout,
                 });
             }
@@ -342,6 +368,7 @@ mod tests {
                 api_key: "key1".to_string(),
                 endpoint: DEEPSEEK_API_ENDPOINT.to_string(),
                 reasoning: false,
+                max_tokens: None,
                 timeout: None,
             },
             Model {
@@ -351,6 +378,7 @@ mod tests {
                 api_key: "key2".to_string(),
                 endpoint: OPENROUTER_API_ENDPOINT.to_string(),
                 reasoning: false,
+                max_tokens: None,
                 timeout: None,
             },
         ];
@@ -367,6 +395,8 @@ mod tests {
             default_model_id: "".to_string(),
             channels: HashMap::new(),
             enable_compiler_explorer: false,
+            max_tokens: None,
+            max_tokens_with_reasoning: None,
             timeout: DEFAULT_TIMEOUT,
             timeout_reasoning: DEFAULT_TIMEOUT_REASONING,
         };
@@ -417,6 +447,7 @@ models = [
                     api_key: "key1".to_string(),
                     endpoint: DEEPSEEK_API_ENDPOINT.to_string(),
                     reasoning: false,
+                    max_tokens: None,
                     timeout: None,
                 },
                 Model {
@@ -426,6 +457,7 @@ models = [
                     api_key: "key1".to_string(),
                     endpoint: DEEPSEEK_API_ENDPOINT.to_string(),
                     reasoning: false,
+                    max_tokens: None,
                     timeout: None,
                 }
             ]
@@ -601,6 +633,7 @@ models = [
             api_key: "key".to_string(),
             endpoint: DEEPSEEK_API_ENDPOINT.to_string(),
             reasoning: false,
+            max_tokens: None,
             timeout: None,
         }];
         let model_list = ModelList {
@@ -748,6 +781,135 @@ models = [
         );
         assert_eq!(config.get_channel_system_prompt("#no-prompt"), None);
         assert_eq!(config.get_channel_system_prompt("#unknown"), None);
+    }
+
+    #[test]
+    fn test_get_max_tokens_uses_default_fallback() {
+        let temp_dir = tempfile::tempdir().unwrap();
+        let config_dir = temp_dir.path();
+        let env_file = config_dir.join(".env");
+        std::fs::write(&env_file, "DEEPSEEK_API_KEY=test-key\n").unwrap();
+
+        let config_path = config_dir.join(CONFIG_FILE_NAME);
+        std::fs::write(
+            &config_path,
+            r##"
+[general]
+default_model = "deepseek-chat"
+
+[providers.deepseek]
+models = [
+  { id = "deepseek-chat", short_name = "d", name = "DeepSeek" },
+  { id = "reasoning-model", short_name = "r", name = "Reasoning Model", reasoning = true }
+]
+"##,
+        )
+        .unwrap();
+
+        let env_vars = EnvVars::from_file(&config_dir).unwrap();
+        let config = Config::new(&config_dir, &env_vars).expect("Config::new()");
+        let model_list = ModelList::new(&config).expect("ModelList::new()");
+
+        let non_reasoning_model = model_list
+            .select_model_for_channel(&["d".to_string()], "deepseek-chat")
+            .unwrap();
+        let reasoning_model = model_list
+            .select_model_for_channel(&["r".to_string()], "deepseek-chat")
+            .unwrap();
+
+        assert_eq!(
+            config.get_max_tokens(non_reasoning_model),
+            DEFAULT_MAX_TOKENS
+        );
+        assert_eq!(
+            config.get_max_tokens(reasoning_model),
+            DEFAULT_MAX_TOKENS_WITH_REASONING
+        );
+    }
+
+    #[test]
+    fn test_get_max_tokens_uses_global_config() {
+        let temp_dir = tempfile::tempdir().unwrap();
+        let config_dir = temp_dir.path();
+        let env_file = config_dir.join(".env");
+        std::fs::write(&env_file, "DEEPSEEK_API_KEY=test-key\n").unwrap();
+
+        let config_path = config_dir.join(CONFIG_FILE_NAME);
+        std::fs::write(
+            &config_path,
+            r##"
+[general]
+default_model = "deepseek-chat"
+max_tokens = 1000
+max_tokens_with_reasoning = 8192
+
+[providers.deepseek]
+models = [
+  { id = "deepseek-chat", short_name = "d", name = "DeepSeek" },
+  { id = "reasoning-model", short_name = "r", name = "Reasoning Model", reasoning = true }
+]
+"##,
+        )
+        .unwrap();
+
+        let env_vars = EnvVars::from_file(&config_dir).unwrap();
+        let config = Config::new(&config_dir, &env_vars).expect("Config::new()");
+        let model_list = ModelList::new(&config).expect("ModelList::new()");
+
+        let non_reasoning_model = model_list
+            .select_model_for_channel(&["d".to_string()], "deepseek-chat")
+            .unwrap();
+        let reasoning_model = model_list
+            .select_model_for_channel(&["r".to_string()], "deepseek-chat")
+            .unwrap();
+
+        assert_eq!(config.get_max_tokens(non_reasoning_model), 1000);
+        assert_eq!(config.get_max_tokens(reasoning_model), 8192);
+    }
+
+    #[test]
+    fn test_get_max_tokens_per_model_override() {
+        let temp_dir = tempfile::tempdir().unwrap();
+        let config_dir = temp_dir.path();
+        let env_file = config_dir.join(".env");
+        std::fs::write(&env_file, "DEEPSEEK_API_KEY=test-key\n").unwrap();
+
+        let config_path = config_dir.join(CONFIG_FILE_NAME);
+        std::fs::write(
+            &config_path,
+            r##"
+[general]
+default_model = "deepseek-chat"
+max_tokens = 1000
+max_tokens_with_reasoning = 8192
+
+[providers.deepseek]
+models = [
+  { id = "deepseek-chat", short_name = "d", name = "DeepSeek" },
+  { id = "reasoning-model", short_name = "r", name = "Reasoning Model", reasoning = true, max_tokens = 16384 },
+  { id = "custom-model", short_name = "c", name = "Custom Model", reasoning = false, max_tokens = 500 }
+]
+"##,
+        )
+        .unwrap();
+
+        let env_vars = EnvVars::from_file(&config_dir).unwrap();
+        let config = Config::new(&config_dir, &env_vars).expect("Config::new()");
+        let model_list = ModelList::new(&config).expect("ModelList::new()");
+
+        let normal_model = model_list
+            .select_model_for_channel(&["d".to_string()], "deepseek-chat")
+            .unwrap();
+        let reasoning_with_override = model_list
+            .select_model_for_channel(&["r".to_string()], "deepseek-chat")
+            .unwrap();
+        let non_reasoning_with_override = model_list
+            .select_model_for_channel(&["c".to_string()], "deepseek-chat")
+            .unwrap();
+
+        assert_eq!(config.get_max_tokens(normal_model), 1000);
+        assert_eq!(config.get_max_tokens(reasoning_with_override), 16384);
+        assert_eq!(config.get_max_tokens(non_reasoning_with_override), 500);
     }
 
     #[test]
