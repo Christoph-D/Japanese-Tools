@@ -43,8 +43,8 @@ fn call_api(
     model: &Model,
     prompt: &Vec<Message>,
     temperature: &Option<f64>,
+    timeout_seconds: u64,
 ) -> Result<String, String> {
-    let timeout_seconds = if model.reasoning { 40 } else { 20 };
     let client = reqwest::blocking::Client::builder()
         .timeout(Duration::from_secs(timeout_seconds))
         .build()
@@ -640,7 +640,8 @@ fn run(input: &Input) -> Result<Output, String> {
         .and_then(|s| s.parse::<f64>().ok().map(|t| t.clamp(0.0, 2.0)))
         .or_else(|| input.config.get_channel_temperature(&input.receiver));
 
-    let result = &call_api(&input.model, &prompt, &temperature)?;
+    let timeout_seconds = input.config.get_timeout(input.model.reasoning);
+    let result = &call_api(&input.model, &prompt, &temperature, timeout_seconds)?;
 
     memory
         .add_to_history(&input.sender, Sender::Assistant, &input.receiver, result)

@@ -381,7 +381,7 @@ msgstr ""
 msgid "Unknown word."
 msgstr ""
 
-#: jmdict/ja.sh kanjidic/kanjidic.sh rtk/rtk.sh rtk/rtk_de.sh
+#: jmdict/ja.sh kanjidic/kanjidic.sh rtk/rtk.sh
 msgid "epsilon."
 msgstr ""
 
@@ -463,7 +463,7 @@ msgstr ""
 msgid "No kanji found."
 msgstr ""
 
-#: kanjidic/kanjidic.sh rtk/rtk.sh rtk/rtk_de.sh
+#: kanjidic/kanjidic.sh rtk/rtk.sh
 msgid "No regular expressions, please."
 msgstr ""
 
@@ -570,14 +570,14 @@ msgstr ""
 msgid "No result."
 msgstr ""
 
-#: rtk/rtk.sh rtk/rtk_de.sh
+#: rtk/rtk.sh
 msgid "Please put \"rtk.txt\" in the same directory as this script."
 msgstr ""
 
-#: rtk/rtk.sh rtk/rtk_de.sh
+#: rtk/rtk.sh
 msgid "Unknown kanji number."
 msgstr ""
 
-#: rtk/rtk.sh rtk/rtk_de.sh
+#: rtk/rtk.sh
 msgid "Unknown keyword."
 msgstr ""

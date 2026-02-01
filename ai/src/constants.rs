@@ -45,6 +45,9 @@ pub const MAX_TOKENS: u32 = 500;
 // Maximum tokens set in requests for reasoning models.
 pub const MAX_TOKENS_WITH_REASONING: u32 = 4096;
 
+pub const DEFAULT_TIMEOUT: u64 = 20;
+pub const DEFAULT_TIMEOUT_REASONING: u64 = 40;
+
 pub const COMPILER_EXPLORER_MAX_RESPONSE_BYTES: u64 = 2048;
 pub const COMPILER_EXPLORER_COMPILE_TIMEOUT: Duration = Duration::from_secs(15);
 

@@ -1,6 +1,10 @@
 [general]
 default_model = "deepseek-chat"
 enable_compiler_explorer = true
+# Timeout for non-reasoning models in seconds
+timeout = 20
+# Timeout for reasoning models in seconds
+timeout_reasoning = 40
 
 [providers.anthropic]
 models = [

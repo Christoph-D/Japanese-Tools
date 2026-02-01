@@ -2,7 +2,7 @@ use gettextrs::gettext;
 use std::collections::HashMap;
 
 use crate::EnvVars;
-use crate::constants::CONFIG_FILE_NAME;
+use crate::constants::{CONFIG_FILE_NAME, DEFAULT_TIMEOUT, DEFAULT_TIMEOUT_REASONING};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 struct Provider {
@@ -18,6 +18,8 @@ pub struct Config {
     default_model_id: String,
     channels: HashMap<String, ChannelConfig>,
     enable_compiler_explorer: bool,
+    timeout: u64,
+    timeout_reasoning: u64,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -63,6 +65,18 @@ struct TomlGeneral {
     default_model: String,
     #[serde(default)]
     enable_compiler_explorer: bool,
+    #[serde(default = "default_timeout")]
+    timeout: u64,
+    #[serde(default = "default_timeout_reasoning")]
+    timeout_reasoning: u64,
+}
+
+fn default_timeout() -> u64 {
+    DEFAULT_TIMEOUT
+}
+
+fn default_timeout_reasoning() -> u64 {
+    DEFAULT_TIMEOUT_REASONING
 }
 
 #[derive(Debug, serde::Deserialize)]
@@ -173,6 +187,8 @@ impl Config {
             default_model_id: toml_config.general.default_model,
             channels,
             enable_compiler_explorer: toml_config.general.enable_compiler_explorer,
+            timeout: toml_config.general.timeout,
+            timeout_reasoning: toml_config.general.timeout_reasoning,
         })
     }
 
@@ -208,6 +224,14 @@ impl Config {
 
     pub fn is_compiler_explorer_enabled(&self) -> bool {
         self.enable_compiler_explorer
+    }
+
+    pub fn get_timeout(&self, reasoning: bool) -> u64 {
+        if reasoning {
+            self.timeout_reasoning
+        } else {
+            self.timeout
+        }
     }
 }
 
