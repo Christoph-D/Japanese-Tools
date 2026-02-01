@@ -8,7 +8,7 @@ timeout_reasoning = 40
 
 [providers.anthropic]
 models = [
-    { id = "claude-sonnet-4-5", short_name = "s", name = "Claude Sonnet 4.5" }
+    { id = "claude-sonnet-4-5", short_name = "s", name = "Claude Sonnet 4.5", timeout = 30 }
 ]
 
 [providers.deepseek]
@@ -44,7 +44,8 @@ models = [
 
 [providers.z-ai-code]
 models = [
-    { id = "glm-4.5-air", short_name = "c", name = "GLM-4.5-air", reasoning = true },
+    # Example: override timeout for this specific model (takes precedence over global settings)
+    { id = "glm-4.5-air", short_name = "c", name = "GLM-4.5-air", reasoning = true, timeout = 60 },
 ]
 
 [channels."#example"]

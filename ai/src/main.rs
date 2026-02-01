@@ -640,7 +640,7 @@ fn run(input: &Input) -> Result<Output, String> {
         .and_then(|s| s.parse::<f64>().ok().map(|t| t.clamp(0.0, 2.0)))
         .or_else(|| input.config.get_channel_temperature(&input.receiver));
 
-    let timeout_seconds = input.config.get_timeout(input.model.reasoning);
+    let timeout_seconds = input.config.get_timeout(&input.model);
     let result = &call_api(&input.model, &prompt, &temperature, timeout_seconds)?;
 
     memory

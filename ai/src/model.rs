@@ -37,6 +37,7 @@ pub struct Model {
     pub api_key: String,
     pub endpoint: String,
     pub reasoning: bool,
+    pub timeout: Option<u64>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -93,6 +94,8 @@ struct TomlModel {
     name: String,
     #[serde(default)]
     reasoning: bool,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    timeout: Option<u64>,
 }
 
 #[derive(Debug, Clone, serde::Deserialize)]
@@ -226,12 +229,14 @@ impl Config {
         self.enable_compiler_explorer
     }
 
-    pub fn get_timeout(&self, reasoning: bool) -> u64 {
-        if reasoning {
-            self.timeout_reasoning
-        } else {
-            self.timeout
-        }
+    pub fn get_timeout(&self, model: &Model) -> u64 {
+        model.timeout.unwrap_or_else(|| {
+            if model.reasoning {
+                self.timeout_reasoning
+            } else {
+                self.timeout
+            }
+        })
     }
 }
 
@@ -247,6 +252,7 @@ impl ModelList {
                     api_key: provider.api_key.clone(),
                     endpoint: provider.endpoint.clone(),
                     reasoning: toml_model.reasoning,
+                    timeout: toml_model.timeout,
                 });
             }
         }
@@ -336,6 +342,7 @@ mod tests {
                 api_key: "key1".to_string(),
                 endpoint: DEEPSEEK_API_ENDPOINT.to_string(),
                 reasoning: false,
+                timeout: None,
             },
             Model {
                 id: "openrouter-2".to_string(),
@@ -344,6 +351,7 @@ mod tests {
                 api_key: "key2".to_string(),
                 endpoint: OPENROUTER_API_ENDPOINT.to_string(),
                 reasoning: false,
+                timeout: None,
             },
         ];
         ModelList {
@@ -359,6 +367,8 @@ mod tests {
             default_model_id: "".to_string(),
             channels: HashMap::new(),
             enable_compiler_explorer: false,
+            timeout: DEFAULT_TIMEOUT,
+            timeout_reasoning: DEFAULT_TIMEOUT_REASONING,
         };
         let result = ModelList::new(&cfg);
         assert!(result.is_err());
@@ -407,6 +417,7 @@ models = [
                     api_key: "key1".to_string(),
                     endpoint: DEEPSEEK_API_ENDPOINT.to_string(),
                     reasoning: false,
+                    timeout: None,
                 },
                 Model {
                     id: "deepseek-2".to_string(),
@@ -415,6 +426,7 @@ models = [
                     api_key: "key1".to_string(),
                     endpoint: DEEPSEEK_API_ENDPOINT.to_string(),
                     reasoning: false,
+                    timeout: None,
                 }
             ]
         );
@@ -589,6 +601,7 @@ models = [
             api_key: "key".to_string(),
             endpoint: DEEPSEEK_API_ENDPOINT.to_string(),
             reasoning: false,
+            timeout: None,
         }];
         let model_list = ModelList {
             models,
@@ -735,5 +748,181 @@ models = [
         );
         assert_eq!(config.get_channel_system_prompt("#no-prompt"), None);
         assert_eq!(config.get_channel_system_prompt("#unknown"), None);
+    }
+
+    #[test]
+    fn test_get_timeout_with_defaults() {
+        let temp_dir = tempfile::tempdir().unwrap();
+        let config_dir = temp_dir.path();
+        let env_file = config_dir.join(".env");
+        std::fs::write(&env_file, "DEEPSEEK_API_KEY=test-key\n").unwrap();
+
+        let config_path = config_dir.join(CONFIG_FILE_NAME);
+        std::fs::write(
+            &config_path,
+            r##"
+[general]
+default_model = "default"
+
+[providers.deepseek]
+models = [
+  { id = "default", short_name = "d", name = "Default" }
+]
+"##,
+        )
+        .unwrap();
+
+        let env_vars = EnvVars {
+            vars: HashMap::new(),
+        };
+        let config = Config::new(&config_dir, &env_vars).expect("Config::new()");
+        let models = ModelList::new(&config).expect("ModelList::new()");
+
+        let non_reasoning_model = models.models.get(0).unwrap();
+        assert_eq!(config.get_timeout(non_reasoning_model), DEFAULT_TIMEOUT);
+    }
+
+    #[test]
+    fn test_get_timeout_with_custom_values() {
+        let temp_dir = tempfile::tempdir().unwrap();
+        let config_dir = temp_dir.path();
+        let env_file = config_dir.join(".env");
+        std::fs::write(&env_file, "DEEPSEEK_API_KEY=test-key\n").unwrap();
+
+        let config_path = config_dir.join(CONFIG_FILE_NAME);
+        std::fs::write(
+            &config_path,
+            r##"
+[general]
+default_model = "default"
+timeout = 30
+timeout_reasoning = 60
+
+[providers.deepseek]
+models = [
+  { id = "default", short_name = "d", name = "Default" }
+]
+"##,
+        )
+        .unwrap();
+
+        let env_vars = EnvVars {
+            vars: HashMap::new(),
+        };
+        let config = Config::new(&config_dir, &env_vars).expect("Config::new()");
+        let models = ModelList::new(&config).expect("ModelList::new()");
+
+        let non_reasoning_model = models.models.get(0).unwrap();
+        assert_eq!(config.get_timeout(non_reasoning_model), 30);
+    }
+
+    #[test]
+    fn test_get_timeout_only_non_reasoning_custom() {
+        let temp_dir = tempfile::tempdir().unwrap();
+        let config_dir = temp_dir.path();
+        let env_file = config_dir.join(".env");
+        std::fs::write(&env_file, "DEEPSEEK_API_KEY=test-key\n").unwrap();
+
+        let config_path = config_dir.join(CONFIG_FILE_NAME);
+        std::fs::write(
+            &config_path,
+            r##"
+[general]
+default_model = "default"
+timeout = 25
+
+[providers.deepseek]
+models = [
+  { id = "default", short_name = "d", name = "Default" }
+]
+"##,
+        )
+        .unwrap();
+
+        let env_vars = EnvVars {
+            vars: HashMap::new(),
+        };
+        let config = Config::new(&config_dir, &env_vars).expect("Config::new()");
+        let models = ModelList::new(&config).expect("ModelList::new()");
+
+        let non_reasoning_model = models.models.get(0).unwrap();
+        assert_eq!(config.get_timeout(non_reasoning_model), 25);
+    }
+
+    #[test]
+    fn test_get_timeout_only_reasoning_custom() {
+        let temp_dir = tempfile::tempdir().unwrap();
+        let config_dir = temp_dir.path();
+        let env_file = config_dir.join(".env");
+        std::fs::write(&env_file, "DEEPSEEK_API_KEY=test-key\n").unwrap();
+
+        let config_path = config_dir.join(CONFIG_FILE_NAME);
+        std::fs::write(
+            &config_path,
+            r##"
+[general]
+default_model = "default"
+timeout_reasoning = 50
+
+[providers.deepseek]
+models = [
+  { id = "default", short_name = "d", name = "Default" }
+]
+"##,
+        )
+        .unwrap();
+
+        let env_vars = EnvVars {
+            vars: HashMap::new(),
+        };
+        let config = Config::new(&config_dir, &env_vars).expect("Config::new()");
+        let models = ModelList::new(&config).expect("ModelList::new()");
+
+        let non_reasoning_model = models.models.get(0).unwrap();
+        assert_eq!(config.get_timeout(non_reasoning_model), DEFAULT_TIMEOUT);
+    }
+
+    #[test]
+    fn test_get_timeout_with_model_override() {
+        let temp_dir = tempfile::tempdir().unwrap();
+        let config_dir = temp_dir.path();
+        let env_file = config_dir.join(".env");
+        std::fs::write(&env_file, "DEEPSEEK_API_KEY=test-key\n").unwrap();
+
+        let config_path = config_dir.join(CONFIG_FILE_NAME);
+        std::fs::write(
+            &config_path,
+            r##"
+[general]
+default_model = "default"
+timeout = 20
+timeout_reasoning = 40
+
+[providers.deepseek]
+models = [
+  { id = "default", short_name = "d", name = "Default" },
+  { id = "custom-timeout", short_name = "c", name = "Custom Timeout", timeout = 100 },
+  { id = "reasoning-default", short_name = "r", name = "Reasoning Default", reasoning = true },
+  { id = "reasoning-custom", short_name = "rc", name = "Reasoning Custom", reasoning = true, timeout = 200 }
+]
+"##,
+        )
+        .unwrap();
+
+        let env_vars = EnvVars {
+            vars: HashMap::new(),
+        };
+        let config = Config::new(&config_dir, &env_vars).expect("Config::new()");
+        let models = ModelList::new(&config).expect("ModelList::new()");
+
+        let default_model = models.models.get(0).unwrap();
+        let custom_timeout_model = models.models.get(1).unwrap();
+        let reasoning_default_model = models.models.get(2).unwrap();
+        let reasoning_custom_model = models.models.get(3).unwrap();
+
+        assert_eq!(config.get_timeout(default_model), 20);
+        assert_eq!(config.get_timeout(custom_timeout_model), 100);
+        assert_eq!(config.get_timeout(reasoning_default_model), 40);
+        assert_eq!(config.get_timeout(reasoning_custom_model), 200);
     }
 }
