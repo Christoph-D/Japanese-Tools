@@ -44,8 +44,9 @@ fn call_api(
     prompt: &Vec<Message>,
     temperature: &Option<f64>,
 ) -> Result<String, String> {
+    let timeout_seconds = if model.reasoning { 40 } else { 20 };
     let client = reqwest::blocking::Client::builder()
-        .timeout(Duration::from_secs(20))
+        .timeout(Duration::from_secs(timeout_seconds))
         .build()
         .map_err(|e| formatget!("HTTP client error: {}", e))?;
 
@@ -76,7 +77,15 @@ fn call_api(
         .json(&payload)
         .send();
 
-    let mut resp = response.map_err(|e| formatget!("API error: {}", e))?;
+    let mut resp = response.map_err(|e| {
+        if e.is_timeout() {
+            formatget!("API error: Request timed out (%d seconds)", timeout_seconds)
+        } else if e.is_connect() {
+            formatget!("API error: Failed to connect to server: {}", e)
+        } else {
+            formatget!("API error: {}", e)
+        }
+    })?;
 
     let mut body = String::new();
     resp.read_to_string(&mut body)

@@ -5,7 +5,7 @@
 msgid ""
 msgstr ""
 "Report-Msgid-Bugs-To: \n"
-"PO-Revision-Date: 2025-09-25 22:44+0200\n"
+"PO-Revision-Date: 2026-02-01 18:41+0100\n"
 "Last-Translator: Christoph Dittmann <github@christoph-d.de>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -15,6 +15,14 @@ msgstr ""
 #: ../ai/src/main.rs
 msgid "!ai is only available in channels."
 msgstr "!ai gibt es nur in Channels."
+
+#: ../ai/src/main.rs
+msgid "API error: Failed to connect to server: {}"
+msgstr "API-Fehler: Verbindung zum Server fehlgeschlagen: {}"
+
+#: ../ai/src/main.rs
+msgid "API error: Request timed out (%d seconds)"
+msgstr "API-Fehler: Zeitüberschreitung (%d Sekunden)"
 
 #: ../ai/src/main.rs
 msgid "API error: {}"
@@ -391,7 +399,7 @@ msgstr "Zu wenig Platz, um das Ergebnis anzuzeigen."
 msgid "Unknown word."
 msgstr "Unbekanntes Wort."
 
-#: jmdict/ja.sh kanjidic/kanjidic.sh rtk/rtk.sh
+#: jmdict/ja.sh kanjidic/kanjidic.sh rtk/rtk.sh rtk/rtk_de.sh
 msgid "epsilon."
 msgstr "epsilon."
 
@@ -479,7 +487,7 @@ msgstr ". In Eigennamen: "
 msgid "No kanji found."
 msgstr "Keine Kanji gefunden."
 
-#: kanjidic/kanjidic.sh rtk/rtk.sh
+#: kanjidic/kanjidic.sh rtk/rtk.sh rtk/rtk_de.sh
 msgid "No regular expressions, please."
 msgstr "Bitte keine regulären Ausdrücke."
 
@@ -589,14 +597,14 @@ msgstr "Unbekanntes Level \"%s\". Gültige Levels sind (Zahl der Wörter): %s"
 msgid "No result."
 msgstr "Kein Ergebnis."
 
-#: rtk/rtk.sh
+#: rtk/rtk.sh rtk/rtk_de.sh
 msgid "Please put \"rtk.txt\" in the same directory as this script."
 msgstr "Bitte \"rtk.txt\" in dasselbe Verzeichnis wie dieses Skript legen."
 
-#: rtk/rtk.sh
+#: rtk/rtk.sh rtk/rtk_de.sh
 msgid "Unknown kanji number."
 msgstr "Unbekannte Kanji-Nummer."
 
-#: rtk/rtk.sh
+#: rtk/rtk.sh rtk/rtk_de.sh
 msgid "Unknown keyword."
 msgstr "Unbekanntes Keyword."

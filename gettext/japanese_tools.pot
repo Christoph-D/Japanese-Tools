@@ -20,6 +20,14 @@ msgid "!ai is only available in channels."
 msgstr ""
 
 #: ../ai/src/main.rs
+msgid "API error: Failed to connect to server: {}"
+msgstr ""
+
+#: ../ai/src/main.rs
+msgid "API error: Request timed out (%d seconds)"
+msgstr ""
+
+#: ../ai/src/main.rs
 msgid "API error: {}"
 msgstr ""
 
@@ -373,7 +381,7 @@ msgstr ""
 msgid "Unknown word."
 msgstr ""
 
-#: jmdict/ja.sh kanjidic/kanjidic.sh rtk/rtk.sh
+#: jmdict/ja.sh kanjidic/kanjidic.sh rtk/rtk.sh rtk/rtk_de.sh
 msgid "epsilon."
 msgstr ""
 
@@ -455,7 +463,7 @@ msgstr ""
 msgid "No kanji found."
 msgstr ""
 
-#: kanjidic/kanjidic.sh rtk/rtk.sh
+#: kanjidic/kanjidic.sh rtk/rtk.sh rtk/rtk_de.sh
 msgid "No regular expressions, please."
 msgstr ""
 
@@ -562,14 +570,14 @@ msgstr ""
 msgid "No result."
 msgstr ""
 
-#: rtk/rtk.sh
+#: rtk/rtk.sh rtk/rtk_de.sh
 msgid "Please put \"rtk.txt\" in the same directory as this script."
 msgstr ""
 
-#: rtk/rtk.sh
+#: rtk/rtk.sh rtk/rtk_de.sh
 msgid "Unknown kanji number."
 msgstr ""
 
-#: rtk/rtk.sh
+#: rtk/rtk.sh rtk/rtk_de.sh
 msgid "Unknown keyword."
 msgstr ""
