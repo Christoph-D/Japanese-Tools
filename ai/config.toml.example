@@ -4,7 +4,7 @@ enable_compiler_explorer = true
 
 [providers.anthropic]
 models = [
-    { id = "claude-sonnet-4-20250514", short_name = "s", name = "Claude Sonnet 4" }
+    { id = "claude-sonnet-4-5", short_name = "s", name = "Claude Sonnet 4.5" }
 ]
 
 [providers.deepseek]
@@ -13,13 +13,14 @@ models = [
 ]
 
 [providers.litellm]
-endpoint = ""
+endpoint = "http://..."
 models = [
-    { id = "deepseek/deepseek-chat", short_name = "d", name = "DeepSeek-V3.1" },
-    { id = "openrouter/google/gemini-2.5-flash", short_name = "g", name = "Gemini 2.5 Flash" },
-    { id = "openrouter/openai/gpt-4o", short_name = "o", name = "GPT-4o" },
-    { id = "mistral/mistral-medium-latest", short_name = "m", name = "Mistral Medium" },
-    { id = "anthropic/claude-sonnet-4-20250514", short_name = "s", name = "Claude Sonnet 4" }
+    # The short names here collide with the other examples.
+    # In a real config, you need to make sure the short names are unique.
+    # { id = "deepseek/deepseek-chat", short_name = "d", name = "DeepSeek-V3.2" },
+    # { id = "openrouter/google/gemini-3-flash-preview", short_name = "g", name = "Gemini 3 Flash" },
+    # { id = "mistral/mistral-medium-latest", short_name = "m", name = "Mistral Medium" },
+    # { id = "anthropic/claude-sonnet-4-5", short_name = "s", name = "Claude Sonnet 4.5" }
 ]
 
 [providers.mistral]
@@ -29,8 +30,7 @@ models = [
 
 [providers.openrouter]
 models = [
-    { id = "google/gemini-2.5-flash", short_name = "g", name = "Gemini 2.5 Flash" },
-    { id = "openai/gpt-4o", short_name = "o", name = "GPT-4o" },
+    { id = "google/gemini-3-flash-preview", short_name = "g", name = "Gemini 3 Flash" },
 ]
 
 [providers.z-ai]
