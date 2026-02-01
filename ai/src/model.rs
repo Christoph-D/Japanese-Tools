@@ -934,9 +934,7 @@ models = [
         )
         .unwrap();
 
-        let env_vars = EnvVars {
-            vars: HashMap::new(),
-        };
+        let env_vars = EnvVars::from_file(&config_dir).unwrap();
         let config = Config::new(&config_dir, &env_vars).expect("Config::new()");
         let models = ModelList::new(&config).expect("ModelList::new()");
 
@@ -968,9 +966,7 @@ models = [
         )
         .unwrap();
 
-        let env_vars = EnvVars {
-            vars: HashMap::new(),
-        };
+        let env_vars = EnvVars::from_file(&config_dir).unwrap();
         let config = Config::new(&config_dir, &env_vars).expect("Config::new()");
         let models = ModelList::new(&config).expect("ModelList::new()");
 
@@ -1001,9 +997,7 @@ models = [
         )
         .unwrap();
 
-        let env_vars = EnvVars {
-            vars: HashMap::new(),
-        };
+        let env_vars = EnvVars::from_file(&config_dir).unwrap();
         let config = Config::new(&config_dir, &env_vars).expect("Config::new()");
         let models = ModelList::new(&config).expect("ModelList::new()");
 
@@ -1034,9 +1028,7 @@ models = [
         )
         .unwrap();
 
-        let env_vars = EnvVars {
-            vars: HashMap::new(),
-        };
+        let env_vars = EnvVars::from_file(&config_dir).unwrap();
         let config = Config::new(&config_dir, &env_vars).expect("Config::new()");
         let models = ModelList::new(&config).expect("ModelList::new()");
 
@@ -1071,9 +1063,7 @@ models = [
         )
         .unwrap();
 
-        let env_vars = EnvVars {
-            vars: HashMap::new(),
-        };
+        let env_vars = EnvVars::from_file(&config_dir).unwrap();
         let config = Config::new(&config_dir, &env_vars).expect("Config::new()");
         let models = ModelList::new(&config).expect("ModelList::new()");
 
