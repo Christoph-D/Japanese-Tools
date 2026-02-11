@@ -65,4 +65,5 @@ ENV OPENCODE_CONFIG=/home/ubuntu/persistent-config/opencode.json
 RUN curl -fsSL https://opencode.ai/install | bash
 ENV PATH="/home/ubuntu/.opencode/bin:$PATH"
 
+ENV EDITOR='code --wait'
 WORKDIR /workspaces/Japanese
