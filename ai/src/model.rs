@@ -28,10 +28,16 @@ pub struct Config {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+pub struct ChannelModelConfig {
+    pub temperature: Option<f64>,
+    pub timeout: Option<u64>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub struct ChannelConfig {
     pub default_model: Option<String>,
-    pub temperature: Option<f64>,
     pub system_prompt: Option<String>,
+    pub models: HashMap<String, ChannelModelConfig>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -114,13 +120,21 @@ struct TomlModel {
 }
 
 #[derive(Debug, Clone, serde::Deserialize)]
+struct TomlChannelModel {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    temperature: Option<f64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    timeout: Option<u64>,
+}
+
+#[derive(Debug, Clone, serde::Deserialize)]
 struct TomlChannel {
     #[serde(skip_serializing_if = "Option::is_none")]
     default_model: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    temperature: Option<f64>,
-    #[serde(skip_serializing_if = "Option::is_none")]
     system_prompt: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    models: Option<HashMap<String, TomlChannelModel>>,
 }
 
 impl Config {
@@ -189,12 +203,26 @@ impl Config {
             .unwrap_or_default()
             .into_iter()
             .map(|(name, channel)| {
+                let models = channel
+                    .models
+                    .unwrap_or_default()
+                    .into_iter()
+                    .map(|(model_id, model_config)| {
+                        (
+                            model_id,
+                            ChannelModelConfig {
+                                temperature: model_config.temperature,
+                                timeout: model_config.timeout,
+                            },
+                        )
+                    })
+                    .collect();
                 (
                     name,
                     ChannelConfig {
                         default_model: channel.default_model,
-                        temperature: channel.temperature,
                         system_prompt: channel.system_prompt,
+                        models,
                     },
                 )
             })
@@ -238,20 +266,32 @@ impl Config {
             .unwrap_or(&self.default_model_id)
     }
 
-    pub fn get_channel_temperature(&self, channel_name: &str) -> Option<f64> {
-        self.channels.get(channel_name).and_then(|c| c.temperature)
+    pub fn get_channel_model_temperature(&self, channel_name: &str, model_id: &str) -> Option<f64> {
+        self.channels
+            .get(channel_name)
+            .and_then(|c| c.models.get(model_id))
+            .and_then(|m| m.temperature)
+    }
+
+    pub fn get_channel_model_timeout(&self, channel_name: &str, model_id: &str) -> Option<u64> {
+        self.channels
+            .get(channel_name)
+            .and_then(|c| c.models.get(model_id))
+            .and_then(|m| m.timeout)
     }
 
     pub fn is_compiler_explorer_enabled(&self) -> bool {
         self.enable_compiler_explorer
     }
 
-    pub fn get_timeout(&self, model: &Model) -> u64 {
-        model.timeout.unwrap_or(if model.reasoning {
-            self.timeout_reasoning
-        } else {
-            self.timeout
-        })
+    pub fn get_timeout(&self, model: &Model, channel_name: &str) -> u64 {
+        self.get_channel_model_timeout(channel_name, &model.id)
+            .or(model.timeout)
+            .unwrap_or(if model.reasoning {
+                self.timeout_reasoning
+            } else {
+                self.timeout
+            })
     }
 
     pub fn get_max_tokens(&self, model: &Model) -> u32 {
@@ -716,7 +756,7 @@ models = [
     }
 
     #[test]
-    fn test_get_channel_temperature() {
+    fn test_get_channel_model_temperature() {
         let temp_dir = tempfile::tempdir().unwrap();
         let config_dir = temp_dir.path();
         let env_file = config_dir.join(".env");
@@ -734,9 +774,11 @@ models = [
   { id = "default", short_name = "d", name = "Default" }
 ]
 
-[channels]
-"#test" = { temperature = 0.7 }
-"#no-temp" = { default_model = "default" }
+[channels."#test"]
+models = { "default" = { temperature = 0.7 } }
+
+[channels."#no-temp"]
+default_model = "default"
 "##,
         )
         .unwrap();
@@ -746,9 +788,22 @@ models = [
         };
         let config = Config::new(&config_dir, &env_vars).expect("Config::new()");
 
-        assert_eq!(config.get_channel_temperature("#test"), Some(0.7));
-        assert_eq!(config.get_channel_temperature("#no-temp"), None);
-        assert_eq!(config.get_channel_temperature("#unknown"), None);
+        assert_eq!(
+            config.get_channel_model_temperature("#test", "default"),
+            Some(0.7)
+        );
+        assert_eq!(
+            config.get_channel_model_temperature("#test", "unknown-model"),
+            None
+        );
+        assert_eq!(
+            config.get_channel_model_temperature("#no-temp", "default"),
+            None
+        );
+        assert_eq!(
+            config.get_channel_model_temperature("#unknown", "default"),
+            None
+        );
     }
 
     #[test]
@@ -946,7 +1001,7 @@ models = [
         let models = ModelList::new(&config).expect("ModelList::new()");
 
         let non_reasoning_model = models.models.get(0).unwrap();
-        assert_eq!(config.get_timeout(non_reasoning_model), DEFAULT_TIMEOUT);
+        assert_eq!(config.get_timeout(non_reasoning_model, ""), DEFAULT_TIMEOUT);
     }
 
     #[test]
@@ -978,7 +1033,7 @@ models = [
         let models = ModelList::new(&config).expect("ModelList::new()");
 
         let non_reasoning_model = models.models.get(0).unwrap();
-        assert_eq!(config.get_timeout(non_reasoning_model), 30);
+        assert_eq!(config.get_timeout(non_reasoning_model, ""), 30);
     }
 
     #[test]
@@ -1009,7 +1064,7 @@ models = [
         let models = ModelList::new(&config).expect("ModelList::new()");
 
         let non_reasoning_model = models.models.get(0).unwrap();
-        assert_eq!(config.get_timeout(non_reasoning_model), 25);
+        assert_eq!(config.get_timeout(non_reasoning_model, ""), 25);
     }
 
     #[test]
@@ -1040,7 +1095,7 @@ models = [
         let models = ModelList::new(&config).expect("ModelList::new()");
 
         let non_reasoning_model = models.models.get(0).unwrap();
-        assert_eq!(config.get_timeout(non_reasoning_model), DEFAULT_TIMEOUT);
+        assert_eq!(config.get_timeout(non_reasoning_model, ""), DEFAULT_TIMEOUT);
     }
 
     #[test]
@@ -1079,10 +1134,59 @@ models = [
         let reasoning_default_model = models.models.get(2).unwrap();
         let reasoning_custom_model = models.models.get(3).unwrap();
 
-        assert_eq!(config.get_timeout(default_model), 20);
-        assert_eq!(config.get_timeout(custom_timeout_model), 100);
-        assert_eq!(config.get_timeout(reasoning_default_model), 40);
-        assert_eq!(config.get_timeout(reasoning_custom_model), 200);
+        assert_eq!(config.get_timeout(default_model, ""), 20);
+        assert_eq!(config.get_timeout(custom_timeout_model, ""), 100);
+        assert_eq!(config.get_timeout(reasoning_default_model, ""), 40);
+        assert_eq!(config.get_timeout(reasoning_custom_model, ""), 200);
+    }
+
+    #[test]
+    fn test_get_timeout_channel_model_override() {
+        let temp_dir = tempfile::tempdir().unwrap();
+        let config_dir = temp_dir.path();
+        let env_file = config_dir.join(".env");
+        std::fs::write(&env_file, "DEEPSEEK_API_KEY=test-key\n").unwrap();
+
+        let config_path = config_dir.join(CONFIG_FILE_NAME);
+        std::fs::write(
+            &config_path,
+            r##"
+[general]
+default_model = "default"
+timeout = 20
+
+[providers.deepseek]
+models = [
+  { id = "default", short_name = "d", name = "Default" },
+  { id = "model-timeout", short_name = "m", name = "Model Timeout", timeout = 50 }
+]
+
+[channels."#test"]
+models = { "default" = { timeout = 100 } }
+
+[channels."#other"]
+models = { "model-timeout" = { timeout = 200 } }
+"##,
+        )
+        .unwrap();
+
+        let env_vars = EnvVars::from_file(&config_dir).unwrap();
+        let config = Config::new(&config_dir, &env_vars).expect("Config::new()");
+        let models = ModelList::new(&config).expect("ModelList::new()");
+
+        let default_model = models.models.get(0).unwrap();
+        let model_timeout_model = models.models.get(1).unwrap();
+
+        // Channel-model override takes precedence
+        assert_eq!(config.get_timeout(default_model, "#test"), 100);
+        // Model-level timeout when no channel override
+        assert_eq!(config.get_timeout(model_timeout_model, "#test"), 50);
+        // Different channel, different model with channel override
+        assert_eq!(config.get_timeout(model_timeout_model, "#other"), 200);
+        // No channel override, uses model timeout
+        assert_eq!(config.get_timeout(model_timeout_model, "#unknown"), 50);
+        // No channel override, no model timeout, uses global
+        assert_eq!(config.get_timeout(default_model, "#unknown"), 20);
     }
 
     #[test]

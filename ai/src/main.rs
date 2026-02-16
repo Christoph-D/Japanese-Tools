@@ -43,8 +43,9 @@ fn call_api(
     prompt: &Vec<Message>,
     temperature: &Option<f64>,
     config: &Config,
+    channel_name: &str,
 ) -> Result<String, String> {
-    let timeout_seconds = config.get_timeout(model);
+    let timeout_seconds = config.get_timeout(model, channel_name);
     let client = reqwest::blocking::Client::builder()
         .timeout(Duration::from_secs(timeout_seconds))
         .build()
@@ -634,10 +635,20 @@ fn run(input: &Input) -> Result<Output, String> {
         .find(|f| f.starts_with("t="))
         .and_then(|f| f.split('=').nth(1))
         .and_then(|s| s.parse::<f64>().ok().map(|t| t.clamp(0.0, 2.0)))
-        .or_else(|| input.config.get_channel_temperature(&input.receiver))
+        .or_else(|| {
+            input
+                .config
+                .get_channel_model_temperature(&input.receiver, &input.model.id)
+        })
         .or(input.model.temperature);
 
-    let result = &call_api(&input.model, &prompt, &temperature, &input.config)?;
+    let result = &call_api(
+        &input.model,
+        &prompt,
+        &temperature,
+        &input.config,
+        &input.receiver,
+    )?;
 
     memory
         .add_to_history(&input.sender, Sender::Assistant, &input.receiver, result)
@@ -1005,7 +1016,9 @@ mod tests {
         let env_vars = EnvVars::from_file(&config_dir).unwrap();
 
         let config_path = config_dir.join(CONFIG_FILE_NAME);
-        std::fs::write(&config_path, r##"
+        std::fs::write(
+            &config_path,
+            r##"
 [general]
 default_model = "default-model"
 
@@ -1016,9 +1029,15 @@ models = [
   { id = "default-model", short_name = "d", name = "Default Model" }
 ]
 
-[channels]
-"#test-channel" = { default_model = "test-model", temperature = 0.8, system_prompt = "Test channel prompt" }
-"##).unwrap();
+[channels."#test-channel"]
+default_model = "test-model"
+system_prompt = "Test channel prompt"
+
+[channels."#test-channel".models."test-model"]
+temperature = 0.8
+"##,
+        )
+        .unwrap();
 
         let config = Config::new(&config_dir, &env_vars).expect("Config::new()");
         let models = ModelList::new(&config).unwrap();
@@ -1033,7 +1052,7 @@ models = [
         assert_eq!(selected_model.id, "test-model");
 
         // Test channel-specific temperature
-        let channel_temp = config.get_channel_temperature("#test-channel");
+        let channel_temp = config.get_channel_model_temperature("#test-channel", "test-model");
         assert_eq!(channel_temp, Some(0.8));
 
         // Test channel-specific system prompt
@@ -1044,7 +1063,7 @@ models = [
         let unconfigured_default = config.get_channel_default_model("#unknown");
         assert_eq!(unconfigured_default, "default-model");
 
-        let unconfigured_temp = config.get_channel_temperature("#unknown");
+        let unconfigured_temp = config.get_channel_model_temperature("#unknown", "test-model");
         assert_eq!(unconfigured_temp, None);
 
         let unconfigured_prompt = config.get_channel_system_prompt("#unknown");
@@ -1075,8 +1094,12 @@ models = [
   { id = "default-model", short_name = "d", name = "Default Model" }
 ]
 
-[channels]
-"#test" = { default_model = "test-model", temperature = 0.5, system_prompt = "Test prompt" }
+[channels."#test"]
+default_model = "test-model"
+system_prompt = "Test prompt"
+
+[channels."#test".models."test-model"]
+temperature = 0.5
 "##,
         )
         .unwrap();
@@ -1084,13 +1107,14 @@ models = [
         let config = Config::new(&config_dir, &env_vars).expect("Config::new()");
 
         // Test channel-specific temperature fallback (simulating the logic from run())
+        let model_id = "test-model";
         let flags: Vec<String> = vec![];
         let temperature = flags
             .iter()
             .find(|f| f.starts_with("temperature=") || f.starts_with("t="))
             .and_then(|f| f.split('=').nth(1))
             .and_then(|s| s.parse::<f64>().ok().map(|t| t.clamp(0.0, 2.0)))
-            .or_else(|| config.get_channel_temperature("#test"));
+            .or_else(|| config.get_channel_model_temperature("#test", model_id));
 
         assert_eq!(temperature, Some(0.5));
 
@@ -1100,7 +1124,7 @@ models = [
             .find(|f| f.starts_with("temperature=") || f.starts_with("t="))
             .and_then(|f| f.split('=').nth(1))
             .and_then(|s| s.parse::<f64>().ok().map(|t| t.clamp(0.0, 2.0)))
-            .or_else(|| config.get_channel_temperature("#unknown"));
+            .or_else(|| config.get_channel_model_temperature("#unknown", model_id));
 
         assert_eq!(temperature_unconfigured, None);
     }
@@ -1129,8 +1153,8 @@ models = [
   { id = "default-model", short_name = "d", name = "Default Model" }
 ]
 
-[channels]
-"#test" = { temperature = 0.5 }
+[channels."#test".models."default-model"]
+temperature = 0.5
 "##,
         )
         .unwrap();
@@ -1138,13 +1162,14 @@ models = [
         let config = Config::new(&config_dir, &env_vars).expect("Config::new()");
 
         // Temperature flag should override channel temperature (simulating the logic from run())
+        let model_id = "default-model";
         let flags = vec!["t=0.9".to_string()];
         let temperature = flags
             .iter()
             .find(|f| f.starts_with("temperature=") || f.starts_with("t="))
             .and_then(|f| f.split('=').nth(1))
             .and_then(|s| s.parse::<f64>().ok().map(|t| t.clamp(0.0, 2.0)))
-            .or_else(|| config.get_channel_temperature("#test"));
+            .or_else(|| config.get_channel_model_temperature("#test", model_id));
 
         assert_eq!(temperature, Some(0.9));
     }
@@ -1173,8 +1198,8 @@ models = [
   { id = "default-model", short_name = "d", name = "Default Model", temperature = 0.3 }
 ]
 
-[channels]
-"#test" = { temperature = 0.5 }
+[channels."#test".models."other-model"]
+temperature = 0.5
 "##,
         )
         .unwrap();
@@ -1185,14 +1210,14 @@ models = [
             .select_model_for_channel(&[], "default-model")
             .unwrap();
 
-        // Model temperature is used when no flag or channel temperature
+        // Model temperature is used when no flag or channel-model temperature
         let flags: Vec<String> = vec![];
         let temperature = flags
             .iter()
             .find(|f| f.starts_with("t="))
             .and_then(|f| f.split('=').nth(1))
             .and_then(|s| s.parse::<f64>().ok().map(|t| t.clamp(0.0, 2.0)))
-            .or_else(|| config.get_channel_temperature("#other"))
+            .or_else(|| config.get_channel_model_temperature("#other", &model.id))
             .or(model.temperature);
 
         assert_eq!(temperature, Some(0.3));
@@ -1222,8 +1247,8 @@ models = [
   { id = "default-model", short_name = "d", name = "Default Model", temperature = 0.3 }
 ]
 
-[channels]
-"#test" = { temperature = 0.5 }
+[channels."#test".models."default-model"]
+temperature = 0.5
 "##,
         )
         .unwrap();
@@ -1234,36 +1259,36 @@ models = [
             .select_model_for_channel(&[], "default-model")
             .unwrap();
 
-        // Flag overrides channel and model
+        // Flag overrides channel-model and model
         let flags = ["t=0.9".to_string()];
         let temperature = flags
             .iter()
             .find(|f| f.starts_with("t="))
             .and_then(|f| f.split('=').nth(1))
             .and_then(|s| s.parse::<f64>().ok().map(|t| t.clamp(0.0, 2.0)))
-            .or_else(|| config.get_channel_temperature("#test"))
+            .or_else(|| config.get_channel_model_temperature("#test", &model.id))
             .or(model.temperature);
         assert_eq!(temperature, Some(0.9));
 
-        // Channel overrides model
+        // Channel-model overrides model
         let flags: [&String; 0] = [];
         let temperature = flags
             .iter()
             .find(|f| f.starts_with("t="))
             .and_then(|f| f.split('=').nth(1))
             .and_then(|s| s.parse::<f64>().ok().map(|t| t.clamp(0.0, 2.0)))
-            .or_else(|| config.get_channel_temperature("#test"))
+            .or_else(|| config.get_channel_model_temperature("#test", &model.id))
             .or(model.temperature);
         assert_eq!(temperature, Some(0.5));
 
-        // Model is used when no channel config
+        // Model is used when no channel-model config
         let flags: [&String; 0] = [];
         let temperature = flags
             .iter()
             .find(|f| f.starts_with("t="))
             .and_then(|f| f.split('=').nth(1))
             .and_then(|s| s.parse::<f64>().ok().map(|t| t.clamp(0.0, 2.0)))
-            .or_else(|| config.get_channel_temperature("#other"))
+            .or_else(|| config.get_channel_model_temperature("#other", &model.id))
             .or(model.temperature);
         assert_eq!(temperature, Some(0.3));
     }

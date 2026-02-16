@@ -70,7 +70,11 @@ models = [
 
 [channels."#example"]
 default_model = "mistral/mistral-medium-latest"
-temperature = 0.4
 system_prompt = """You are a technical AI assistant in the #example channel.
 Focus on practical, accurate solutions for Linux system administration and development.
 Be concise and precise. Limit responses to {MAX_LINE_LENGTH} characters."""
+
+# Example: override temperature for deepseek/deepseek-chat in #example channel
+# [channels."#example".models."deepseek/deepseek-chat"]
+# temperature = 0.4
+# timeout = 30
