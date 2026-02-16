@@ -636,9 +636,11 @@ fn run(input: &Input) -> Result<Output, String> {
         .and_then(|f| f.split('=').nth(1))
         .and_then(|s| s.parse::<f64>().ok().map(|t| t.clamp(0.0, 2.0)))
         .or_else(|| {
-            input
-                .config
-                .get_channel_model_temperature(&input.receiver, &input.model.id)
+            input.config.get_channel_model_temperature(
+                &input.receiver,
+                &input.model.provider,
+                &input.model.id,
+            )
         })
         .or(input.model.temperature);
 
@@ -1033,7 +1035,7 @@ models = [
 default_model = "test-model"
 system_prompt = "Test channel prompt"
 
-[channels."#test-channel".models."test-model"]
+[channels."#test-channel".models.litellm."test-model"]
 temperature = 0.8
 "##,
         )
@@ -1052,7 +1054,8 @@ temperature = 0.8
         assert_eq!(selected_model.id, "test-model");
 
         // Test channel-specific temperature
-        let channel_temp = config.get_channel_model_temperature("#test-channel", "test-model");
+        let channel_temp =
+            config.get_channel_model_temperature("#test-channel", "litellm", "test-model");
         assert_eq!(channel_temp, Some(0.8));
 
         // Test channel-specific system prompt
@@ -1063,7 +1066,8 @@ temperature = 0.8
         let unconfigured_default = config.get_channel_default_model("#unknown");
         assert_eq!(unconfigured_default, "default-model");
 
-        let unconfigured_temp = config.get_channel_model_temperature("#unknown", "test-model");
+        let unconfigured_temp =
+            config.get_channel_model_temperature("#unknown", "litellm", "test-model");
         assert_eq!(unconfigured_temp, None);
 
         let unconfigured_prompt = config.get_channel_system_prompt("#unknown");
@@ -1089,7 +1093,8 @@ temperature = 0.8
 [general]
 default_model = "default-model"
 
-[providers.deepseek]
+[providers.litellm]
+endpoint = "http://test.example.com"
 models = [
   { id = "default-model", short_name = "d", name = "Default Model" }
 ]
@@ -1098,7 +1103,7 @@ models = [
 default_model = "test-model"
 system_prompt = "Test prompt"
 
-[channels."#test".models."test-model"]
+[channels."#test".models.litellm."test-model"]
 temperature = 0.5
 "##,
         )
@@ -1107,6 +1112,7 @@ temperature = 0.5
         let config = Config::new(&config_dir, &env_vars).expect("Config::new()");
 
         // Test channel-specific temperature fallback (simulating the logic from run())
+        let provider = "litellm";
         let model_id = "test-model";
         let flags: Vec<String> = vec![];
         let temperature = flags
@@ -1114,7 +1120,7 @@ temperature = 0.5
             .find(|f| f.starts_with("temperature=") || f.starts_with("t="))
             .and_then(|f| f.split('=').nth(1))
             .and_then(|s| s.parse::<f64>().ok().map(|t| t.clamp(0.0, 2.0)))
-            .or_else(|| config.get_channel_model_temperature("#test", model_id));
+            .or_else(|| config.get_channel_model_temperature("#test", provider, model_id));
 
         assert_eq!(temperature, Some(0.5));
 
@@ -1124,7 +1130,7 @@ temperature = 0.5
             .find(|f| f.starts_with("temperature=") || f.starts_with("t="))
             .and_then(|f| f.split('=').nth(1))
             .and_then(|s| s.parse::<f64>().ok().map(|t| t.clamp(0.0, 2.0)))
-            .or_else(|| config.get_channel_model_temperature("#unknown", model_id));
+            .or_else(|| config.get_channel_model_temperature("#unknown", provider, model_id));
 
         assert_eq!(temperature_unconfigured, None);
     }
@@ -1153,7 +1159,7 @@ models = [
   { id = "default-model", short_name = "d", name = "Default Model" }
 ]
 
-[channels."#test".models."default-model"]
+[channels."#test".models.deepseek."default-model"]
 temperature = 0.5
 "##,
         )
@@ -1162,6 +1168,7 @@ temperature = 0.5
         let config = Config::new(&config_dir, &env_vars).expect("Config::new()");
 
         // Temperature flag should override channel temperature (simulating the logic from run())
+        let provider = "deepseek";
         let model_id = "default-model";
         let flags = vec!["t=0.9".to_string()];
         let temperature = flags
@@ -1169,7 +1176,7 @@ temperature = 0.5
             .find(|f| f.starts_with("temperature=") || f.starts_with("t="))
             .and_then(|f| f.split('=').nth(1))
             .and_then(|s| s.parse::<f64>().ok().map(|t| t.clamp(0.0, 2.0)))
-            .or_else(|| config.get_channel_model_temperature("#test", model_id));
+            .or_else(|| config.get_channel_model_temperature("#test", provider, model_id));
 
         assert_eq!(temperature, Some(0.9));
     }
@@ -1198,7 +1205,7 @@ models = [
   { id = "default-model", short_name = "d", name = "Default Model", temperature = 0.3 }
 ]
 
-[channels."#test".models."other-model"]
+[channels."#test".models.deepseek."other-model"]
 temperature = 0.5
 "##,
         )
@@ -1217,7 +1224,7 @@ temperature = 0.5
             .find(|f| f.starts_with("t="))
             .and_then(|f| f.split('=').nth(1))
             .and_then(|s| s.parse::<f64>().ok().map(|t| t.clamp(0.0, 2.0)))
-            .or_else(|| config.get_channel_model_temperature("#other", &model.id))
+            .or_else(|| config.get_channel_model_temperature("#other", &model.provider, &model.id))
             .or(model.temperature);
 
         assert_eq!(temperature, Some(0.3));
@@ -1247,7 +1254,7 @@ models = [
   { id = "default-model", short_name = "d", name = "Default Model", temperature = 0.3 }
 ]
 
-[channels."#test".models."default-model"]
+[channels."#test".models.deepseek."default-model"]
 temperature = 0.5
 "##,
         )
@@ -1266,7 +1273,7 @@ temperature = 0.5
             .find(|f| f.starts_with("t="))
             .and_then(|f| f.split('=').nth(1))
             .and_then(|s| s.parse::<f64>().ok().map(|t| t.clamp(0.0, 2.0)))
-            .or_else(|| config.get_channel_model_temperature("#test", &model.id))
+            .or_else(|| config.get_channel_model_temperature("#test", &model.provider, &model.id))
             .or(model.temperature);
         assert_eq!(temperature, Some(0.9));
 
@@ -1277,7 +1284,7 @@ temperature = 0.5
             .find(|f| f.starts_with("t="))
             .and_then(|f| f.split('=').nth(1))
             .and_then(|s| s.parse::<f64>().ok().map(|t| t.clamp(0.0, 2.0)))
-            .or_else(|| config.get_channel_model_temperature("#test", &model.id))
+            .or_else(|| config.get_channel_model_temperature("#test", &model.provider, &model.id))
             .or(model.temperature);
         assert_eq!(temperature, Some(0.5));
 
@@ -1288,7 +1295,7 @@ temperature = 0.5
             .find(|f| f.starts_with("t="))
             .and_then(|f| f.split('=').nth(1))
             .and_then(|s| s.parse::<f64>().ok().map(|t| t.clamp(0.0, 2.0)))
-            .or_else(|| config.get_channel_model_temperature("#other", &model.id))
+            .or_else(|| config.get_channel_model_temperature("#other", &model.provider, &model.id))
             .or(model.temperature);
         assert_eq!(temperature, Some(0.3));
     }

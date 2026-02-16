@@ -75,6 +75,6 @@ Focus on practical, accurate solutions for Linux system administration and devel
 Be concise and precise. Limit responses to {MAX_LINE_LENGTH} characters."""
 
 # Example: override temperature for deepseek/deepseek-chat in #example channel
-# [channels."#example".models."deepseek/deepseek-chat"]
+# [channels."#example".models.litellm."deepseek/deepseek-chat"]
 # temperature = 0.4
 # timeout = 30

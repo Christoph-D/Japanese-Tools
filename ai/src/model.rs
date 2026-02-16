@@ -10,6 +10,7 @@ use crate::constants::{
 #[derive(Debug, Clone, PartialEq)]
 struct Provider {
     name: String,
+    raw_name: String,
     api_key: String,
     endpoint: String,
     models: Vec<TomlModel>,
@@ -37,12 +38,13 @@ pub struct ChannelModelConfig {
 pub struct ChannelConfig {
     pub default_model: Option<String>,
     pub system_prompt: Option<String>,
-    pub models: HashMap<String, ChannelModelConfig>,
+    pub models: HashMap<String, HashMap<String, ChannelModelConfig>>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Model {
     pub id: String,
+    pub provider: String,
     pub short_name: String,
     pub name: String,
     pub api_key: String,
@@ -140,7 +142,7 @@ struct TomlChannel {
     #[serde(skip_serializing_if = "Option::is_none")]
     system_prompt: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    models: Option<HashMap<String, TomlChannelModel>>,
+    models: Option<HashMap<String, HashMap<String, TomlChannelModel>>>,
 }
 
 impl Config {
@@ -198,6 +200,7 @@ impl Config {
                 };
                 providers.push(Provider {
                     name: Self::provider_display_name(&provider_name),
+                    raw_name: provider_name.clone(),
                     api_key: api_key.clone(),
                     endpoint,
                     models: toml_provider.models,
@@ -213,14 +216,20 @@ impl Config {
                     .models
                     .unwrap_or_default()
                     .into_iter()
-                    .map(|(model_id, model_config)| {
-                        (
-                            model_id,
-                            ChannelModelConfig {
-                                temperature: model_config.temperature,
-                                timeout: model_config.timeout,
-                            },
-                        )
+                    .map(|(provider_name, provider_models)| {
+                        let model_configs = provider_models
+                            .into_iter()
+                            .map(|(model_id, model_config)| {
+                                (
+                                    model_id,
+                                    ChannelModelConfig {
+                                        temperature: model_config.temperature,
+                                        timeout: model_config.timeout,
+                                    },
+                                )
+                            })
+                            .collect();
+                        (provider_name, model_configs)
                     })
                     .collect();
                 (
@@ -272,17 +281,29 @@ impl Config {
             .unwrap_or(&self.default_model_id)
     }
 
-    pub fn get_channel_model_temperature(&self, channel_name: &str, model_id: &str) -> Option<f64> {
+    pub fn get_channel_model_temperature(
+        &self,
+        channel_name: &str,
+        provider: &str,
+        model_id: &str,
+    ) -> Option<f64> {
         self.channels
             .get(channel_name)
-            .and_then(|c| c.models.get(model_id))
+            .and_then(|c| c.models.get(provider))
+            .and_then(|p| p.get(model_id))
             .and_then(|m| m.temperature)
     }
 
-    pub fn get_channel_model_timeout(&self, channel_name: &str, model_id: &str) -> Option<u64> {
+    pub fn get_channel_model_timeout(
+        &self,
+        channel_name: &str,
+        provider: &str,
+        model_id: &str,
+    ) -> Option<u64> {
         self.channels
             .get(channel_name)
-            .and_then(|c| c.models.get(model_id))
+            .and_then(|c| c.models.get(provider))
+            .and_then(|p| p.get(model_id))
             .and_then(|m| m.timeout)
     }
 
@@ -291,7 +312,7 @@ impl Config {
     }
 
     pub fn get_timeout(&self, model: &Model, channel_name: &str) -> u64 {
-        self.get_channel_model_timeout(channel_name, &model.id)
+        self.get_channel_model_timeout(channel_name, &model.provider, &model.id)
             .or(model.timeout)
             .unwrap_or(if model.reasoning {
                 self.timeout_reasoning
@@ -319,6 +340,7 @@ impl ModelList {
             for toml_model in &provider.models {
                 models.push(Model {
                     id: toml_model.id.to_string(),
+                    provider: provider.raw_name.clone(),
                     short_name: toml_model.short_name.to_string(),
                     name: toml_model.name.to_string(),
                     api_key: provider.api_key.clone(),
@@ -411,6 +433,7 @@ mod tests {
         let models = vec![
             Model {
                 id: "deepseek-1".to_string(),
+                provider: "deepseek".to_string(),
                 short_name: "d".to_string(),
                 name: "Deepseek".to_string(),
                 api_key: "key1".to_string(),
@@ -422,6 +445,7 @@ mod tests {
             },
             Model {
                 id: "openrouter-2".to_string(),
+                provider: "openrouter".to_string(),
                 short_name: "o".to_string(),
                 name: "OpenRouter".to_string(),
                 api_key: "key2".to_string(),
@@ -492,6 +516,7 @@ models = [
             vec![
                 Model {
                     id: "deepseek-1".to_string(),
+                    provider: "deepseek".to_string(),
                     short_name: "short1".to_string(),
                     name: "Deepseek 1".to_string(),
                     api_key: "key1".to_string(),
@@ -503,6 +528,7 @@ models = [
                 },
                 Model {
                     id: "deepseek-2".to_string(),
+                    provider: "deepseek".to_string(),
                     short_name: "short2".to_string(),
                     name: "Deepseek 2".to_string(),
                     api_key: "key1".to_string(),
@@ -680,6 +706,7 @@ models = [
     fn test_list_models_with_single_model() {
         let models = vec![Model {
             id: "only-model".to_string(),
+            provider: "deepseek".to_string(),
             short_name: "o".to_string(),
             name: "Only Model".to_string(),
             api_key: "key".to_string(),
@@ -781,7 +808,7 @@ models = [
 ]
 
 [channels."#test"]
-models = { "default" = { temperature = 0.7 } }
+models = { deepseek = { default = { temperature = 0.7 } } }
 
 [channels."#no-temp"]
 default_model = "default"
@@ -795,19 +822,19 @@ default_model = "default"
         let config = Config::new(&config_dir, &env_vars).expect("Config::new()");
 
         assert_eq!(
-            config.get_channel_model_temperature("#test", "default"),
+            config.get_channel_model_temperature("#test", "deepseek", "default"),
             Some(0.7)
         );
         assert_eq!(
-            config.get_channel_model_temperature("#test", "unknown-model"),
+            config.get_channel_model_temperature("#test", "deepseek", "unknown-model"),
             None
         );
         assert_eq!(
-            config.get_channel_model_temperature("#no-temp", "default"),
+            config.get_channel_model_temperature("#no-temp", "deepseek", "default"),
             None
         );
         assert_eq!(
-            config.get_channel_model_temperature("#unknown", "default"),
+            config.get_channel_model_temperature("#unknown", "deepseek", "default"),
             None
         );
     }
@@ -1168,10 +1195,10 @@ models = [
 ]
 
 [channels."#test"]
-models = { "default" = { timeout = 100 } }
+models = { deepseek = { default = { timeout = 100 } } }
 
 [channels."#other"]
-models = { "model-timeout" = { timeout = 200 } }
+models = { deepseek = { "model-timeout" = { timeout = 200 } } }
 "##,
         )
         .unwrap();
