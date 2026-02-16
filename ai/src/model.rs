@@ -7,7 +7,7 @@ use crate::constants::{
     DEFAULT_TIMEOUT_REASONING,
 };
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq)]
 struct Provider {
     name: String,
     api_key: String,
@@ -34,7 +34,7 @@ pub struct ChannelConfig {
     pub system_prompt: Option<String>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Model {
     pub id: String,
     pub short_name: String,
@@ -44,9 +44,10 @@ pub struct Model {
     pub reasoning: bool,
     pub max_tokens: Option<u32>,
     pub timeout: Option<u64>,
+    pub temperature: Option<f64>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct ModelList {
     models: Vec<Model>,
     default_model_index: usize,
@@ -97,7 +98,7 @@ struct TomlProvider {
     models: Vec<TomlModel>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, serde::Deserialize)]
+#[derive(Debug, Clone, PartialEq, serde::Deserialize)]
 struct TomlModel {
     id: String,
     short_name: String,
@@ -108,6 +109,8 @@ struct TomlModel {
     max_tokens: Option<u32>,
     #[serde(skip_serializing_if = "Option::is_none")]
     timeout: Option<u64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    temperature: Option<f64>,
 }
 
 #[derive(Debug, Clone, serde::Deserialize)]
@@ -244,12 +247,10 @@ impl Config {
     }
 
     pub fn get_timeout(&self, model: &Model) -> u64 {
-        model.timeout.unwrap_or_else(|| {
-            if model.reasoning {
-                self.timeout_reasoning
-            } else {
-                self.timeout
-            }
+        model.timeout.unwrap_or(if model.reasoning {
+            self.timeout_reasoning
+        } else {
+            self.timeout
         })
     }
 
@@ -279,6 +280,7 @@ impl ModelList {
                     reasoning: toml_model.reasoning,
                     max_tokens: toml_model.max_tokens,
                     timeout: toml_model.timeout,
+                    temperature: toml_model.temperature,
                 });
             }
         }
@@ -370,6 +372,7 @@ mod tests {
                 reasoning: false,
                 max_tokens: None,
                 timeout: None,
+                temperature: None,
             },
             Model {
                 id: "openrouter-2".to_string(),
@@ -380,6 +383,7 @@ mod tests {
                 reasoning: false,
                 max_tokens: None,
                 timeout: None,
+                temperature: None,
             },
         ];
         ModelList {
@@ -449,6 +453,7 @@ models = [
                     reasoning: false,
                     max_tokens: None,
                     timeout: None,
+                    temperature: None,
                 },
                 Model {
                     id: "deepseek-2".to_string(),
@@ -459,6 +464,7 @@ models = [
                     reasoning: false,
                     max_tokens: None,
                     timeout: None,
+                    temperature: None,
                 }
             ]
         );
@@ -635,6 +641,7 @@ models = [
             reasoning: false,
             max_tokens: None,
             timeout: None,
+            temperature: None,
         }];
         let model_list = ModelList {
             models,
@@ -1076,5 +1083,39 @@ models = [
         assert_eq!(config.get_timeout(custom_timeout_model), 100);
         assert_eq!(config.get_timeout(reasoning_default_model), 40);
         assert_eq!(config.get_timeout(reasoning_custom_model), 200);
+    }
+
+    #[test]
+    fn test_model_temperature_parsed() {
+        let temp_dir = tempfile::tempdir().unwrap();
+        let config_dir = temp_dir.path();
+        let env_file = config_dir.join(".env");
+        std::fs::write(&env_file, "DEEPSEEK_API_KEY=test-key\n").unwrap();
+
+        let config_path = config_dir.join(CONFIG_FILE_NAME);
+        std::fs::write(
+            &config_path,
+            r##"
+[general]
+default_model = "default"
+
+[providers.deepseek]
+models = [
+  { id = "default", short_name = "d", name = "Default" },
+  { id = "with-temp", short_name = "t", name = "With Temperature", temperature = 0.3 }
+]
+"##,
+        )
+        .unwrap();
+
+        let env_vars = EnvVars::from_file(config_dir).unwrap();
+        let config = Config::new(config_dir, &env_vars).expect("Config::new()");
+        let models = ModelList::new(&config).expect("ModelList::new()");
+
+        let default_model = models.models.first().unwrap();
+        let temp_model = models.models.get(1).unwrap();
+
+        assert_eq!(default_model.temperature, None);
+        assert_eq!(temp_model.temperature, Some(0.3));
     }
 }

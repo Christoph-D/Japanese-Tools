@@ -634,7 +634,8 @@ fn run(input: &Input) -> Result<Output, String> {
         .find(|f| f.starts_with("t="))
         .and_then(|f| f.split('=').nth(1))
         .and_then(|s| s.parse::<f64>().ok().map(|t| t.clamp(0.0, 2.0)))
-        .or_else(|| input.config.get_channel_temperature(&input.receiver));
+        .or_else(|| input.config.get_channel_temperature(&input.receiver))
+        .or(input.model.temperature);
 
     let result = &call_api(&input.model, &prompt, &temperature, &input.config)?;
 
@@ -1146,5 +1147,124 @@ models = [
             .or_else(|| config.get_channel_temperature("#test"));
 
         assert_eq!(temperature, Some(0.9));
+    }
+
+    #[test]
+    fn test_model_temperature_fallback() {
+        use crate::constants::CONFIG_FILE_NAME;
+        use crate::model::{Config, ModelList};
+
+        let temp_dir = tempfile::tempdir().unwrap();
+        let config_dir = temp_dir.path();
+        let env_file = config_dir.join(".env");
+        std::fs::write(&env_file, "DEEPSEEK_API_KEY=test-key\n").unwrap();
+        let env_vars = EnvVars::from_file(&config_dir).unwrap();
+
+        std::fs::create_dir_all(&config_dir).unwrap();
+        let config_path = config_dir.join(CONFIG_FILE_NAME);
+        std::fs::write(
+            &config_path,
+            r##"
+[general]
+default_model = "default-model"
+
+[providers.deepseek]
+models = [
+  { id = "default-model", short_name = "d", name = "Default Model", temperature = 0.3 }
+]
+
+[channels]
+"#test" = { temperature = 0.5 }
+"##,
+        )
+        .unwrap();
+
+        let config = Config::new(&config_dir, &env_vars).expect("Config::new()");
+        let models = ModelList::new(&config).expect("ModelList::new()");
+        let model = models
+            .select_model_for_channel(&[], "default-model")
+            .unwrap();
+
+        // Model temperature is used when no flag or channel temperature
+        let flags: Vec<String> = vec![];
+        let temperature = flags
+            .iter()
+            .find(|f| f.starts_with("t="))
+            .and_then(|f| f.split('=').nth(1))
+            .and_then(|s| s.parse::<f64>().ok().map(|t| t.clamp(0.0, 2.0)))
+            .or_else(|| config.get_channel_temperature("#other"))
+            .or(model.temperature);
+
+        assert_eq!(temperature, Some(0.3));
+    }
+
+    #[test]
+    fn test_temperature_precedence_flag_over_channel_over_model() {
+        use crate::constants::CONFIG_FILE_NAME;
+        use crate::model::{Config, ModelList};
+
+        let temp_dir = tempfile::tempdir().unwrap();
+        let config_dir = temp_dir.path();
+        let env_file = config_dir.join(".env");
+        std::fs::write(&env_file, "DEEPSEEK_API_KEY=test-key\n").unwrap();
+        let env_vars = EnvVars::from_file(&config_dir).unwrap();
+
+        std::fs::create_dir_all(&config_dir).unwrap();
+        let config_path = config_dir.join(CONFIG_FILE_NAME);
+        std::fs::write(
+            &config_path,
+            r##"
+[general]
+default_model = "default-model"
+
+[providers.deepseek]
+models = [
+  { id = "default-model", short_name = "d", name = "Default Model", temperature = 0.3 }
+]
+
+[channels]
+"#test" = { temperature = 0.5 }
+"##,
+        )
+        .unwrap();
+
+        let config = Config::new(&config_dir, &env_vars).expect("Config::new()");
+        let models = ModelList::new(&config).expect("ModelList::new()");
+        let model = models
+            .select_model_for_channel(&[], "default-model")
+            .unwrap();
+
+        // Flag overrides channel and model
+        let flags = ["t=0.9".to_string()];
+        let temperature = flags
+            .iter()
+            .find(|f| f.starts_with("t="))
+            .and_then(|f| f.split('=').nth(1))
+            .and_then(|s| s.parse::<f64>().ok().map(|t| t.clamp(0.0, 2.0)))
+            .or_else(|| config.get_channel_temperature("#test"))
+            .or(model.temperature);
+        assert_eq!(temperature, Some(0.9));
+
+        // Channel overrides model
+        let flags: [&String; 0] = [];
+        let temperature = flags
+            .iter()
+            .find(|f| f.starts_with("t="))
+            .and_then(|f| f.split('=').nth(1))
+            .and_then(|s| s.parse::<f64>().ok().map(|t| t.clamp(0.0, 2.0)))
+            .or_else(|| config.get_channel_temperature("#test"))
+            .or(model.temperature);
+        assert_eq!(temperature, Some(0.5));
+
+        // Model is used when no channel config
+        let flags: [&String; 0] = [];
+        let temperature = flags
+            .iter()
+            .find(|f| f.starts_with("t="))
+            .and_then(|f| f.split('=').nth(1))
+            .and_then(|s| s.parse::<f64>().ok().map(|t| t.clamp(0.0, 2.0)))
+            .or_else(|| config.get_channel_temperature("#other"))
+            .or(model.temperature);
+        assert_eq!(temperature, Some(0.3));
     }
 }

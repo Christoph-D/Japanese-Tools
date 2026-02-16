@@ -64,6 +64,8 @@ models = [
 models = [
     # Example: override timeout for this specific model (takes precedence over global settings)
     { id = "glm-4.5-air", short_name = "c", name = "GLM-4.5-air", reasoning = true, timeout = 60 },
+    # Example: override temperature for this specific model (takes precedence over channel settings)
+    # { id = "glm-4.5-air", short_name = "c", name = "GLM-4.5-air", temperature = 0.3 },
 ]
 
 [channels."#example"]
