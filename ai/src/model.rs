@@ -67,6 +67,7 @@ const Z_AI_API_ENDPOINT: &str = "https://api.z.ai/api/paas/v4/chat/completions";
 const Z_AI_CODE_API_ENDPOINT: &str = "https://api.z.ai/api/coding/paas/v4/chat/completions";
 
 #[derive(Debug, serde::Deserialize)]
+#[serde(deny_unknown_fields)]
 struct TomlConfig {
     general: TomlGeneral,
     providers: HashMap<String, TomlProvider>,
@@ -75,6 +76,7 @@ struct TomlConfig {
 }
 
 #[derive(Debug, serde::Deserialize)]
+#[serde(deny_unknown_fields)]
 struct TomlGeneral {
     default_model: String,
     #[serde(default)]
@@ -98,6 +100,7 @@ fn default_timeout_reasoning() -> u64 {
 }
 
 #[derive(Debug, serde::Deserialize)]
+#[serde(deny_unknown_fields)]
 struct TomlProvider {
     #[serde(skip_serializing_if = "Option::is_none")]
     endpoint: Option<String>,
@@ -105,6 +108,7 @@ struct TomlProvider {
 }
 
 #[derive(Debug, Clone, PartialEq, serde::Deserialize)]
+#[serde(deny_unknown_fields)]
 struct TomlModel {
     id: String,
     short_name: String,
@@ -120,6 +124,7 @@ struct TomlModel {
 }
 
 #[derive(Debug, Clone, serde::Deserialize)]
+#[serde(deny_unknown_fields)]
 struct TomlChannelModel {
     #[serde(skip_serializing_if = "Option::is_none")]
     temperature: Option<f64>,
@@ -128,6 +133,7 @@ struct TomlChannelModel {
 }
 
 #[derive(Debug, Clone, serde::Deserialize)]
+#[serde(deny_unknown_fields)]
 struct TomlChannel {
     #[serde(skip_serializing_if = "Option::is_none")]
     default_model: Option<String>,
