@@ -543,7 +543,10 @@ fn process_command(
                         + &formatget!("The current local time is {}.", t))
                 ),
             }),
-            Err(err) => Ok(CommandResult::Message(err)),
+            Err(err) => Ok(CommandResult::AskAgent {
+                query: weather::weather_error_prompt(),
+                extra_history: formatget!("Weather API error: {}", err),
+            }),
         },
         Command::Forecast { city } => match weather::get_weather(city) {
             Ok(w) => Ok(CommandResult::AskAgent {
@@ -555,7 +558,10 @@ fn process_command(
                         + &formatget!("The current local time is {}.", t))
                 ),
             }),
-            Err(err) => Ok(CommandResult::Message(err)),
+            Err(err) => Ok(CommandResult::AskAgent {
+                query: weather::weather_error_prompt(),
+                extra_history: formatget!("Weather API error: {}", err),
+            }),
         },
         Command::None => Ok(CommandResult::NotACommand),
     }

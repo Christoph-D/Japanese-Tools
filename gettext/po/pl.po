@@ -6,7 +6,7 @@
 msgid ""
 msgstr ""
 "Report-Msgid-Bugs-To: \n"
-"PO-Revision-Date: 2026-02-01 18:58+0100\n"
+"PO-Revision-Date: 2026-02-21 14:07+0100\n"
 "Last-Translator: Christoph Dittmann <github@christoph-d.de>\n"
 "Language: PL\n"
 "MIME-Version: 1.0\n"
@@ -129,6 +129,10 @@ msgstr ""
 "Sposób użycia: !ai pogoda <miasto>  (Przekaż AI aktualną pogodę. Dane "
 "pogodowe z https://open-meteo.com.)"
 
+#: ../ai/src/main.rs ../ai/src/weather.rs
+msgid "Weather API error: {}"
+msgstr "Błąd API pogody: {}"
+
 #: ../ai/src/main.rs
 msgid "Weather forecast for {}: {}."
 msgstr "Prognoza pogody dla {}: {}."
@@ -222,6 +226,10 @@ msgid "Heavy snow showers"
 msgstr "Silne przelotne opady śniegu"
 
 #: ../ai/src/weather.rs
+msgid "Inform the user about this weather API error in a friendly way."
+msgstr "Poinformuj użytkownika w przyjazny sposób o tym błędzie API pogody."
+
+#: ../ai/src/weather.rs
 msgid "Light drizzle"
 msgstr "Lekka mżawka"
 
@@ -308,10 +316,6 @@ msgstr "Gwałtowne przelotne opady deszczu"
 #: ../ai/src/weather.rs
 msgid "Weather API error: HTTP {}"
 msgstr "Błąd API pogody: HTTP {}"
-
-#: ../ai/src/weather.rs
-msgid "Weather API error: {}"
-msgstr "Błąd API pogody: {}"
 
 #: ../ai/src/weather.rs
 msgid ""

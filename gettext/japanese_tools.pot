@@ -109,6 +109,10 @@ msgid ""
 "https://open-meteo.com.)"
 msgstr ""
 
+#: ../ai/src/main.rs ../ai/src/weather.rs
+msgid "Weather API error: {}"
+msgstr ""
+
 #: ../ai/src/main.rs
 msgid "Weather forecast for {}: {}."
 msgstr ""
@@ -202,6 +206,10 @@ msgid "Heavy snow showers"
 msgstr ""
 
 #: ../ai/src/weather.rs
+msgid "Inform the user about this weather API error in a friendly way."
+msgstr ""
+
+#: ../ai/src/weather.rs
 msgid "Light drizzle"
 msgstr ""
 
@@ -287,10 +295,6 @@ msgstr ""
 
 #: ../ai/src/weather.rs
 msgid "Weather API error: HTTP {}"
-msgstr ""
-
-#: ../ai/src/weather.rs
-msgid "Weather API error: {}"
 msgstr ""
 
 #: ../ai/src/weather.rs

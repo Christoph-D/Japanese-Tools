@@ -255,6 +255,10 @@ pub fn forecast_prompt() -> &'static str {
     }
 }
 
+pub fn weather_error_prompt() -> String {
+    gettext("Inform the user about this weather API error in a friendly way.")
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
