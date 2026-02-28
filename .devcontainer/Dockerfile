@@ -57,13 +57,5 @@ ENV PATH="/home/ubuntu/.cargo/bin:${PATH}"
 ENV CARGO_TARGET_DIR=/home/ubuntu/target
 RUN cargo install xtr
 
-ENV CLAUDE_CONFIG_DIR=/home/ubuntu/persistent-config
-RUN curl -fsSL https://claude.ai/install.sh | bash
-ENV PATH="/home/ubuntu/.local/bin:$PATH"
-
-ENV OPENCODE_CONFIG=/home/ubuntu/persistent-config/opencode.json
-RUN curl -fsSL https://opencode.ai/install | bash
-ENV PATH="/home/ubuntu/.opencode/bin:$PATH"
-
 ENV EDITOR='code --wait'
 WORKDIR /workspaces/Japanese

@@ -6,36 +6,13 @@
     "customizations": {
         "vscode": {
             "extensions": [
-                "anthropic.claude-code",
-                "Continue.continue",
-                "DavidAnson.vscode-markdownlint",
-                "eamodio.gitlens",
                 "esbenp.prettier-vscode",
                 "mkhl.shfmt",
                 "ms-python.python",
                 "rust-lang.rust-analyzer",
-                "saoudrizwan.claude-dev",
-                "sst-dev.opencode"
             ],
             "settings": {
-                "[markdown]": {
-                    "editor.defaultFormatter": "esbenp.prettier-vscode",
-                    "editor.unicodeHighlight.ambiguousCharacters": false,
-                    "editor.unicodeHighlight.invisibleCharacters": false,
-                    "diffEditor.ignoreTrimWhitespace": false,
-                    "editor.wordWrap": "on",
-                    "editor.quickSuggestions": {
-                        "comments": "off",
-                        "strings": "off",
-                        "other": "off"
-                    }
-                },
                 "prettier.proseWrap": "always",
-                "markdownlint.config": {
-                    "no-duplicate-heading": {
-                        "siblings_only": true
-                    }
-                },
                 "files.insertFinalNewline": true
             }
         }
@@ -46,6 +23,5 @@
     "mounts": [
         "source=config-japanese-tools,target=/home/ubuntu/persistent-config,type=volume",
         "source=/etc/localtime,target=/usr/share/zoneinfo/hostlocaltime,type=bind,readonly"
-    ],
-    "postCreateCommand": "bash .devcontainer/setup.sh"
+    ]
 }
