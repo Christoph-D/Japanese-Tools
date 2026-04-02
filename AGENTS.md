@@ -45,7 +45,3 @@ git diff gettext/po           # Review translation changes
 
 **NO EXCEPTIONS**: These steps are mandatory for every code change, no matter
 how small.
-
-## Git Guidelines
-
-- **NEVER** include "Generated with Claude Code" lines in commit messages
