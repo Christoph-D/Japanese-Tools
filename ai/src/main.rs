@@ -682,6 +682,8 @@ fn run(input: &Input) -> Result<Output, String> {
 
         flag_state.join(" ")
     };
+
+    let result = result.trim();
     let result = if flag_state.is_empty() {
         result.to_string()
     } else {
