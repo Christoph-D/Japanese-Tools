@@ -1,5 +1,5 @@
 [general]
-default_model = "deepseek-chat"
+default_model = "deepseek-v4-flash"
 enable_compiler_explorer = true
 # Timeout for non-reasoning models in seconds
 timeout = 20
@@ -30,7 +30,7 @@ models = [
 
 [providers.deepseek]
 models = [
-    { id = "deepseek-chat", short_name = "d", name = "DeepSeek-V3.1" }
+    { id = "deepseek-v4-flash", short_name = "d", name = "DeepSeek V4 Flash" }
 ]
 
 [providers.litellm]
@@ -38,7 +38,7 @@ endpoint = "http://..."
 models = [
     # The short names here collide with the other examples.
     # In a real config, you need to make sure the short names are unique.
-    # { id = "deepseek/deepseek-chat", short_name = "d", name = "DeepSeek-V3.2" },
+    # { id = "deepseek/deepseek-v4-flash", short_name = "d", name = "DeepSeek V4 Flash" },
     # { id = "openrouter/google/gemini-3-flash-preview", short_name = "g", name = "Gemini 3 Flash" },
     # { id = "mistral/mistral-medium-latest", short_name = "m", name = "Mistral Medium" },
     # { id = "anthropic/claude-sonnet-4-5", short_name = "s", name = "Claude Sonnet 4.5" }
@@ -74,7 +74,7 @@ system_prompt = """You are a technical AI assistant in the #example channel.
 Focus on practical, accurate solutions for Linux system administration and development.
 Be concise and precise. Limit responses to {MAX_LINE_LENGTH} characters."""
 
-# Example: override temperature for deepseek/deepseek-chat in #example channel
-# [channels."#example".models.litellm."deepseek/deepseek-chat"]
+# Example: override temperature for deepseek/deepseek-v4-flash in #example channel
+# [channels."#example".models.litellm."deepseek/deepseek-v4-flash"]
 # temperature = 0.4
 # timeout = 30

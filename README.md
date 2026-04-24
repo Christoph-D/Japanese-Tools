@@ -85,8 +85,8 @@ cargo run -- "What's 夜空?"
 ```text
 $ cd ai
 $ cargo run
-Usage: !ai [flags...] [command] <query>.  Flags: -c (clear history), -t=<val> (temp), -r|-g|-m|-s|-k (select model).
-Commands: join <user...>, solo [user], joined, weather <city>, forecast <city>.  Models: [r]DeepSeek-V3.1 (reasoning) [g]Gemini 2.5 Flash [m]Mistral Medium [s]Claude Sonnet 4 [k]Kimi K2, Default: DeepSeek-V3.1
+Usage: !ai [flags...] [command] <query>.  Flags: -c (clear history), -t=<val> (temp), -r|-g|-m|-k (select model).
+Commands: join <user...>, solo [user], joined, weather <city>, forecast <city>.  Models: [r]DeepSeek V4 Pro [g]Gemini 2.5 Flash [m]Mistral Medium [k]Kimi K2.6, Default: DeepSeek V4 Flash
 By default, history is split by user and deleted after 10 minutes. The bot does not have access to a full chat log, it sees only your history.
 
 $ cargo run -- "What's 夜空?"

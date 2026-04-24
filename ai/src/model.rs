@@ -890,11 +890,11 @@ models = [
             &config_path,
             r##"
 [general]
-default_model = "deepseek-chat"
+default_model = "flash-model"
 
 [providers.deepseek]
 models = [
-  { id = "deepseek-chat", short_name = "d", name = "DeepSeek" },
+  { id = "flash-model", short_name = "d", name = "flash-model" },
   { id = "reasoning-model", short_name = "r", name = "Reasoning Model", reasoning = true }
 ]
 "##,
@@ -906,10 +906,10 @@ models = [
         let model_list = ModelList::new(&config).expect("ModelList::new()");
 
         let non_reasoning_model = model_list
-            .select_model_for_channel(&["d".to_string()], "deepseek-chat")
+            .select_model_for_channel(&["d".to_string()], "flash-model")
             .unwrap();
         let reasoning_model = model_list
-            .select_model_for_channel(&["r".to_string()], "deepseek-chat")
+            .select_model_for_channel(&["r".to_string()], "flash-model")
             .unwrap();
 
         assert_eq!(
@@ -934,13 +934,13 @@ models = [
             &config_path,
             r##"
 [general]
-default_model = "deepseek-chat"
+default_model = "flash-model"
 max_tokens = 1000
 max_tokens_with_reasoning = 8192
 
 [providers.deepseek]
 models = [
-  { id = "deepseek-chat", short_name = "d", name = "DeepSeek" },
+  { id = "flash-model", short_name = "f", name = "Flash Model" },
   { id = "reasoning-model", short_name = "r", name = "Reasoning Model", reasoning = true }
 ]
 "##,
@@ -952,10 +952,10 @@ models = [
         let model_list = ModelList::new(&config).expect("ModelList::new()");
 
         let non_reasoning_model = model_list
-            .select_model_for_channel(&["d".to_string()], "deepseek-chat")
+            .select_model_for_channel(&["f".to_string()], "flash-model")
             .unwrap();
         let reasoning_model = model_list
-            .select_model_for_channel(&["r".to_string()], "deepseek-chat")
+            .select_model_for_channel(&["r".to_string()], "flash-model")
             .unwrap();
 
         assert_eq!(config.get_max_tokens(non_reasoning_model), 1000);
@@ -974,13 +974,13 @@ models = [
             &config_path,
             r##"
 [general]
-default_model = "deepseek-chat"
+default_model = "flash-model"
 max_tokens = 1000
 max_tokens_with_reasoning = 8192
 
 [providers.deepseek]
 models = [
-  { id = "deepseek-chat", short_name = "d", name = "DeepSeek" },
+  { id = "flash-model", short_name = "f", name = "flash-model" },
   { id = "reasoning-model", short_name = "r", name = "Reasoning Model", reasoning = true, max_tokens = 16384 },
   { id = "custom-model", short_name = "c", name = "Custom Model", reasoning = false, max_tokens = 500 }
 ]
@@ -993,13 +993,13 @@ models = [
         let model_list = ModelList::new(&config).expect("ModelList::new()");
 
         let normal_model = model_list
-            .select_model_for_channel(&["d".to_string()], "deepseek-chat")
+            .select_model_for_channel(&["f".to_string()], "flash-model")
             .unwrap();
         let reasoning_with_override = model_list
-            .select_model_for_channel(&["r".to_string()], "deepseek-chat")
+            .select_model_for_channel(&["r".to_string()], "flash-model")
             .unwrap();
         let non_reasoning_with_override = model_list
-            .select_model_for_channel(&["c".to_string()], "deepseek-chat")
+            .select_model_for_channel(&["c".to_string()], "flash-model")
             .unwrap();
 
         assert_eq!(config.get_max_tokens(normal_model), 1000);
