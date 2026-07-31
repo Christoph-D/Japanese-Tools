@@ -51,6 +51,7 @@ RESULT="$(firejail \
 	--read-only="$HOME" \
 	--noblacklist="$HOME/.cabal" \
 	--noblacklist="$HOME/.ghc" \
+	--noblacklist="$HOME/.local" \
     --blacklist="$HOME/*" \
 	--restrict-namespaces \
     --disable-mnt \
