@@ -34,7 +34,7 @@ These tools have been tested on Ubuntu 24.04. Install dependencies:
 
 ```bash
 # Required dependencies
-sudo apt install gettext mecab-jumandic-utf8 mecab libssl-dev kakasi xmlstarlet xsltproc sqlite3 libsqlite3-dev bc liburi-perl build-essential pkg-config python3 wget
+sudo apt install gettext mecab-ipadic-utf8 mecab libssl-dev kakasi xmlstarlet xsltproc sqlite3 libsqlite3-dev bc liburi-perl build-essential pkg-config python3 wget
 cargo install xtr
 # Optional, required only for lhc
 sudo apt install tesseract-ocr imagemagick

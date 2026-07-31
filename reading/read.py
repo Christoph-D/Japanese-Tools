@@ -18,7 +18,7 @@ import codecs
 MAX_OUTPUT_LENGTH = 300
 
 kakasiCmd = ["kakasi", "-iutf8", "-outf8", "-u", "-JH", "-KH"]
-mecabCmd = ["mecab", '--node-format=%m[%f[5]] ', '--eos-format=\n',
+mecabCmd = ["mecab", '--node-format=%m[%f[7]] ', '--eos-format=\n',
             '--unk-format=%m[] ']
 
 class KakasiController(object):

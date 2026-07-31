@@ -6,7 +6,7 @@ RUN apt-get update && apt-get install -y \
   # Required dependencies
   firejail \
   gettext \
-  mecab-jumandic-utf8 \
+  mecab-ipadic-utf8 \
   mecab \
   libssl-dev \
   kakasi \
