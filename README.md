@@ -30,7 +30,7 @@ dependencies pre-installed:
 
 ### Manual Installation
 
-These tools have been tested on Ubuntu 24.04. Install dependencies:
+These tools have been tested on Ubuntu 26.04. Install dependencies:
 
 ```bash
 # Required dependencies
@@ -41,7 +41,7 @@ sudo apt install tesseract-ocr imagemagick
 # Optional, required only for cdecl
 sudo apt install cdecl
 # Optional, required only for mueval
-sudo apt install firejail libffi-dev libffi8ubuntu1 libgmp-dev libgmp10 libncurses-dev
+sudo apt install firejail libffi-dev libffi8 libgmp-dev libgmp10 libncurses-dev
 ./install_mueval.sh
 ```
 
