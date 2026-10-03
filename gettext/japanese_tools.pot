@@ -72,8 +72,8 @@ msgstr[1] ""
 
 #: ../ai/src/main.rs
 msgid ""
-"Usage: !ai [flags...] [command] <query>.  Flags: -c (clear history), -"
-"t=<val> (temp), {} (select model).\n"
+"Usage: !ai [flags...] [command] <query>.  Flags: -c (clear history), "
+"-t=<val> (temp), {} (select model).\n"
 "Commands: join <user...>, solo [user], joined, weather <city>, forecast "
 "<city>.  Models: {}, Default: {}\n"
 "By default, history is split by user and deleted after {} minutes. The bot "

@@ -433,7 +433,7 @@ impl Bot {
             self.extract_timer_commands(&output, &data.script, &data.sender, &data.response_target);
         self.debug_out(&format!(
             "Executed timed command: {:?}\nResponse: {:?}",
-            data, &filtered
+            data, filtered
         ));
         self.execute_response(Response::Reply(filtered), &data.response_target)
     }

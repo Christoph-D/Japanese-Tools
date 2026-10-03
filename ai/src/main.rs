@@ -253,7 +253,7 @@ fn extract_flags(known_flags: &[Flag], query: &str) -> Result<(Vec<String>, Stri
             ),
             &unknown_flags_str
         )
-        .unwrap_or_else(|_| format!("Unknown flag(s): {}", &unknown_flags_str)));
+        .unwrap_or_else(|_| format!("Unknown flag(s): {}", unknown_flags_str)));
     }
     Ok((flags, rest.to_string()))
 }
@@ -340,10 +340,14 @@ fn main() {
 fn setup() -> Result<Input, String> {
     if let Some(dir) = textdomain_dir() {
         // Ignore errors and use untranslated strings if it fails.
-        let _ = TextDomain::new("japanese_tools")
-            .skip_system_data_paths()
-            .push(&dir)
-            .init();
+        // SAFETY: Called once at startup, before any threads that use gettext
+        // translations are spawned.
+        let _ = unsafe {
+            TextDomain::new("japanese_tools")
+                .skip_system_data_paths()
+                .push(&dir)
+                .init()
+        };
     }
     let config_path = locate_config_path().ok_or_else(|| gettext("Config file not found."))?;
     let env_vars = EnvVars::from_file(&config_path).unwrap_or_default();
@@ -691,7 +695,7 @@ fn run(input: &Input) -> Result<Output, String> {
     };
 
     let result = if history_cleared {
-        format!("[{}] {}", CLEAR_MEMORY_MESSAGE, &result)
+        format!("[{}] {}", CLEAR_MEMORY_MESSAGE, result)
     } else {
         result
     };
@@ -1023,7 +1027,7 @@ mod tests {
         let config_dir = temp_dir.path();
         let env_file = config_dir.join(".env");
         std::fs::write(&env_file, "LITELLM_API_KEY=test-key\n").unwrap();
-        let env_vars = EnvVars::from_file(&config_dir).unwrap();
+        let env_vars = EnvVars::from_file(config_dir).unwrap();
 
         let config_path = config_dir.join(CONFIG_FILE_NAME);
         std::fs::write(
@@ -1049,7 +1053,7 @@ temperature = 0.8
         )
         .unwrap();
 
-        let config = Config::new(&config_dir, &env_vars).expect("Config::new()");
+        let config = Config::new(config_dir, &env_vars).expect("Config::new()");
         let models = ModelList::new(&config).unwrap();
 
         // Test channel-specific model selection
@@ -1057,7 +1061,7 @@ temperature = 0.8
         assert_eq!(channel_default, "test-model");
 
         let selected_model = models
-            .select_model_for_channel(&vec![], channel_default)
+            .select_model_for_channel(&[], channel_default)
             .unwrap();
         assert_eq!(selected_model.id, "test-model");
 
@@ -1091,9 +1095,9 @@ temperature = 0.8
         let config_dir = temp_dir.path();
         let env_file = config_dir.join(".env");
         std::fs::write(&env_file, "LITELLM_API_KEY=test-key\n").unwrap();
-        let env_vars = EnvVars::from_file(&config_dir).unwrap();
+        let env_vars = EnvVars::from_file(config_dir).unwrap();
 
-        std::fs::create_dir_all(&config_dir).unwrap();
+        std::fs::create_dir_all(config_dir).unwrap();
         let config_path = config_dir.join(CONFIG_FILE_NAME);
         std::fs::write(
             &config_path,
@@ -1117,7 +1121,7 @@ temperature = 0.5
         )
         .unwrap();
 
-        let config = Config::new(&config_dir, &env_vars).expect("Config::new()");
+        let config = Config::new(config_dir, &env_vars).expect("Config::new()");
 
         // Test channel-specific temperature fallback (simulating the logic from run())
         let provider = "litellm";
@@ -1152,9 +1156,9 @@ temperature = 0.5
         let config_dir = temp_dir.path();
         let env_file = config_dir.join(".env");
         std::fs::write(&env_file, "DEEPSEEK_API_KEY=test-key\n").unwrap();
-        let env_vars = EnvVars::from_file(&config_dir).unwrap();
+        let env_vars = EnvVars::from_file(config_dir).unwrap();
 
-        std::fs::create_dir_all(&config_dir).unwrap();
+        std::fs::create_dir_all(config_dir).unwrap();
         let config_path = config_dir.join(CONFIG_FILE_NAME);
         std::fs::write(
             &config_path,
@@ -1173,12 +1177,12 @@ temperature = 0.5
         )
         .unwrap();
 
-        let config = Config::new(&config_dir, &env_vars).expect("Config::new()");
+        let config = Config::new(config_dir, &env_vars).expect("Config::new()");
 
         // Temperature flag should override channel temperature (simulating the logic from run())
         let provider = "deepseek";
         let model_id = "default-model";
-        let flags = vec!["t=0.9".to_string()];
+        let flags = ["t=0.9".to_string()];
         let temperature = flags
             .iter()
             .find(|f| f.starts_with("temperature=") || f.starts_with("t="))
@@ -1198,9 +1202,9 @@ temperature = 0.5
         let config_dir = temp_dir.path();
         let env_file = config_dir.join(".env");
         std::fs::write(&env_file, "DEEPSEEK_API_KEY=test-key\n").unwrap();
-        let env_vars = EnvVars::from_file(&config_dir).unwrap();
+        let env_vars = EnvVars::from_file(config_dir).unwrap();
 
-        std::fs::create_dir_all(&config_dir).unwrap();
+        std::fs::create_dir_all(config_dir).unwrap();
         let config_path = config_dir.join(CONFIG_FILE_NAME);
         std::fs::write(
             &config_path,
@@ -1219,7 +1223,7 @@ temperature = 0.5
         )
         .unwrap();
 
-        let config = Config::new(&config_dir, &env_vars).expect("Config::new()");
+        let config = Config::new(config_dir, &env_vars).expect("Config::new()");
         let models = ModelList::new(&config).expect("ModelList::new()");
         let model = models
             .select_model_for_channel(&[], "default-model")
@@ -1247,9 +1251,9 @@ temperature = 0.5
         let config_dir = temp_dir.path();
         let env_file = config_dir.join(".env");
         std::fs::write(&env_file, "DEEPSEEK_API_KEY=test-key\n").unwrap();
-        let env_vars = EnvVars::from_file(&config_dir).unwrap();
+        let env_vars = EnvVars::from_file(config_dir).unwrap();
 
-        std::fs::create_dir_all(&config_dir).unwrap();
+        std::fs::create_dir_all(config_dir).unwrap();
         let config_path = config_dir.join(CONFIG_FILE_NAME);
         std::fs::write(
             &config_path,
@@ -1268,7 +1272,7 @@ temperature = 0.5
         )
         .unwrap();
 
-        let config = Config::new(&config_dir, &env_vars).expect("Config::new()");
+        let config = Config::new(config_dir, &env_vars).expect("Config::new()");
         let models = ModelList::new(&config).expect("ModelList::new()");
         let model = models
             .select_model_for_channel(&[], "default-model")

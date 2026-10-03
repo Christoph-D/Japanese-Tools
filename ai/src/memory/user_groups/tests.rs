@@ -317,13 +317,13 @@ fn check_invariants(group_set: &GroupSets) -> Result<(), String> {
     }
 
     // Invariant 4: next_group_id should be greater than all existing group IDs
-    if let Some(max_group_id) = group_set.groups.keys().max().copied() {
-        if group_set.next_group_id <= max_group_id {
-            return Err(format!(
-                "next_group_id {} should be > max group ID {}",
-                group_set.next_group_id, max_group_id
-            ));
-        }
+    if let Some(max_group_id) = group_set.groups.keys().max().copied()
+        && group_set.next_group_id <= max_group_id
+    {
+        return Err(format!(
+            "next_group_id {} should be > max group ID {}",
+            group_set.next_group_id, max_group_id
+        ));
     }
 
     Ok(())
@@ -521,15 +521,14 @@ proptest! {
             }
 
             // Group members should match the actual group
-            if let Some(gid) = group_id {
-                if let Some(group_info) = group_set.groups.get(&gid) {
+            if let Some(gid) = group_id
+                && let Some(group_info) = group_set.groups.get(&gid) {
                     let mut expected_members: Vec<String> = group_info.members.iter().cloned().collect();
                     let mut actual_members = members.clone();
                     expected_members.sort();
                     actual_members.sort();
                     prop_assert_eq!(expected_members, actual_members);
                 }
-            }
         }
     }
 

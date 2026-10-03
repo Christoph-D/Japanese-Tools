@@ -134,7 +134,7 @@ models = [
         let env_vars = crate::EnvVars {
             vars: std::collections::HashMap::new(),
         };
-        Config::new(&config_dir, &env_vars).expect("Config::new()")
+        Config::new(config_dir, &env_vars).expect("Config::new()")
     }
 
     #[test]
@@ -190,7 +190,7 @@ models = [
 
         assert_eq!(result.len(), 4);
         assert_eq!(result[0].role, "system");
-        assert_eq!(result[0].content, format_prompt(&default_prompt()));
+        assert_eq!(result[0].content, format_prompt(default_prompt()));
         assert_eq!(result[1].role, "user");
         assert_eq!(result[1].content, "Hello!");
         assert_eq!(result[2].role, "assistant");
@@ -207,7 +207,7 @@ models = [
         let prompt_content = "This is a test prompt.";
         let query = "Test query";
         let config = create_test_config_with_channel(channel, Some(prompt_content.to_string()));
-        let memory = Memory::new_from_path(&config_path).unwrap();
+        let memory = Memory::new_from_path(config_path).unwrap();
 
         let result = build_prompt(query, "user1", channel, &memory, &config);
 

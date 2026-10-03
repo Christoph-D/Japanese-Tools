@@ -596,7 +596,6 @@ mod tests {
         let cache = CompilerCache {
             compilers,
             last_updated: get_current_timestamp(),
-            ..Default::default()
         };
 
         let result = transform_query(query, &info, &cache, &None);

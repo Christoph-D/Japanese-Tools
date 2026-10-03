@@ -508,8 +508,8 @@ models = [
 "#,
         )
         .unwrap();
-        let env_vars = EnvVars::from_file(&config_dir).unwrap();
-        let cfg = Config::new(&config_dir, &env_vars).expect("Config::new()");
+        let env_vars = EnvVars::from_file(config_dir).unwrap();
+        let cfg = Config::new(config_dir, &env_vars).expect("Config::new()");
         let model_list = ModelList::new(&cfg).expect("new()");
         assert_eq!(
             model_list.models,
@@ -565,8 +565,8 @@ models = [
 "#,
         )
         .unwrap();
-        let env_vars = EnvVars::from_file(&config_dir).unwrap();
-        let cfg = Config::new(&config_dir, &env_vars).expect("Config::new()");
+        let env_vars = EnvVars::from_file(config_dir).unwrap();
+        let cfg = Config::new(config_dir, &env_vars).expect("Config::new()");
         let model_list = ModelList::new(&cfg).expect("new()");
         assert_eq!(model_list.models.len(), 2);
         assert_eq!(model_list.models[0].id, "openrouter-1");
@@ -595,8 +595,8 @@ models = [
 "#,
         )
         .unwrap();
-        let env_vars = EnvVars::from_file(&config_dir).unwrap();
-        let cfg = Config::new(&config_dir, &env_vars).expect("Config::new()");
+        let env_vars = EnvVars::from_file(config_dir).unwrap();
+        let cfg = Config::new(config_dir, &env_vars).expect("Config::new()");
         let err = ModelList::new(&cfg).unwrap_err();
         assert!(err.contains("Default model"), "{}", err);
     }
@@ -642,8 +642,8 @@ models = [
         )
         .unwrap();
 
-        let env_vars = EnvVars::from_file(&config_dir).unwrap();
-        let config = Config::new(&config_dir, &env_vars).expect("Config::new()");
+        let env_vars = EnvVars::from_file(config_dir).unwrap();
+        let config = Config::new(config_dir, &env_vars).expect("Config::new()");
         let model_list = ModelList::new(&config).expect("ModelList::new()");
 
         let channel_default = config.get_channel_default_model("#test");
@@ -689,8 +689,8 @@ models = [
         )
         .unwrap();
 
-        let env_vars = EnvVars::from_file(&config_dir).unwrap();
-        let config = Config::new(&config_dir, &env_vars).expect("Config::new()");
+        let env_vars = EnvVars::from_file(config_dir).unwrap();
+        let config = Config::new(config_dir, &env_vars).expect("Config::new()");
         let model_list = ModelList::new(&config).expect("ModelList::new()");
 
         let channel_default = config.get_channel_default_model("#test");
@@ -726,7 +726,7 @@ models = [
     #[test]
     fn test_select_model_for_channel_with_channel_default() {
         let model_list = setup_model_list();
-        let result = model_list.select_model_for_channel(&vec![], "openrouter-2");
+        let result = model_list.select_model_for_channel(&[], "openrouter-2");
         let model = result.expect("select_model_for_channel()");
         assert_eq!(model.id, "openrouter-2");
         assert_eq!(model.short_name, "o");
@@ -735,7 +735,7 @@ models = [
     #[test]
     fn test_select_model_for_channel_flags_override_channel_default() {
         let model_list = setup_model_list();
-        let result = model_list.select_model_for_channel(&vec!["d".to_string()], "openrouter-2");
+        let result = model_list.select_model_for_channel(&["d".to_string()], "openrouter-2");
         let model = result.expect("select_model_for_channel()");
         assert_eq!(model.id, "deepseek-1");
         assert_eq!(model.short_name, "d");
@@ -744,7 +744,7 @@ models = [
     #[test]
     fn test_select_model_for_channel_fallback_to_global_default() {
         let model_list = setup_model_list();
-        let result = model_list.select_model_for_channel(&vec![], "unknown-model");
+        let result = model_list.select_model_for_channel(&[], "unknown-model");
         let model = result.expect("select_model_for_channel()");
         assert_eq!(model.id, "deepseek-1");
         assert_eq!(model.short_name, "d");
@@ -779,7 +779,7 @@ models = [
         let env_vars = EnvVars {
             vars: HashMap::new(),
         };
-        let config = Config::new(&config_dir, &env_vars).expect("Config::new()");
+        let config = Config::new(config_dir, &env_vars).expect("Config::new()");
 
         assert_eq!(config.get_channel_default_model("#test"), "test-model");
         assert_eq!(
@@ -819,7 +819,7 @@ default_model = "default"
         let env_vars = EnvVars {
             vars: HashMap::new(),
         };
-        let config = Config::new(&config_dir, &env_vars).expect("Config::new()");
+        let config = Config::new(config_dir, &env_vars).expect("Config::new()");
 
         assert_eq!(
             config.get_channel_model_temperature("#test", "deepseek", "default"),
@@ -868,7 +868,7 @@ models = [
         let env_vars = EnvVars {
             vars: HashMap::new(),
         };
-        let config = Config::new(&config_dir, &env_vars).expect("Config::new()");
+        let config = Config::new(config_dir, &env_vars).expect("Config::new()");
 
         assert_eq!(
             config.get_channel_system_prompt("#test"),
@@ -901,8 +901,8 @@ models = [
         )
         .unwrap();
 
-        let env_vars = EnvVars::from_file(&config_dir).unwrap();
-        let config = Config::new(&config_dir, &env_vars).expect("Config::new()");
+        let env_vars = EnvVars::from_file(config_dir).unwrap();
+        let config = Config::new(config_dir, &env_vars).expect("Config::new()");
         let model_list = ModelList::new(&config).expect("ModelList::new()");
 
         let non_reasoning_model = model_list
@@ -947,8 +947,8 @@ models = [
         )
         .unwrap();
 
-        let env_vars = EnvVars::from_file(&config_dir).unwrap();
-        let config = Config::new(&config_dir, &env_vars).expect("Config::new()");
+        let env_vars = EnvVars::from_file(config_dir).unwrap();
+        let config = Config::new(config_dir, &env_vars).expect("Config::new()");
         let model_list = ModelList::new(&config).expect("ModelList::new()");
 
         let non_reasoning_model = model_list
@@ -988,8 +988,8 @@ models = [
         )
         .unwrap();
 
-        let env_vars = EnvVars::from_file(&config_dir).unwrap();
-        let config = Config::new(&config_dir, &env_vars).expect("Config::new()");
+        let env_vars = EnvVars::from_file(config_dir).unwrap();
+        let config = Config::new(config_dir, &env_vars).expect("Config::new()");
         let model_list = ModelList::new(&config).expect("ModelList::new()");
 
         let normal_model = model_list
@@ -1029,11 +1029,11 @@ models = [
         )
         .unwrap();
 
-        let env_vars = EnvVars::from_file(&config_dir).unwrap();
-        let config = Config::new(&config_dir, &env_vars).expect("Config::new()");
+        let env_vars = EnvVars::from_file(config_dir).unwrap();
+        let config = Config::new(config_dir, &env_vars).expect("Config::new()");
         let models = ModelList::new(&config).expect("ModelList::new()");
 
-        let non_reasoning_model = models.models.get(0).unwrap();
+        let non_reasoning_model = models.models.first().unwrap();
         assert_eq!(config.get_timeout(non_reasoning_model, ""), DEFAULT_TIMEOUT);
     }
 
@@ -1061,11 +1061,11 @@ models = [
         )
         .unwrap();
 
-        let env_vars = EnvVars::from_file(&config_dir).unwrap();
-        let config = Config::new(&config_dir, &env_vars).expect("Config::new()");
+        let env_vars = EnvVars::from_file(config_dir).unwrap();
+        let config = Config::new(config_dir, &env_vars).expect("Config::new()");
         let models = ModelList::new(&config).expect("ModelList::new()");
 
-        let non_reasoning_model = models.models.get(0).unwrap();
+        let non_reasoning_model = models.models.first().unwrap();
         assert_eq!(config.get_timeout(non_reasoning_model, ""), 30);
     }
 
@@ -1092,11 +1092,11 @@ models = [
         )
         .unwrap();
 
-        let env_vars = EnvVars::from_file(&config_dir).unwrap();
-        let config = Config::new(&config_dir, &env_vars).expect("Config::new()");
+        let env_vars = EnvVars::from_file(config_dir).unwrap();
+        let config = Config::new(config_dir, &env_vars).expect("Config::new()");
         let models = ModelList::new(&config).expect("ModelList::new()");
 
-        let non_reasoning_model = models.models.get(0).unwrap();
+        let non_reasoning_model = models.models.first().unwrap();
         assert_eq!(config.get_timeout(non_reasoning_model, ""), 25);
     }
 
@@ -1123,11 +1123,11 @@ models = [
         )
         .unwrap();
 
-        let env_vars = EnvVars::from_file(&config_dir).unwrap();
-        let config = Config::new(&config_dir, &env_vars).expect("Config::new()");
+        let env_vars = EnvVars::from_file(config_dir).unwrap();
+        let config = Config::new(config_dir, &env_vars).expect("Config::new()");
         let models = ModelList::new(&config).expect("ModelList::new()");
 
-        let non_reasoning_model = models.models.get(0).unwrap();
+        let non_reasoning_model = models.models.first().unwrap();
         assert_eq!(config.get_timeout(non_reasoning_model, ""), DEFAULT_TIMEOUT);
     }
 
@@ -1158,11 +1158,11 @@ models = [
         )
         .unwrap();
 
-        let env_vars = EnvVars::from_file(&config_dir).unwrap();
-        let config = Config::new(&config_dir, &env_vars).expect("Config::new()");
+        let env_vars = EnvVars::from_file(config_dir).unwrap();
+        let config = Config::new(config_dir, &env_vars).expect("Config::new()");
         let models = ModelList::new(&config).expect("ModelList::new()");
 
-        let default_model = models.models.get(0).unwrap();
+        let default_model = models.models.first().unwrap();
         let custom_timeout_model = models.models.get(1).unwrap();
         let reasoning_default_model = models.models.get(2).unwrap();
         let reasoning_custom_model = models.models.get(3).unwrap();
@@ -1203,11 +1203,11 @@ models = { deepseek = { "model-timeout" = { timeout = 200 } } }
         )
         .unwrap();
 
-        let env_vars = EnvVars::from_file(&config_dir).unwrap();
-        let config = Config::new(&config_dir, &env_vars).expect("Config::new()");
+        let env_vars = EnvVars::from_file(config_dir).unwrap();
+        let config = Config::new(config_dir, &env_vars).expect("Config::new()");
         let models = ModelList::new(&config).expect("ModelList::new()");
 
-        let default_model = models.models.get(0).unwrap();
+        let default_model = models.models.first().unwrap();
         let model_timeout_model = models.models.get(1).unwrap();
 
         // Channel-model override takes precedence

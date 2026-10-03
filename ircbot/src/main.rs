@@ -61,10 +61,14 @@ fn textdomain_dir() -> Option<String> {
 async fn main() {
     if let Some(dir) = textdomain_dir() {
         // Ignore errors and use untranslated strings if it fails.
-        let _ = TextDomain::new("japanese_tools")
-            .skip_system_data_paths()
-            .push(&dir)
-            .init();
+        // SAFETY: Called once at startup, before any threads that use gettext
+        // translations are spawned.
+        let _ = unsafe {
+            TextDomain::new("japanese_tools")
+                .skip_system_data_paths()
+                .push(&dir)
+                .init()
+        };
     }
 
     let args = Args::parse();
