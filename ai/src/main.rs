@@ -76,7 +76,7 @@ fn call_api(
 
     let mut resp = response.map_err(|e| {
         if e.is_timeout() {
-            formatget!("API error: Request timed out (%d seconds)", timeout_seconds)
+            formatget!("API error: Request timed out ({} seconds)", timeout_seconds)
         } else if e.is_connect() {
             formatget!("API error: Failed to connect to server: {}", e)
         } else {

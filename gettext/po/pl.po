@@ -24,8 +24,8 @@ msgid "API error: Failed to connect to server: {}"
 msgstr "Błąd API: Nie udało się połączyć z serwerem: {}"
 
 #: ../ai/src/main.rs
-msgid "API error: Request timed out (%d seconds)"
-msgstr "Błąd API: Przekroczono limit czasu (%d sekund)"
+msgid "API error: Request timed out ({} seconds)"
+msgstr "Błąd API: Przekroczono limit czasu ({} sekund)"
 
 #: ../ai/src/main.rs
 msgid "API error: {}"
