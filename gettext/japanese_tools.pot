@@ -65,6 +65,10 @@ msgid "The weather in {} is: {}."
 msgstr ""
 
 #: ../ai/src/main.rs
+msgid "Token limit exceeded."
+msgstr ""
+
+#: ../ai/src/main.rs
 msgid "Unknown flag: {}"
 msgid_plural "Unknown flags: {}"
 msgstr[0] ""

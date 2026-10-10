@@ -6,7 +6,7 @@
 msgid ""
 msgstr ""
 "Report-Msgid-Bugs-To: \n"
-"PO-Revision-Date: 2026-02-21 14:07+0100\n"
+"PO-Revision-Date: 2026-10-10 11:06+0200\n"
 "Last-Translator: Christoph Dittmann <github@christoph-d.de>\n"
 "Language: PL\n"
 "MIME-Version: 1.0\n"
@@ -67,6 +67,10 @@ msgid "The weather in {} is: {}."
 msgstr "Pogoda w {} jest: {}."
 
 #: ../ai/src/main.rs
+msgid "Token limit exceeded."
+msgstr "Przekroczono limit tokenów."
+
+#: ../ai/src/main.rs
 msgid "Unknown flag: {}"
 msgid_plural "Unknown flags: {}"
 msgstr[0] "Nieznana flaga: {}"
@@ -75,8 +79,8 @@ msgstr[2] "Nieznane flagi: {}"
 
 #: ../ai/src/main.rs
 msgid ""
-"Usage: !ai [flags...] [command] <query>.  Flags: -c (clear history), -"
-"t=<val> (temp), {} (select model).\n"
+"Usage: !ai [flags...] [command] <query>.  Flags: -c (clear history), "
+"-t=<val> (temp), {} (select model).\n"
 "Commands: join <user...>, solo [user], joined, weather <city>, forecast "
 "<city>.  Models: {}, Default: {}\n"
 "By default, history is split by user and deleted after {} minutes. The bot "
@@ -528,7 +532,6 @@ msgstr "Nie ma nic do pominięcia!"
 msgid "Please choose [1-4]: %s (1: %s 2: %s 3: %s 4: %s)."
 msgstr "Proszę wybrać [1-4]: %s (1: %s 2: %s 3: %s 4: %s)."
 
-# msgstr "Najtrudniejsze słowo dla %s (liczba błędów): %s"
 #: kumitate_quiz/kuiz.sh reading_quiz/quiz.sh
 msgid "Please specify a level."
 msgstr "Proszę wybrać poziom."

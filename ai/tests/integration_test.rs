@@ -158,6 +158,85 @@ models = [
 }
 
 #[test]
+fn test_ai_binary_reasoning_model_hits_max_tokens() {
+    let temp_dir = TempDir::new().expect("Failed to create temp directory");
+    let temp_path = temp_dir.path();
+
+    let mut server = Server::new();
+    let mock_url = server.url();
+
+    // A reasoning model that spends its whole token budget on reasoning
+    // returns empty content and finish_reason "length".
+    let _mock = server
+        .mock("POST", "/v1/chat/completions")
+        .match_header("authorization", "Bearer test-api-key")
+        .match_header("content-type", "application/json")
+        .match_body(mockito::Matcher::PartialJsonString(
+            serde_json::json!({"max_tokens": 4096}).to_string(),
+        ))
+        .with_status(200)
+        .with_header("content-type", "application/json")
+        .with_body(
+            serde_json::json!({
+                "choices": [{
+                    "message": {
+                        "content": ""
+                    },
+                    "finish_reason": "length"
+                }]
+            })
+            .to_string(),
+        )
+        .create();
+
+    let env_content = "LITELLM_API_KEY=test-api-key\n";
+    fs::write(temp_path.join(".env"), env_content).expect("Failed to write .env file");
+
+    let config_content = format!(
+        r#"[general]
+default_model = "test-model"
+
+[providers.litellm]
+endpoint = "{}/v1/chat/completions"
+models = [
+    {{ id = "test-model", short_name = "tm", name = "Test Model" }},
+    {{ id = "reasoning-model", short_name = "m", name = "Reasoning Model", reasoning = true }}
+]
+"#,
+        mock_url
+    );
+    fs::write(temp_path.join("config.toml"), config_content)
+        .expect("Failed to write config.toml file");
+
+    let binary_path = env!("CARGO_BIN_EXE_ai");
+    let output = Command::new(binary_path)
+        .current_dir(temp_path)
+        .arg("-m")
+        .arg("Test query")
+        .output()
+        .expect("Failed to execute ai binary");
+
+    let stdout = String::from_utf8(output.stdout).expect("Invalid UTF-8 in stdout");
+    assert!(
+        !output.status.success(),
+        "Binary should have failed due to the max tokens limit. Output: {}",
+        stdout
+    );
+    assert!(
+        stdout.contains("Token limit exceeded."),
+        "Expected max tokens error message not found in output: {}",
+        stdout
+    );
+    assert!(
+        !stdout.contains("[m]"),
+        "Output must not be just the model prefix: {}",
+        stdout
+    );
+
+    _mock.assert();
+}
+
+#[test]
 fn test_ai_binary_server_error() {
     let temp_dir = TempDir::new().expect("Failed to create temp directory");
     let temp_path = temp_dir.path();

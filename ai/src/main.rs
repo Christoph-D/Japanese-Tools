@@ -91,12 +91,22 @@ fn call_api(
     let json: serde_json::Value =
         serde_json::from_str(&body).map_err(|e| formatget!("Invalid response: {}", e))?;
 
-    let content = json["choices"]
-        .get(0)
+    let choice = json["choices"].get(0);
+    let content = choice
         .and_then(|c| c["message"]["content"].as_str())
-        .map(|s| s.to_string());
+        .map(|s| s.to_string())
+        .filter(|c| !c.trim().is_empty());
 
-    content.ok_or_else(|| formatget!("Invalid response: {}", body))
+    content.ok_or_else(|| {
+        let finish_reason = choice
+            .and_then(|c| c["finish_reason"].as_str())
+            .unwrap_or_default();
+        if finish_reason == "length" {
+            gettext("Token limit exceeded.")
+        } else {
+            formatget!("Invalid response: {}", body)
+        }
+    })
 }
 
 fn sanitize_output(s: &str, api_key: &Option<&str>) -> String {
